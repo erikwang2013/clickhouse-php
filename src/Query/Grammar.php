@@ -58,12 +58,12 @@ class Grammar
         foreach ($builder->wheres as $where) {
             [$type, $column, $operator, $value, $boolean] = $where;
 
+            $prefix = empty($clauses) ? '' : ($boolean === 'or' ? 'OR ' : 'AND ');
+
             if ($type === 'raw') {
-                $clauses[] = ($boolean === 'or' ? 'OR ' : '') . $column;
+                $clauses[] = $prefix . $column;
                 continue;
             }
-
-            $prefix = empty($clauses) ? '' : ($boolean === 'or' ? 'OR ' : 'AND ');
 
             if ($type === 'basic') {
                 $clauses[] = $prefix . $column . ' ' . $operator . ' ' . $this->quote($value);

@@ -73,6 +73,14 @@ class BuilderTest extends TestCase
         $this->assertStringContainsString('42', $sql);
     }
 
+    public function testWhereRawWithAndCombination(): void
+    {
+        $builder = $this->createBuilder();
+        $builder->table('logs')->where('status', 'active')->whereRaw('some_column > 0');
+        $sql = $builder->toSql();
+        $this->assertStringContainsString("WHERE status = 'active' AND some_column > 0", $sql);
+    }
+
     public function testExpressionNotQuoted(): void
     {
         $builder = $this->createBuilder();

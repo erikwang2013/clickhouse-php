@@ -135,34 +135,36 @@ class Builder
     public function count(): int
     {
         $this->columns = ['count(*) as aggregate'];
-        $result = $this->get();
-        return (int) ($result->first()['aggregate'] ?? 0);
+        $row = $this->get()->first();
+        return (int) ($row['aggregate'] ?? 0);
     }
 
     public function sum(string $column): float
     {
         $this->columns = ["sum($column) as aggregate"];
-        $result = $this->get();
-        return (float) ($result->first()['aggregate'] ?? 0);
+        $row = $this->get()->first();
+        return (float) ($row['aggregate'] ?? 0);
     }
 
     public function avg(string $column): float
     {
         $this->columns = ["avg($column) as aggregate"];
-        $result = $this->get();
-        return (float) ($result->first()['aggregate'] ?? 0);
+        $row = $this->get()->first();
+        return (float) ($row['aggregate'] ?? 0);
     }
 
     public function min(string $column): mixed
     {
         $this->columns = ["min($column) as aggregate"];
-        return $this->get()->first()['aggregate'] ?? null;
+        $row = $this->get()->first();
+        return $row['aggregate'] ?? null;
     }
 
     public function max(string $column): mixed
     {
         $this->columns = ["max($column) as aggregate"];
-        return $this->get()->first()['aggregate'] ?? null;
+        $row = $this->get()->first();
+        return $row['aggregate'] ?? null;
     }
 
     public function insert(array $data): int
