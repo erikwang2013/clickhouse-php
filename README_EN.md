@@ -1,31 +1,30 @@
 # clickhouse-php
 
-PHP ClickHouse 客户端，支持 HTTP 与 Native TCP 双协议，内置查询构建器、Schema Builder、迁移系统和 ORM，深度适配 Laravel、ThinkPHP、Webman、Hyperf。
+A full-featured PHP ClickHouse client with HTTP & Native TCP support, query builder, schema builder, migration system, and ORM. Deep integration with Laravel, ThinkPHP, Webman, and Hyperf.
 
-[English Documentation](README_EN.md)
+[中文文档](README.md)
 
-## 安装
+## Installation
 
 ```bash
 composer require erikwang2013/clickhouse-php
 ```
 
-## 快速开始
+## Quick Start
 
-### 独立使用
+### Standalone Usage
 
 ```php
 use Erikwang2013\ClickHouse\ClickHouse;
 use Erikwang2013\ClickHouse\Client\Manager;
 
-// 配置
 $config = [
     'default' => 'clickhouse',
     'connections' => [
         'clickhouse' => [
-            'driver'   => 'http',        // http 或 native
+            'driver'   => 'http',        // 'http' or 'native'
             'host'     => 'localhost',
-            'port'     => 8123,          // HTTP 端口, Native 用 9000
+            'port'     => 8123,          // HTTP port, 9000 for Native
             'database' => 'default',
             'username' => 'default',
             'password' => '',
@@ -34,11 +33,10 @@ $config = [
     ],
 ];
 
-// 初始化
 $manager = new Manager($config);
 ClickHouse::setManager($manager);
 
-// 查询
+// Query with builder
 $rows = ClickHouse::table('logs')
     ->where('date', '>=', '2024-01-01')
     ->whereIn('level', ['error', 'warn'])
@@ -50,34 +48,34 @@ foreach ($rows as $row) {
     echo $row['message'];
 }
 
-// 原生 SQL
+// Raw SQL
 $result = ClickHouse::query('SELECT count(*) AS cnt FROM logs WHERE date = ?', ['2024-01-01']);
 echo $result->first()['cnt'];
 
-// 聚合
+// Aggregation
 $count = ClickHouse::table('logs')->where('level', 'error')->count();
 $avgDuration = ClickHouse::table('logs')->avg('duration');
 ```
 
-### 插入数据
+### Insert Data
 
 ```php
-// 单行
+// Single row
 ClickHouse::table('logs')->insert([
-    'date'      => '2024-01-01',
-    'level'     => 'info',
-    'message'   => 'hello',
-    'duration'  => 12.5,
+    'date'     => '2024-01-01',
+    'level'    => 'info',
+    'message'  => 'hello',
+    'duration' => 12.5,
 ]);
 
-// 批量
+// Batch insert
 ClickHouse::table('logs')->insert([
     ['date' => '2024-01-01', 'level' => 'info',  'message' => 'a', 'duration' => 1.2],
     ['date' => '2024-01-02', 'level' => 'error', 'message' => 'b', 'duration' => 3.4],
 ]);
 ```
 
-### 建表 (Schema Builder)
+### Schema Builder
 
 ```php
 ClickHouse::schema()->create('logs', function ($table) {
@@ -91,18 +89,18 @@ ClickHouse::schema()->create('logs', function ($table) {
           ->orderBy(['date', 'timestamp', 'level']);
 });
 
-// 删除表
+// Drop
 ClickHouse::schema()->drop('logs');
 
-// 修改表
+// Alter
 ClickHouse::schema()->alter('logs', function ($table) {
     $table->nullable('source', 'String');
 });
 ```
 
-### 数据迁移
+### Migrations
 
-创建迁移文件（如 `2026_05_27_000000_create_logs_table.php`）：
+Create a migration file (e.g. `2026_05_27_000000_create_logs_table.php`):
 
 ```php
 use Erikwang2013\ClickHouse\Migration\Migration;
@@ -127,7 +125,7 @@ class CreateLogsTable extends Migration
 }
 ```
 
-运行迁移：
+Run:
 
 ```php
 use Erikwang2013\ClickHouse\Migration\Migrator;
@@ -137,10 +135,10 @@ $client = ClickHouse::getManager()->connection();
 $repository = new Repository($client);
 $migrator = new Migrator($client, $repository, '/path/to/migrations');
 
-$migrator->install();   // 创建迁移记录表
-$migrator->run();       // 执行待迁移
-$migrator->rollback();  // 回滚上一批
-$migrator->refresh();   // 回滚后重新执行
+$migrator->install();   // Create migrations table
+$migrator->run();       // Run pending
+$migrator->rollback();  // Rollback last batch
+$migrator->refresh();   // Rollback + re-run
 ```
 
 ### ORM
@@ -154,48 +152,45 @@ class Log extends Model
     protected string $connection = 'default';
 }
 
-// 查询
+// Queries
 $logs = Log::where('level', 'error')
     ->orderBy('timestamp', 'desc')
     ->limit(50)
     ->get();
 
-// 查找单条
 $log = Log::find(123);
-
-// 聚合
 $total = Log::where('date', '>=', '2024-01-01')->count();
 
-// 批量插入
+// Batch insert
 Log::insert([
     ['date' => '2024-01-01', 'level' => 'info'],
     ['date' => '2024-01-02', 'level' => 'error'],
 ]);
 ```
 
-### 多连接
+### Multiple Connections
 
 ```php
 $config = [
     'default' => 'default',
     'connections' => [
-        'default' => ['driver' => 'http', 'host' => 'ch1.example.com', 'port' => 8123],
+        'default'   => ['driver' => 'http', 'host' => 'ch1.example.com', 'port' => 8123],
         'analytics' => ['driver' => 'http', 'host' => 'ch2.example.com', 'port' => 8123],
     ],
 ];
 
 $manager = new Manager($config);
+ClickHouse::setManager($manager);
 
-// 使用指定连接
 ClickHouse::connection('analytics')->table('events')->get();
 ClickHouse::table('events', 'analytics')->get();
 ```
 
-## 框架集成
+## Framework Integration
 
 ### Laravel
 
-配置文件自动发布，Composer 自动发现 ServiceProvider。
+Auto-discovered via Composer. Publish config:
 
 ```bash
 php artisan vendor:publish --tag=clickhouse-config
@@ -208,7 +203,7 @@ ClickHouse::table('logs')->where('level', 'error')->get();
 ClickHouse::connection('native')->select('SELECT * FROM logs LIMIT 10');
 ```
 
-Artisan 命令：
+Artisan commands:
 
 ```bash
 php artisan clickhouse:table-list
@@ -218,7 +213,7 @@ php artisan clickhouse:migration:run
 
 ### ThinkPHP
 
-在 `app/service.php` 中注册服务：
+Register in `app/service.php`:
 
 ```php
 return [
@@ -232,13 +227,9 @@ use think\facade\ClickHouse;
 ClickHouse::table('logs')->get();
 ```
 
-```bash
-php think clickhouse:table-list
-```
-
 ### Webman
 
-Webman 自动加载插件配置，无需手动配置。
+Auto-loaded from `config/plugin/erikwang2013/clickhouse-php/app.php`.
 
 ```php
 use Erikwang2013\ClickHouse\Webman\ClickHouse;
@@ -248,7 +239,7 @@ ClickHouse::table('logs')->where('level', 'error')->get();
 
 ### Hyperf
 
-通过 `ConfigProvider` 自动发现，支持依赖注入和协程连接池。
+Auto-discovered via `ConfigProvider`. Supports coroutine connection pooling with Swoole.
 
 ```bash
 php bin/hyperf.php vendor:publish erikwang2013/clickhouse-php
@@ -270,32 +261,32 @@ class LogController
 }
 ```
 
-## 查询构建器参考
+## Query Builder Reference
 
-| 方法 | 说明 |
-|------|------|
-| `table($name)` / `from($name)` | 指定表名 |
-| `select([...])` / `selectRaw($expr)` | SELECT 列 |
-| `where($col, $op, $val)` | 条件 (2 参数时 `$op` 默认 `=`) |
-| `orWhere($col, $op, $val)` | OR 条件 |
-| `whereIn($col, $arr)` / `whereNotIn($col, $arr)` | IN / NOT IN |
-| `whereBetween($col, [$min, $max])` | BETWEEN |
+| Method | Description |
+|--------|-------------|
+| `table($name)` / `from($name)` | Set table name |
+| `select([...])` / `selectRaw($expr)` | SELECT columns |
+| `where($col, $op, $val)` | WHERE clause (2-arg defaults to `=`) |
+| `orWhere($col, $op, $val)` | OR WHERE clause |
+| `whereIn($col, $arr)` / `whereNotIn($col, $arr)` | WHERE IN / NOT IN |
+| `whereBetween($col, [$min, $max])` | WHERE BETWEEN |
 | `whereNull($col)` / `whereNotNull($col)` | IS NULL / IS NOT NULL |
-| `whereRaw($sql)` | 原生 WHERE |
-| `orderBy($col, $dir)` | 排序 (默认 ASC) |
-| `groupBy(...$cols)` | 分组 |
-| `limit($n)` / `offset($n)` | 分页 |
-| `count()` / `sum($col)` / `avg($col)` / `min($col)` / `max($col)` | 聚合 |
-| `insert($data)` | 插入 (单行或批量) |
-| `delete()` | 删除 |
-| `get()` | 执行查询，返回 Result |
-| `first()` | 返回第一条 |
-| `toSql()` | 获取生成的 SQL |
+| `whereRaw($sql)` | Raw WHERE expression |
+| `orderBy($col, $dir)` | ORDER BY (default ASC) |
+| `groupBy(...$cols)` | GROUP BY |
+| `limit($n)` / `offset($n)` | Pagination |
+| `count()` / `sum($col)` / `avg($col)` / `min($col)` / `max($col)` | Aggregates |
+| `insert($data)` | Insert (single or batch) |
+| `delete()` | Delete (ALTER TABLE ... DELETE) |
+| `get()` | Execute query, returns Result |
+| `first()` | Return first row |
+| `toSql()` | Get generated SQL |
 
-## Schema 列类型
+## Schema Column Types
 
-| 方法 | ClickHouse 类型 |
-|------|----------------|
+| Method | ClickHouse Type |
+|--------|----------------|
 | `string($name)` | String |
 | `fixedString($name, $len)` | FixedString(N) |
 | `int8/16/32/64($name)` | Int8/16/32/64 |
@@ -311,7 +302,7 @@ class LogController
 | `nullable($name, $type)` | Nullable(T) |
 | `lowCardinality($name, $type)` | LowCardinality(T) |
 
-## 配置参考
+## Configuration Reference
 
 ```php
 [
@@ -336,21 +327,9 @@ class LogController
 ];
 ```
 
-## 环境变量
+## Error Handling
 
-| 变量 | 默认值 | 说明 |
-|------|--------|------|
-| `CLICKHOUSE_HOST` | localhost | 主机地址 |
-| `CLICKHOUSE_PORT` | 8123 | HTTP 端口 |
-| `CLICKHOUSE_DB` | default | 数据库名 |
-| `CLICKHOUSE_USER` | default | 用户名 |
-| `CLICKHOUSE_PASS` | — | 密码 |
-| `CLICKHOUSE_TIMEOUT` | 30 | 连接超时(秒) |
-| `CLICKHOUSE_DRIVER` | http | 驱动类型 |
-| `CLICKHOUSE_POOL_MIN` | 2 | 最小连接数 |
-| `CLICKHOUSE_POOL_MAX` | 16 | 最大连接数 |
-
-## 异常处理
+All exceptions extend `ClickHouseException`:
 
 ```php
 use Erikwang2013\ClickHouse\Exceptions\{
@@ -364,15 +343,29 @@ use Erikwang2013\ClickHouse\Exceptions\{
 try {
     ClickHouse::table('logs')->get();
 } catch (ConnectionException | TimeoutException $e) {
-    // 连接或超时问题
+    // Connection or timeout issues
 } catch (QueryException $e) {
     echo $e->getMessage();
-    echo $e->getSql();      // 原始 SQL
+    echo $e->getSql();      // Original SQL
 } catch (ClickHouseException $e) {
-    // 其他异常
+    // Other exceptions
 }
 ```
 
-## 许可证
+## Environment Variables
 
-MIT License.  Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CLICKHOUSE_HOST` | localhost | Server host |
+| `CLICKHOUSE_PORT` | 8123 | HTTP port |
+| `CLICKHOUSE_DB` | default | Database name |
+| `CLICKHOUSE_USER` | default | Username |
+| `CLICKHOUSE_PASS` | — | Password |
+| `CLICKHOUSE_TIMEOUT` | 30 | Timeout (seconds) |
+| `CLICKHOUSE_DRIVER` | http | Driver type |
+| `CLICKHOUSE_POOL_MIN` | 2 | Min connections |
+| `CLICKHOUSE_POOL_MAX` | 16 | Max connections |
+
+## License
+
+MIT License. Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz

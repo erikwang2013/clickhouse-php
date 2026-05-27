@@ -6,7 +6,8 @@
     "keywords": ["clickhouse", "database", "client", "php"],
     "authors": [
         {
-            "name": "erikwang2013"
+            "name": "erik",
+            "email": "erik@erik.xyz"
         }
     ],
     "require": {
