@@ -52,9 +52,11 @@ class HttpClient implements ClientInterface
             $values[] = '(' . implode(', ', $escaped) . ')';
         }
 
+        $tableQuoted = implode('.', array_map(fn($p) => "`$p`", explode('.', $table)));
+
         $sql = sprintf(
             'INSERT INTO %s (%s) VALUES %s',
-            $table,
+            $tableQuoted,
             implode(', ', array_map(fn($c) => "`$c`", $columns)),
             implode(', ', $values),
         );
