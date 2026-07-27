@@ -58,9 +58,10 @@ class WorkermanPool implements PoolInterface
 
     public function stats(): array
     {
+        $idle = $this->channel->getLength();
         return [
             'active' => $this->activeCount,
-            'idle' => $this->channel->isEmpty() ? 0 : $this->activeCount,
+            'idle' => $idle,
             'total' => $this->activeCount,
         ];
     }

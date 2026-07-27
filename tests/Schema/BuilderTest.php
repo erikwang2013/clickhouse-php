@@ -24,7 +24,7 @@ class BuilderTest extends TestCase
             ->orderBy(['date', 'level']);
 
         $sql = $grammar->compileCreate('logs', $blueprint);
-        $this->assertStringContainsString('CREATE TABLE IF NOT EXISTS logs', $sql);
+        $this->assertStringContainsString('CREATE TABLE IF NOT EXISTS `logs`', $sql);
         $this->assertStringContainsString('ENGINE = MergeTree', $sql);
         $this->assertStringContainsString('PARTITION BY toYYYYMM(date)', $sql);
         $this->assertStringContainsString('ORDER BY (date, level)', $sql);
@@ -33,7 +33,7 @@ class BuilderTest extends TestCase
     public function testDropTableSql(): void
     {
         $grammar = new Grammar();
-        $this->assertSame('DROP TABLE IF EXISTS logs', $grammar->compileDrop('logs'));
+        $this->assertSame('DROP TABLE IF EXISTS `logs`', $grammar->compileDrop('logs'));
     }
 
     public function testAllColumnTypes(): void

@@ -16,7 +16,7 @@ class Grammar
         }
 
         $sql = 'SELECT ' . implode(', ', $builder->columns);
-        $sql .= ' FROM ' . $builder->from;
+        $sql .= ' FROM ' . $this->quoteTable($builder->from);
 
         return $this->compileWheres($builder, $sql)
             . $this->compileGroups($builder)
@@ -41,7 +41,7 @@ class Grammar
 
         return sprintf(
             'INSERT INTO %s (%s) VALUES %s',
-            $builder->from,
+            $this->quoteTable($builder->from),
             implode(', ', array_map(fn($c) => "`$c`", $columns)),
             implode(', ', $values),
         );
@@ -49,7 +49,7 @@ class Grammar
 
     public function compileDelete(Builder $builder): string
     {
-        $sql = 'ALTER TABLE ' . $builder->from . ' DELETE';
+        $sql = 'ALTER TABLE ' . $this->quoteTable($builder->from) . ' DELETE';
         return $this->compileWheres($builder, $sql);
     }
 
@@ -117,6 +117,11 @@ class Grammar
             $sql .= ' OFFSET ' . $builder->offset;
         }
         return $sql;
+    }
+
+    private function quoteTable(string $table): string
+    {
+        return implode('.', array_map(fn($p) => "`$p`", explode('.', $table)));
     }
 
     public function quote(mixed $value): string

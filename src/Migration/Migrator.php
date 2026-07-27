@@ -77,6 +77,7 @@ class Migrator
     private function loadMigrations(): array
     {
         $files = glob($this->path . '/*.php');
+        sort($files, SORT_STRING);
         return array_map(fn($f) => basename($f, '.php'), $files);
     }
 

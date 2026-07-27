@@ -20,7 +20,7 @@ class ClickHouse
         static::$manager = $manager;
     }
 
-    public static function getManager(): Manager
+    public static function getManager(): ?Manager
     {
         return static::$manager;
     }

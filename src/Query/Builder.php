@@ -134,41 +134,44 @@ class Builder
 
     public function first(): mixed
     {
-        return $this->limit(1)->get()->first();
+        $original = $this->limit;
+        $result = $this->limit(1)->get()->first();
+        $this->limit = $original;
+        return $result;
     }
 
     public function count(): int
     {
-        $this->columns = ['count(*) as aggregate'];
-        $row = $this->get()->first();
-        return (int) ($row['aggregate'] ?? 0);
+        return (int) $this->aggregate('count');
     }
 
     public function sum(string $column): float
     {
-        $this->columns = ["sum($column) as aggregate"];
-        $row = $this->get()->first();
-        return (float) ($row['aggregate'] ?? 0);
+        return (float) $this->aggregate('sum', $column);
     }
 
     public function avg(string $column): float
     {
-        $this->columns = ["avg($column) as aggregate"];
-        $row = $this->get()->first();
-        return (float) ($row['aggregate'] ?? 0);
+        return (float) $this->aggregate('avg', $column);
     }
 
     public function min(string $column): mixed
     {
-        $this->columns = ["min($column) as aggregate"];
-        $row = $this->get()->first();
-        return $row['aggregate'] ?? null;
+        return $this->aggregate('min', $column);
     }
 
     public function max(string $column): mixed
     {
-        $this->columns = ["max($column) as aggregate"];
+        return $this->aggregate('max', $column);
+    }
+
+    private function aggregate(string $fn, ?string $column = null): mixed
+    {
+        $original = $this->columns;
+        $expr = $column ? "$fn($column)" : "$fn(*)";
+        $this->columns = ["$expr as aggregate"];
         $row = $this->get()->first();
+        $this->columns = $original;
         return $row['aggregate'] ?? null;
     }
 

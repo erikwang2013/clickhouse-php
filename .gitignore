@@ -7,3 +7,8 @@ composer.lock
 .vscode/
 *.swp
 *.swo
+.claude
+.claude-flow
+.swarm
+.mcp.json
+ruvector.db

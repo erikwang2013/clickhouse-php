@@ -28,7 +28,7 @@ class BuilderTest extends TestCase
         $builder = $this->createBuilder();
         $builder->table('logs')->where('level', 'error')->limit(10);
         $sql = $builder->toSql();
-        $this->assertStringContainsString('SELECT * FROM logs', $sql);
+        $this->assertStringContainsString('SELECT * FROM `logs`', $sql);
         $this->assertStringContainsString("WHERE level = 'error'", $sql);
         $this->assertStringContainsString('LIMIT 10', $sql);
     }
@@ -73,7 +73,7 @@ class BuilderTest extends TestCase
         $sql = (new \Erikwang2013\ClickHouse\Query\Grammar())->compileInsert($builder, [
             ['name' => 'test', 'value' => 42],
         ]);
-        $this->assertStringContainsString('INSERT INTO logs', $sql);
+        $this->assertStringContainsString('INSERT INTO `logs`', $sql);
         $this->assertStringContainsString("'test'", $sql);
         $this->assertStringContainsString('42', $sql);
     }
@@ -92,6 +92,32 @@ class BuilderTest extends TestCase
         $builder->table('logs')->where('date', '>=', new Expression('today()'));
         $sql = $builder->toSql();
         $this->assertStringContainsString('WHERE date >= today()', $sql);
+    }
+
+    public function testCountDoesNotMutateColumns(): void
+    {
+        $builder = $this->createBuilder();
+        $builder->table('logs')->select('id', 'name');
+        $builder->count();
+        $sql = $builder->toSql();
+        $this->assertStringContainsString('SELECT id, name FROM', $sql);
+    }
+
+    public function testFirstDoesNotMutateLimit(): void
+    {
+        $builder = $this->createBuilder();
+        $builder->table('logs');
+        $builder->first();
+        $sql = $builder->toSql();
+        $this->assertStringNotContainsString('LIMIT 1', $sql);
+    }
+
+    public function testWhereNotNullSql(): void
+    {
+        $builder = $this->createBuilder();
+        $builder->table('logs')->whereNotNull('deleted_at');
+        $sql = $builder->toSql();
+        $this->assertStringContainsString('WHERE deleted_at IS NOT NULL', $sql);
     }
 
     protected function tearDown(): void
