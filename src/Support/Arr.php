@@ -30,14 +30,4 @@ class Arr
         return $array;
     }
 
-    public static function only(array $array, array $keys): array
-    {
-        $result = [];
-        foreach ($keys as $key) {
-            if (array_key_exists($key, $array)) {
-                $result[$key] = $array[$key];
-            }
-        }
-        return $result;
-    }
 }

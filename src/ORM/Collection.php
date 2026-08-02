@@ -39,9 +39,9 @@ class Collection implements \IteratorAggregate, \Countable, \ArrayAccess
         return $this->items;
     }
 
-    public function map(callable $callback): array
+    public function map(callable $callback): static
     {
-        return array_map($callback, $this->items);
+        return new static(array_map($callback, $this->items));
     }
 
     public function filter(callable $callback): static

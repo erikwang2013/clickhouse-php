@@ -8,6 +8,7 @@
 namespace Erikwang2013\ClickHouse\Migration;
 
 use Erikwang2013\ClickHouse\Client\ClientInterface;
+use Erikwang2013\ClickHouse\Exceptions\QueryException;
 use Erikwang2013\ClickHouse\Schema\Builder;
 
 class Migrator
@@ -38,10 +39,20 @@ class Migrator
         $run = [];
 
         foreach ($pending as $file) {
-            $migration = $this->resolve($file);
-            $migration->up();
-            $this->repository->log($file, $batch);
-            $run[] = $file;
+            try {
+                $migration = $this->resolve($file);
+                $migration->up();
+                $this->repository->log($file, $batch);
+                $run[] = $file;
+            } catch (\Throwable $e) {
+                throw new QueryException(
+                    sprintf('Migration [%s] failed: %s', $file, $e->getMessage()),
+                    $file,
+                    ['batch' => $batch, 'previously_run' => $run],
+                    0,
+                    $e,
+                );
+            }
         }
 
         return $run;
@@ -50,6 +61,10 @@ class Migrator
     public function rollback(?int $steps = null): array
     {
         $batch = $this->repository->getLastBatch();
+
+        if ($batch === 0) {
+            return [];
+        }
         $migrations = $this->repository->getMigrationsByBatch($batch);
 
         if ($steps !== null) {
@@ -84,10 +99,21 @@ class Migrator
     private function resolve(string $file): Migration
     {
         $path = $this->path . '/' . $file . '.php';
+
+        if (!file_exists($path)) {
+            throw new QueryException("Migration file not found: {$path}");
+        }
+
         require_once $path;
 
         $class = preg_replace('/^\d+_/', '', $file);
         $class = str_replace('_', '', ucwords($class, '_'));
+
+        if (!class_exists($class)) {
+            throw new QueryException(
+                "Migration class [{$class}] not found in file [{$path}]"
+            );
+        }
 
         $instance = new $class();
         $instance->setSchema(new Builder($this->client));

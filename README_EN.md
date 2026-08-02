@@ -22,7 +22,7 @@ $config = [
     'default' => 'clickhouse',
     'connections' => [
         'clickhouse' => [
-            'driver'   => 'http',        // 'http' or 'native'
+            'driver'   => 'http',        // 'http' (recommended) or 'native' (WIP)
             'host'     => 'localhost',
             'port'     => 8123,          // HTTP port, 9000 for Native
             'database' => 'default',
@@ -309,7 +309,7 @@ class LogController
     'default' => 'clickhouse',
     'connections' => [
         'clickhouse' => [
-            'driver'   => 'http',     // http | native
+            'driver'   => 'http',     // http (recommended) | native (WIP)
             'host'     => 'localhost',
             'port'     => 8123,       // HTTP 8123, Native 9000
             'database' => 'default',
@@ -365,6 +365,14 @@ try {
 | `CLICKHOUSE_DRIVER` | http | Driver type |
 | `CLICKHOUSE_POOL_MIN` | 2 | Min connections |
 | `CLICKHOUSE_POOL_MAX` | 16 | Max connections |
+
+## Support
+
+| WeChat | Alipay |
+|--------|--------|
+| <img src="docs/weixinpay.png" width="130" height="130" alt="WeChat Pay"> | <img src="docs/alipay.png" width="130" height="130" alt="Alipay"> |
+
+Thank you for your support!
 
 ## License
 

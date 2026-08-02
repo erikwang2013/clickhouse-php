@@ -53,7 +53,9 @@ class SwoolePool implements PoolInterface
 
     public function put(ClientInterface $client): void
     {
-        $this->channel->push($client, $this->connectionTimeout);
+        if ($this->channel->push($client, $this->connectionTimeout) === false) {
+            $this->activeCount--;
+        }
     }
 
     public function stats(): array

@@ -39,7 +39,12 @@ class Builder
     {
         $blueprint = new Blueprint();
         $callback($blueprint);
-        $this->client->query($this->grammar->compileAlter($table, $blueprint));
+
+        if (empty($blueprint->columns)) {
+            return;
+        }
+
+        $this->client->query($this->grammar->compileAlterAdd($table, $blueprint));
     }
 
     public function hasTable(string $table): bool

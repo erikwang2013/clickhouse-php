@@ -53,7 +53,9 @@ class SwowPool implements PoolInterface
 
     public function put(ClientInterface $client): void
     {
-        $this->channel->push($client, (int) ($this->connectionTimeout * 1000));
+        if ($this->channel->push($client, (int) ($this->connectionTimeout * 1000)) === false) {
+            $this->activeCount--;
+        }
     }
 
     public function stats(): array

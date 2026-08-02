@@ -36,6 +36,19 @@ class BuilderTest extends TestCase
         $this->assertSame('DROP TABLE IF EXISTS `logs`', $grammar->compileDrop('logs'));
     }
 
+    public function testAlterSql(): void
+    {
+        $grammar = new Grammar();
+        $blueprint = new Blueprint();
+        $blueprint->string('source');
+        $blueprint->nullable('description', 'String');
+
+        $sql = $grammar->compileAlterAdd('logs', $blueprint);
+        $this->assertStringContainsString('ALTER TABLE `logs`', $sql);
+        $this->assertStringContainsString('ADD COLUMN `source` String', $sql);
+        $this->assertStringContainsString('ADD COLUMN `description` Nullable(String)', $sql);
+    }
+
     public function testAllColumnTypes(): void
     {
         $blueprint = new Blueprint();

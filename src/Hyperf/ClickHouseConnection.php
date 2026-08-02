@@ -17,15 +17,18 @@ use Erikwang2013\ClickHouse\Hyperf\Pool\PoolFactory;
 class ClickHouseConnection
 {
     private ?ClientInterface $client = null;
+    private string $connectionName;
 
     public function __construct(
         private readonly PoolFactory $poolFactory,
     ) {
+        $this->connectionName = 'default';
     }
 
     public function connection(string $name = 'default'): ClientInterface
     {
         if ($this->client === null) {
+            $this->connectionName = $name;
             $pool = $this->poolFactory->getPool($name);
             $this->client = $pool->get();
         }
@@ -45,7 +48,7 @@ class ClickHouseConnection
     public function release(): void
     {
         if ($this->client !== null) {
-            $pool = $this->poolFactory->getPool('default');
+            $pool = $this->poolFactory->getPool($this->connectionName);
             $pool->put($this->client);
             $this->client = null;
         }

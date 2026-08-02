@@ -7,15 +7,19 @@
 
 namespace Erikwang2013\ClickHouse\Query;
 
+use Erikwang2013\ClickHouse\Support\Quoter;
+
 class Grammar
 {
     public function compileSelect(Builder $builder): string
     {
-        if (empty($builder->columns)) {
-            $builder->select('*');
+        if (empty($builder->from)) {
+            throw new \Erikwang2013\ClickHouse\Exceptions\QueryException('Table name is required.', '');
         }
 
-        $sql = 'SELECT ' . implode(', ', $builder->columns);
+        $columns = $builder->columns ?: ['*'];
+
+        $sql = 'SELECT ' . implode(', ', $columns);
         $sql .= ' FROM ' . $this->quoteTable($builder->from);
 
         return $this->compileWheres($builder, $sql)
@@ -77,6 +81,9 @@ class Grammar
                 $not = $operator === 'not in' ? 'NOT ' : '';
                 $clauses[] = $prefix . $column . ' ' . $not . 'IN (' . $values . ')';
             } elseif ($type === 'between') {
+                if (count((array) $value) !== 2) {
+                    throw new \InvalidArgumentException('whereBetween requires exactly two values.');
+                }
                 $clauses[] = $prefix . $column . ' BETWEEN ' . $this->quote($value[0]) . ' AND ' . $this->quote($value[1]);
             } elseif ($type === 'null') {
                 $not = $operator === 'not null' ? 'NOT ' : '';
@@ -121,17 +128,11 @@ class Grammar
 
     private function quoteTable(string $table): string
     {
-        return implode('.', array_map(fn($p) => "`$p`", explode('.', $table)));
+        return Quoter::table($table);
     }
 
     public function quote(mixed $value): string
     {
-        if ($value instanceof Expression) {
-            return $value->getValue();
-        }
-        if (is_null($value)) return 'NULL';
-        if (is_int($value) || is_float($value)) return (string) $value;
-        if (is_bool($value)) return $value ? '1' : '0';
-        return "'" . addcslashes((string) $value, "\\'") . "'";
+        return Quoter::value($value);
     }
 }

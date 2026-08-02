@@ -10,6 +10,7 @@ namespace Erikwang2013\ClickHouse\Transport;
 use Erikwang2013\ClickHouse\Exceptions\ConnectionException;
 use Erikwang2013\ClickHouse\Exceptions\QueryException;
 use Erikwang2013\ClickHouse\Support\Config;
+use Erikwang2013\ClickHouse\Support\Quoter;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ConnectException;
 
@@ -22,7 +23,8 @@ class HttpTransport implements TransportInterface
     ) {
         $this->httpClient = new Client([
             'base_uri' => sprintf(
-                'http://%s:%d/',
+                '%s://%s:%d/',
+                $this->config->get('https', false) ? 'https' : 'http',
                 $this->config->get('host', 'localhost'),
                 $this->config->get('port', 8123),
             ),
@@ -89,15 +91,6 @@ class HttpTransport implements TransportInterface
 
     private function quoteValue(mixed $value): string
     {
-        if (is_null($value)) {
-            return 'NULL';
-        }
-        if (is_int($value) || is_float($value)) {
-            return (string) $value;
-        }
-        if (is_bool($value)) {
-            return $value ? '1' : '0';
-        }
-        return "'" . addcslashes((string) $value, "\\'") . "'";
+        return Quoter::value($value);
     }
 }

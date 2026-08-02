@@ -8,8 +8,10 @@
 namespace Erikwang2013\ClickHouse\Tests\Query;
 
 use Erikwang2013\ClickHouse\Client\ClientInterface;
+use Erikwang2013\ClickHouse\Exceptions\QueryException;
 use Erikwang2013\ClickHouse\Query\Builder;
 use Erikwang2013\ClickHouse\Query\Expression;
+use Erikwang2013\ClickHouse\Query\Grammar;
 use Erikwang2013\ClickHouse\Query\Result;
 use PHPUnit\Framework\TestCase;
 use Mockery;
@@ -118,6 +120,56 @@ class BuilderTest extends TestCase
         $builder->table('logs')->whereNotNull('deleted_at');
         $sql = $builder->toSql();
         $this->assertStringContainsString('WHERE deleted_at IS NOT NULL', $sql);
+    }
+
+    public function testOrWhereSql(): void
+    {
+        $builder = $this->createBuilder();
+        $builder->table('logs')->where('level', 'error')->orWhere('level', 'warn');
+        $sql = $builder->toSql();
+        $this->assertStringContainsString("level = 'error' OR level = 'warn'", $sql);
+    }
+
+    public function testWhereNotInSql(): void
+    {
+        $builder = $this->createBuilder();
+        $builder->table('logs')->whereNotIn('level', ['debug', 'trace']);
+        $sql = $builder->toSql();
+        $this->assertStringContainsString("level NOT IN ('debug', 'trace')", $sql);
+    }
+
+    public function testOffsetSql(): void
+    {
+        $builder = $this->createBuilder();
+        $builder->table('logs')->limit(10)->offset(20);
+        $sql = $builder->toSql();
+        $this->assertStringContainsString('LIMIT 10', $sql);
+        $this->assertStringContainsString('OFFSET 20', $sql);
+    }
+
+    public function testDeleteSql(): void
+    {
+        $grammar = new Grammar();
+        $builder = $this->createBuilder();
+        $builder->table('logs')->where('level', 'debug');
+        $sql = $grammar->compileDelete($builder);
+        $this->assertStringContainsString('ALTER TABLE `logs` DELETE', $sql);
+        $this->assertStringContainsString("WHERE level = 'debug'", $sql);
+    }
+
+    public function testEmptyFromThrows(): void
+    {
+        $builder = $this->createBuilder();
+        $this->expectException(QueryException::class);
+        $builder->toSql();
+    }
+
+    public function testBetweenValidationThrows(): void
+    {
+        $builder = $this->createBuilder();
+        $builder->table('logs')->whereBetween('date', ['2024-01-01']);
+        $this->expectException(\InvalidArgumentException::class);
+        $builder->toSql();
     }
 
     protected function tearDown(): void

@@ -23,7 +23,7 @@ $config = [
     'default' => 'clickhouse',
     'connections' => [
         'clickhouse' => [
-            'driver'   => 'http',        // http 或 native
+            'driver'   => 'http',        // http（推荐）或 native（开发中）
             'host'     => 'localhost',
             'port'     => 8123,          // HTTP 端口, Native 用 9000
             'database' => 'default',
@@ -318,7 +318,7 @@ class LogController
     'default' => 'clickhouse',
     'connections' => [
         'clickhouse' => [
-            'driver'   => 'http',     // http | native
+            'driver'   => 'http',     // http（推荐）| native（开发中）
             'host'     => 'localhost',
             'port'     => 8123,       // HTTP 8123, Native 9000
             'database' => 'default',
@@ -372,6 +372,14 @@ try {
     // 其他异常
 }
 ```
+
+## 欢迎支持
+
+| 微信 | 支付宝 |
+|------|--------|
+| <img src="docs/weixinpay.png" width="130" height="130" alt="微信支付"> | <img src="docs/alipay.png" width="130" height="130" alt="支付宝"> |
+
+感谢您的支持！
 
 ## 许可证
 

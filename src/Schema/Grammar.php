@@ -7,6 +7,8 @@
 
 namespace Erikwang2013\ClickHouse\Schema;
 
+use Erikwang2013\ClickHouse\Support\Quoter;
+
 class Grammar
 {
     public function compileCreate(string $table, Blueprint $blueprint): string
@@ -45,7 +47,7 @@ class Grammar
         return 'DROP TABLE IF EXISTS ' . $this->quoteTable($table);
     }
 
-    public function compileAlter(string $table, Blueprint $blueprint): string
+    public function compileAlterAdd(string $table, Blueprint $blueprint): string
     {
         $columns = array_map(fn(Column $c) => 'ADD COLUMN ' . $c->toSql(), $blueprint->columns);
         return 'ALTER TABLE ' . $this->quoteTable($table) . ' ' . implode(', ', $columns);
@@ -69,6 +71,6 @@ class Grammar
 
     private function quoteTable(string $table): string
     {
-        return implode('.', array_map(fn($p) => "`$p`", explode('.', $table)));
+        return Quoter::table($table);
     }
 }

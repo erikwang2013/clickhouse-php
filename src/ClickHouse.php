@@ -27,6 +27,9 @@ class ClickHouse
 
     public static function connection(?string $name = null): Builder
     {
+        if (static::$manager === null) {
+            throw new Exceptions\ConnectionException('ClickHouse manager not initialized. Call ClickHouse::setManager() first.');
+        }
         $client = static::$manager->connection($name);
         return new Builder($client);
     }
@@ -38,11 +41,17 @@ class ClickHouse
 
     public static function schema(): SchemaBuilder
     {
+        if (static::$manager === null) {
+            throw new Exceptions\ConnectionException('ClickHouse manager not initialized. Call ClickHouse::setManager() first.');
+        }
         return new SchemaBuilder(static::$manager->connection());
     }
 
     public static function query(string $sql, array $bindings = []): Query\Result
     {
+        if (static::$manager === null) {
+            throw new Exceptions\ConnectionException('ClickHouse manager not initialized. Call ClickHouse::setManager() first.');
+        }
         return static::$manager->connection()->query($sql, $bindings);
     }
 }

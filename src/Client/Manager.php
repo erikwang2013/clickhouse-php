@@ -33,12 +33,12 @@ class Manager
     {
         $name ??= $this->defaultConnection;
 
-        if (isset($this->connections[$name])) {
-            return $this->connections[$name];
-        }
-
         if (isset($this->pools[$name])) {
             return $this->pools[$name]->get();
+        }
+
+        if (isset($this->connections[$name])) {
+            return $this->connections[$name];
         }
 
         return $this->connections[$name] = $this->make($name);

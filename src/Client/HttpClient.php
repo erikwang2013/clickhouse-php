@@ -9,6 +9,7 @@ namespace Erikwang2013\ClickHouse\Client;
 
 use Erikwang2013\ClickHouse\Query\Result;
 use Erikwang2013\ClickHouse\Support\Config;
+use Erikwang2013\ClickHouse\Support\Quoter;
 use Erikwang2013\ClickHouse\Transport\TransportInterface;
 
 class HttpClient implements ClientInterface
@@ -57,7 +58,7 @@ class HttpClient implements ClientInterface
             $values[] = '(' . implode(', ', $escaped) . ')';
         }
 
-        $tableQuoted = implode('.', array_map(fn($p) => "`$p`", explode('.', $table)));
+        $tableQuoted = Quoter::table($table);
 
         $sql = sprintf(
             'INSERT INTO %s (%s) VALUES %s',
@@ -82,9 +83,6 @@ class HttpClient implements ClientInterface
 
     private function escape(mixed $value): string
     {
-        if (is_null($value)) return 'NULL';
-        if (is_int($value) || is_float($value)) return (string) $value;
-        if (is_bool($value)) return $value ? '1' : '0';
-        return "'" . addcslashes((string) $value, "\\'") . "'";
+        return Quoter::value($value);
     }
 }

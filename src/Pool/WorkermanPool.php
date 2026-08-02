@@ -23,7 +23,7 @@ class WorkermanPool implements PoolInterface
         private readonly \Closure $factory,
         private readonly array $config = [],
     ) {
-        $this->minConnections = $config['min_connections'] ?? 1;
+        $this->minConnections = $config['min_connections'] ?? 2;
         $this->maxConnections = $config['max_connections'] ?? 8;
         $this->connectionTimeout = $config['connection_timeout'] ?? 5.0;
 
@@ -53,7 +53,9 @@ class WorkermanPool implements PoolInterface
 
     public function put(ClientInterface $client): void
     {
-        $this->channel->push($client, $this->connectionTimeout);
+        if ($this->channel->push($client, $this->connectionTimeout) === false) {
+            $this->activeCount--;
+        }
     }
 
     public function stats(): array
