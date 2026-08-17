@@ -7,6 +7,7 @@
 
 namespace Erikwang2013\ClickHouse\Transport;
 
+use Erikwang2013\ClickHouse\Exceptions\ConnectionException;
 use Erikwang2013\ClickHouse\Support\Config;
 
 class TcpTransport implements TransportInterface
@@ -20,7 +21,7 @@ class TcpTransport implements TransportInterface
 
     public function send(string $sql, array $bindings = []): mixed
     {
-        throw new \RuntimeException(
+        throw new ConnectionException(
             'Native TCP transport not yet implemented. Use HTTP driver.'
         );
     }

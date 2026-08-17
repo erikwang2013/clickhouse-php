@@ -30,6 +30,14 @@ class Quoter
 
     public static function table(string $table): string
     {
-        return implode('.', array_map(fn($p) => "`$p`", explode('.', $table)));
+        return self::column($table);
+    }
+
+    public static function column(string $id): string
+    {
+        return implode('.', array_map(
+            fn($p) => '`' . str_replace('`', '\\`', $p) . '`',
+            explode('.', $id),
+        ));
     }
 }

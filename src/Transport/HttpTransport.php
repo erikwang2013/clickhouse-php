@@ -16,12 +16,57 @@ use GuzzleHttp\Exception\ConnectException;
 
 class HttpTransport implements TransportInterface
 {
-    private Client $httpClient;
+    private ?Client $httpClient;
 
     public function __construct(
         private readonly Config $config,
     ) {
-        $this->httpClient = new Client([
+        $this->httpClient = null;
+    }
+
+    public function send(string $sql, array $bindings = []): mixed
+    {
+        $sql = $this->bindParams($sql, $bindings);
+        $this->httpClient ??= $this->createClient();
+
+        try {
+            $response = $this->httpClient->post('', ['body' => $sql . ' FORMAT JSON']);
+        } catch (ConnectException $e) {
+            throw new ConnectionException(
+                'ClickHouse connection failed: unable to connect to server.',
+                0,
+                $e,
+            );
+        }
+
+        $statusCode = $response->getStatusCode();
+        $body = (string) $response->getBody();
+
+        if ($statusCode !== 200) {
+            $truncated = mb_substr($body, 0, 500);
+            if (mb_strlen($body) > 500) {
+                $truncated .= '... (truncated)';
+            }
+            throw new QueryException(
+                sprintf('ClickHouse query error [%d]: %s', $statusCode, $truncated),
+                $sql,
+                $bindings,
+                $statusCode,
+            );
+        }
+
+        $decoded = json_decode($body, true);
+        return $decoded['data'] ?? $decoded;
+    }
+
+    public function close(): void
+    {
+        $this->httpClient = null;
+    }
+
+    private function createClient(): Client
+    {
+        return new Client([
             'base_uri' => sprintf(
                 '%s://%s:%d/',
                 $this->config->get('https', false) ? 'https' : 'http',
@@ -39,54 +84,50 @@ class HttpTransport implements TransportInterface
         ]);
     }
 
-    public function send(string $sql, array $bindings = []): mixed
-    {
-        $sql = $this->bindParams($sql, $bindings);
-
-        try {
-            $response = $this->httpClient->post('', ['body' => $sql . ' FORMAT JSON']);
-        } catch (ConnectException $e) {
-            throw new ConnectionException(
-                sprintf('ClickHouse connection failed: %s', $e->getMessage()),
-                0,
-                $e,
-            );
-        }
-
-        $statusCode = $response->getStatusCode();
-        $body = (string) $response->getBody();
-
-        if ($statusCode !== 200) {
-            throw new QueryException(
-                sprintf('ClickHouse query error [%d]: %s', $statusCode, $body),
-                $sql,
-                $bindings,
-                $statusCode,
-            );
-        }
-
-        $decoded = json_decode($body, true);
-        return $decoded['data'] ?? $decoded;
-    }
-
-    public function close(): void
-    {
-    }
-
     private function bindParams(string $sql, array $bindings): string
     {
         if (empty($bindings)) {
             return $sql;
         }
 
+        $result = '';
         $index = 0;
-        return preg_replace_callback('/\?/', function () use (&$index, $bindings) {
-            if (!array_key_exists($index, $bindings)) {
-                return '';
+        $inString = false;
+        $length = strlen($sql);
+
+        for ($i = 0; $i < $length; $i++) {
+            $char = $sql[$i];
+
+            if ($inString) {
+                $result .= $char;
+                if ($char === '\\') {
+                    if ($i + 1 < $length) {
+                        $result .= $sql[++$i];
+                    }
+                } elseif ($char === "'") {
+                    $inString = false;
+                }
+                continue;
             }
-            $value = $bindings[$index++];
-            return $this->quoteValue($value);
-        }, $sql);
+
+            if ($char === "'") {
+                $inString = true;
+                $result .= $char;
+                continue;
+            }
+
+            if ($char === '?') {
+                if (!array_key_exists($index, $bindings)) {
+                    throw new QueryException("Missing binding for placeholder #{$index}.", $sql, $bindings);
+                }
+                $result .= $this->quoteValue($bindings[$index++]);
+                continue;
+            }
+
+            $result .= $char;
+        }
+
+        return $result;
     }
 
     private function quoteValue(mixed $value): string

@@ -60,7 +60,8 @@ abstract class Model
 
     public static function find(int|string $id): ?static
     {
-        return static::where('id', $id)->first();
+        $row = static::where('id', $id)->first();
+        return $row ? new static($row) : null;
     }
 
     public static function all(): Collection

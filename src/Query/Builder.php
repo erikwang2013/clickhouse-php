@@ -18,7 +18,6 @@ class Builder
     public array $groups = [];
     public ?int $limit = null;
     public ?int $offset = null;
-    public array $bindings = [];
 
     public function __construct(
         private readonly ClientInterface $client,
@@ -53,6 +52,11 @@ class Builder
     {
         if (func_num_args() === 2) {
             [$value, $operator] = [$operator, '='];
+        }
+        $operator = strtolower($operator);
+        $allowed = ['=', '!=', '<>', '<', '>', '<=', '>=', 'like', 'not like', 'ilike', 'not ilike', 'in', 'not in', 'between', 'not between', 'glob', 'not glob'];
+        if (!in_array($operator, $allowed, true)) {
+            throw new \InvalidArgumentException("Unsupported operator: $operator");
         }
         $this->wheres[] = ['basic', $column, $operator, $value, $boolean];
         return $this;
@@ -104,7 +108,11 @@ class Builder
 
     public function orderBy(string $column, string $direction = 'ASC'): static
     {
-        $this->orders[] = [$column, strtoupper($direction)];
+        $direction = strtoupper($direction);
+        if (!in_array($direction, ['ASC', 'DESC'], true)) {
+            throw new \InvalidArgumentException("Invalid order direction: $direction");
+        }
+        $this->orders[] = [$column, $direction];
         return $this;
     }
 
@@ -129,15 +137,17 @@ class Builder
     public function get(): Result
     {
         $sql = $this->grammar->compileSelect($this);
-        return $this->client->query($sql, $this->bindings);
+        return $this->client->query($sql);
     }
 
     public function first(): mixed
     {
         $original = $this->limit;
-        $result = $this->limit(1)->get()->first();
-        $this->limit = $original;
-        return $result;
+        try {
+            return $this->limit(1)->get()->first();
+        } finally {
+            $this->limit = $original;
+        }
     }
 
     public function count(): int
@@ -170,16 +180,16 @@ class Builder
         $original = $this->columns;
         $expr = $column ? "$fn($column)" : "$fn(*)";
         $this->columns = ["$expr as aggregate"];
-        $row = $this->get()->first();
-        $this->columns = $original;
-        return $row['aggregate'] ?? null;
+        try {
+            return $this->get()->first()['aggregate'] ?? null;
+        } finally {
+            $this->columns = $original;
+        }
     }
 
     public function insert(array $data): int
     {
-        $sql = $this->grammar->compileInsert($this, $data);
-        $this->client->query($sql);
-        return isset($data[0]) && is_array($data[0]) ? count($data) : 1;
+        return $this->client->insert($this->from, $data);
     }
 
     public function delete(): int

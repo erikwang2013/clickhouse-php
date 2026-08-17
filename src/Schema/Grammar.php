@@ -15,13 +15,15 @@ class Grammar
     {
         $columns = array_map(fn(Column $c) => $c->toSql(), $blueprint->columns);
         $sql = 'CREATE TABLE IF NOT EXISTS ' . $this->quoteTable($table) . ' (' . implode(', ', $columns) . ')';
-        $sql .= ' ENGINE = ' . $blueprint->getEngine();
+        $sql .= ' ENGINE = ' . ($blueprint->getEngine() ?? 'MergeTree');
 
         if ($partitionBy = $blueprint->getPartitionBy()) {
             $sql .= ' PARTITION BY ' . $partitionBy;
         }
         if ($orderBy = $blueprint->getOrderBy()) {
             $sql .= ' ORDER BY (' . implode(', ', $orderBy) . ')';
+        } else {
+            $sql .= ' ORDER BY tuple()';
         }
         if ($primaryKey = $blueprint->getPrimaryKey()) {
             $sql .= ' PRIMARY KEY ' . $primaryKey;
@@ -55,7 +57,16 @@ class Grammar
 
     public function compileTableExists(string $table): string
     {
-        return 'EXISTS TABLE ' . $this->quoteTable($table);
+        $pos = strrpos($table, '.');
+        if ($pos === false) {
+            $database = 'default';
+            $name = $table;
+        } else {
+            $database = substr($table, 0, $pos);
+            $name = substr($table, $pos + 1);
+        }
+        return 'SELECT count() AS c FROM system.tables WHERE database = ' . Quoter::value($database)
+            . ' AND name = ' . Quoter::value($name);
     }
 
     public function compileTableList(string $database = 'default'): string

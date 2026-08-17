@@ -34,7 +34,7 @@ class Manager
         $name ??= $this->defaultConnection;
 
         if (isset($this->pools[$name])) {
-            return $this->pools[$name]->get();
+            return $this->connections[$name] ??= new PooledClient($this->pools[$name]);
         }
 
         if (isset($this->connections[$name])) {

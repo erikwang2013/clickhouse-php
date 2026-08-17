@@ -60,6 +60,22 @@ class Repository
         $this->client->query("ALTER TABLE {$table} DELETE WHERE migration = ?", [$migration]);
     }
 
+    public function waitForMutations(int $timeoutMs = 10000): void
+    {
+        $table = Quoter::value($this->table);
+        $sql = "SELECT count() AS c FROM system.mutations"
+            . " WHERE database = currentDatabase() AND table = {$table} AND is_done = 0";
+        $deadline = microtime(true) + $timeoutMs / 1000;
+
+        while (microtime(true) < $deadline) {
+            $row = $this->client->query($sql)->first();
+            if ((int) ($row['c'] ?? 0) === 0) {
+                return;
+            }
+            usleep(100_000);
+        }
+    }
+
     public function getMigrationsByBatch(int $batch): array
     {
         $table = $this->quoteTable();

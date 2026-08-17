@@ -31,7 +31,7 @@ class BuilderTest extends TestCase
         $builder->table('logs')->where('level', 'error')->limit(10);
         $sql = $builder->toSql();
         $this->assertStringContainsString('SELECT * FROM `logs`', $sql);
-        $this->assertStringContainsString("WHERE level = 'error'", $sql);
+        $this->assertStringContainsString("WHERE `level` = 'error'", $sql);
         $this->assertStringContainsString('LIMIT 10', $sql);
     }
 
@@ -40,7 +40,7 @@ class BuilderTest extends TestCase
         $builder = $this->createBuilder();
         $builder->table('logs')->whereIn('level', ['error', 'warn']);
         $sql = $builder->toSql();
-        $this->assertStringContainsString("level IN ('error', 'warn')", $sql);
+        $this->assertStringContainsString("`level` IN ('error', 'warn')", $sql);
     }
 
     public function testWhereBetweenSql(): void
@@ -48,7 +48,7 @@ class BuilderTest extends TestCase
         $builder = $this->createBuilder();
         $builder->table('logs')->whereBetween('date', ['2024-01-01', '2024-01-31']);
         $sql = $builder->toSql();
-        $this->assertStringContainsString("WHERE date BETWEEN '2024-01-01' AND '2024-01-31'", $sql);
+        $this->assertStringContainsString("WHERE `date` BETWEEN '2024-01-01' AND '2024-01-31'", $sql);
     }
 
     public function testWhereNullSql(): void
@@ -56,7 +56,7 @@ class BuilderTest extends TestCase
         $builder = $this->createBuilder();
         $builder->table('logs')->whereNull('deleted_at');
         $sql = $builder->toSql();
-        $this->assertStringContainsString('WHERE deleted_at IS NULL', $sql);
+        $this->assertStringContainsString('WHERE `deleted_at` IS NULL', $sql);
     }
 
     public function testOrderByAndGroupBy(): void
@@ -64,20 +64,17 @@ class BuilderTest extends TestCase
         $builder = $this->createBuilder();
         $builder->table('logs')->groupBy('level')->orderBy('count', 'DESC');
         $sql = $builder->toSql();
-        $this->assertStringContainsString('GROUP BY level', $sql);
-        $this->assertStringContainsString('ORDER BY count DESC', $sql);
+        $this->assertStringContainsString('GROUP BY `level`', $sql);
+        $this->assertStringContainsString('ORDER BY `count` DESC', $sql);
     }
 
-    public function testInsertSql(): void
+    public function testInsertDelegatesToClient(): void
     {
-        $builder = $this->createBuilder();
+        $client = Mockery::mock(ClientInterface::class);
+        $client->shouldReceive('insert')->once()->with('logs', [['name' => 'test', 'value' => 42]])->andReturn(1);
+        $builder = new Builder($client);
         $builder->table('logs');
-        $sql = (new \Erikwang2013\ClickHouse\Query\Grammar())->compileInsert($builder, [
-            ['name' => 'test', 'value' => 42],
-        ]);
-        $this->assertStringContainsString('INSERT INTO `logs`', $sql);
-        $this->assertStringContainsString("'test'", $sql);
-        $this->assertStringContainsString('42', $sql);
+        $this->assertSame(1, $builder->insert([['name' => 'test', 'value' => 42]]));
     }
 
     public function testWhereRawWithAndCombination(): void
@@ -85,7 +82,7 @@ class BuilderTest extends TestCase
         $builder = $this->createBuilder();
         $builder->table('logs')->where('status', 'active')->whereRaw('some_column > 0');
         $sql = $builder->toSql();
-        $this->assertStringContainsString("WHERE status = 'active' AND some_column > 0", $sql);
+        $this->assertStringContainsString("WHERE `status` = 'active' AND some_column > 0", $sql);
     }
 
     public function testExpressionNotQuoted(): void
@@ -93,7 +90,7 @@ class BuilderTest extends TestCase
         $builder = $this->createBuilder();
         $builder->table('logs')->where('date', '>=', new Expression('today()'));
         $sql = $builder->toSql();
-        $this->assertStringContainsString('WHERE date >= today()', $sql);
+        $this->assertStringContainsString('WHERE `date` >= today()', $sql);
     }
 
     public function testCountDoesNotMutateColumns(): void
@@ -119,7 +116,7 @@ class BuilderTest extends TestCase
         $builder = $this->createBuilder();
         $builder->table('logs')->whereNotNull('deleted_at');
         $sql = $builder->toSql();
-        $this->assertStringContainsString('WHERE deleted_at IS NOT NULL', $sql);
+        $this->assertStringContainsString('WHERE `deleted_at` IS NOT NULL', $sql);
     }
 
     public function testOrWhereSql(): void
@@ -127,7 +124,7 @@ class BuilderTest extends TestCase
         $builder = $this->createBuilder();
         $builder->table('logs')->where('level', 'error')->orWhere('level', 'warn');
         $sql = $builder->toSql();
-        $this->assertStringContainsString("level = 'error' OR level = 'warn'", $sql);
+        $this->assertStringContainsString("`level` = 'error' OR `level` = 'warn'", $sql);
     }
 
     public function testWhereNotInSql(): void
@@ -135,7 +132,7 @@ class BuilderTest extends TestCase
         $builder = $this->createBuilder();
         $builder->table('logs')->whereNotIn('level', ['debug', 'trace']);
         $sql = $builder->toSql();
-        $this->assertStringContainsString("level NOT IN ('debug', 'trace')", $sql);
+        $this->assertStringContainsString("`level` NOT IN ('debug', 'trace')", $sql);
     }
 
     public function testOffsetSql(): void
@@ -154,7 +151,7 @@ class BuilderTest extends TestCase
         $builder->table('logs')->where('level', 'debug');
         $sql = $grammar->compileDelete($builder);
         $this->assertStringContainsString('ALTER TABLE `logs` DELETE', $sql);
-        $this->assertStringContainsString("WHERE level = 'debug'", $sql);
+        $this->assertStringContainsString("WHERE `level` = 'debug'", $sql);
     }
 
     public function testEmptyFromThrows(): void
@@ -170,6 +167,46 @@ class BuilderTest extends TestCase
         $builder->table('logs')->whereBetween('date', ['2024-01-01']);
         $this->expectException(\InvalidArgumentException::class);
         $builder->toSql();
+    }
+
+    public function testWhereInEmptyGeneratesFalseCondition(): void
+    {
+        $builder = $this->createBuilder();
+        $builder->table('logs')->whereIn('level', []);
+        $sql = $builder->toSql();
+        $this->assertStringContainsString('0 = 1', $sql);
+        $this->assertStringNotContainsString('IN ()', $sql);
+    }
+
+    public function testWhereNotInEmptyGeneratesTrueCondition(): void
+    {
+        $builder = $this->createBuilder();
+        $builder->table('logs')->whereNotIn('level', []);
+        $sql = $builder->toSql();
+        $this->assertStringContainsString('1 = 1', $sql);
+    }
+
+    public function testInvalidOperatorThrows(): void
+    {
+        $builder = $this->createBuilder();
+        $this->expectException(\InvalidArgumentException::class);
+        $builder->where('level', 'INJECT_ME', 'x');
+    }
+
+    public function testFirstRestoresLimitOnError(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $client->shouldReceive('query')->once()->andThrow(new QueryException('boom', 'SELECT 1'));
+        $builder = new Builder($client);
+        $builder->table('logs');
+
+        try {
+            $builder->first();
+            $this->fail('expected QueryException');
+        } catch (QueryException) {
+        }
+
+        $this->assertStringNotContainsString('LIMIT 1', $builder->toSql());
     }
 
     protected function tearDown(): void

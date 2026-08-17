@@ -44,4 +44,31 @@ class HttpTransportTest extends TestCase
 
         $this->assertSame('SELECT * FROM t WHERE col = NULL', $result);
     }
+
+    public function testBindParamsSkipsQuestionMarkInsideStringLiteral(): void
+    {
+        $config = new Config([
+            'host' => 'localhost', 'port' => 8123,
+            'username' => 'default', 'password' => '', 'database' => 'default',
+        ]);
+        $transport = new HttpTransport($config);
+
+        $ref = new \ReflectionMethod($transport, 'bindParams');
+        $result = $ref->invoke($transport, "SELECT * FROM t WHERE note = 'what?' AND id = ?", [5]);
+
+        $this->assertSame("SELECT * FROM t WHERE note = 'what?' AND id = 5", $result);
+    }
+
+    public function testBindParamsMissingBindingThrows(): void
+    {
+        $config = new Config([
+            'host' => 'localhost', 'port' => 8123,
+            'username' => 'default', 'password' => '', 'database' => 'default',
+        ]);
+        $transport = new HttpTransport($config);
+
+        $ref = new \ReflectionMethod($transport, 'bindParams');
+        $this->expectException(\Erikwang2013\ClickHouse\Exceptions\QueryException::class);
+        $ref->invoke($transport, 'SELECT * FROM t WHERE a = ? AND b = ?', [1]);
+    }
 }

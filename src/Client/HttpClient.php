@@ -45,30 +45,34 @@ class HttpClient implements ClientInterface
             return 0;
         }
 
-        $columns = array_keys($data[0] ?? $data);
-        $values = [];
+        $isSingle = isset($data[0]) && is_array($data[0]) ? false : true;
+        $rows = $isSingle ? [$data] : $data;
 
-        if (isset($data[0]) && is_array($data[0])) {
-            foreach ($data as $row) {
+        $columns = array_keys($rows[0]);
+        $columnList = implode(', ', array_map(fn($c) => Quoter::column((string) $c), $columns));
+
+        $tableQuoted = Quoter::table($table);
+        $inserted = 0;
+
+        foreach (array_chunk($rows, 1000) as $chunk) {
+            $values = [];
+            foreach ($chunk as $row) {
                 $escaped = array_map(fn($v) => $this->escape($v), array_values($row));
                 $values[] = '(' . implode(', ', $escaped) . ')';
             }
-        } else {
-            $escaped = array_map(fn($v) => $this->escape($v), array_values($data));
-            $values[] = '(' . implode(', ', $escaped) . ')';
+
+            $sql = sprintf(
+                'INSERT INTO %s (%s) VALUES %s',
+                $tableQuoted,
+                $columnList,
+                implode(', ', $values),
+            );
+
+            $this->query($sql);
+            $inserted += count($values);
         }
 
-        $tableQuoted = Quoter::table($table);
-
-        $sql = sprintf(
-            'INSERT INTO %s (%s) VALUES %s',
-            $tableQuoted,
-            implode(', ', array_map(fn($c) => "`$c`", $columns)),
-            implode(', ', $values),
-        );
-
-        $this->query($sql);
-        return count($values);
+        return $inserted;
     }
 
     public function ping(): bool

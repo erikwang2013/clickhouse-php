@@ -85,7 +85,10 @@ class Migrator
 
     public function refresh(): void
     {
-        $this->rollback();
+        if ($this->rollback() !== []) {
+            // ALTER TABLE ... DELETE 是异步 mutation，需等其完成，否则 run() 仍会读到未删除的记录
+            $this->repository->waitForMutations();
+        }
         $this->run();
     }
 

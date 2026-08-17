@@ -28,29 +28,6 @@ class Grammar
             . $this->compileLimit($builder);
     }
 
-    public function compileInsert(Builder $builder, array $data): string
-    {
-        $columns = array_keys($data[0] ?? $data);
-        $values = [];
-
-        if (isset($data[0]) && is_array($data[0])) {
-            foreach ($data as $row) {
-                $escaped = array_map(fn($v) => $this->quote($v), array_values($row));
-                $values[] = '(' . implode(', ', $escaped) . ')';
-            }
-        } else {
-            $escaped = array_map(fn($v) => $this->quote($v), array_values($data));
-            $values[] = '(' . implode(', ', $escaped) . ')';
-        }
-
-        return sprintf(
-            'INSERT INTO %s (%s) VALUES %s',
-            $this->quoteTable($builder->from),
-            implode(', ', array_map(fn($c) => "`$c`", $columns)),
-            implode(', ', $values),
-        );
-    }
-
     public function compileDelete(Builder $builder): string
     {
         $sql = 'ALTER TABLE ' . $this->quoteTable($builder->from) . ' DELETE';
@@ -75,19 +52,24 @@ class Grammar
             }
 
             if ($type === 'basic') {
-                $clauses[] = $prefix . $column . ' ' . $operator . ' ' . $this->quote($value);
+                $clauses[] = $prefix . Quoter::column($column) . ' ' . $operator . ' ' . $this->quote($value);
             } elseif ($type === 'in') {
-                $values = implode(', ', array_map(fn($v) => $this->quote($v), (array) $value));
-                $not = $operator === 'not in' ? 'NOT ' : '';
-                $clauses[] = $prefix . $column . ' ' . $not . 'IN (' . $values . ')';
+                $values = (array) $value;
+                if ($values === []) {
+                    $clauses[] = $prefix . ($operator === 'not in' ? '1 = 1' : '0 = 1');
+                } else {
+                    $quoted = implode(', ', array_map(fn($v) => $this->quote($v), $values));
+                    $not = $operator === 'not in' ? 'NOT ' : '';
+                    $clauses[] = $prefix . Quoter::column($column) . ' ' . $not . 'IN (' . $quoted . ')';
+                }
             } elseif ($type === 'between') {
                 if (count((array) $value) !== 2) {
                     throw new \InvalidArgumentException('whereBetween requires exactly two values.');
                 }
-                $clauses[] = $prefix . $column . ' BETWEEN ' . $this->quote($value[0]) . ' AND ' . $this->quote($value[1]);
+                $clauses[] = $prefix . Quoter::column($column) . ' BETWEEN ' . $this->quote($value[0]) . ' AND ' . $this->quote($value[1]);
             } elseif ($type === 'null') {
                 $not = $operator === 'not null' ? 'NOT ' : '';
-                $clauses[] = $prefix . $column . ' IS ' . $not . 'NULL';
+                $clauses[] = $prefix . Quoter::column($column) . ' IS ' . $not . 'NULL';
             }
         }
 
@@ -99,7 +81,7 @@ class Grammar
         if (empty($builder->groups)) {
             return '';
         }
-        return ' GROUP BY ' . implode(', ', $builder->groups);
+        return ' GROUP BY ' . implode(', ', array_map(fn($c) => Quoter::column($c), $builder->groups));
     }
 
     private function compileOrders(Builder $builder): string
@@ -109,7 +91,7 @@ class Grammar
         }
         $orders = [];
         foreach ($builder->orders as [$column, $direction]) {
-            $orders[] = $column . ' ' . $direction;
+            $orders[] = Quoter::column($column) . ' ' . $direction;
         }
         return ' ORDER BY ' . implode(', ', $orders);
     }

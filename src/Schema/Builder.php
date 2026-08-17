@@ -49,12 +49,8 @@ class Builder
 
     public function hasTable(string $table): bool
     {
-        try {
-            $this->client->query($this->grammar->compileTableExists($table));
-            return true;
-        } catch (\Throwable) {
-            return false;
-        }
+        $row = $this->client->query($this->grammar->compileTableExists($table))->first();
+        return (int) ($row['c'] ?? 0) > 0;
     }
 
     public function getTables(string $database = 'default'): array
