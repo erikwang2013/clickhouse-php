@@ -7,9 +7,9 @@
 
 namespace Erikwang2013\ClickHouse\ThinkPHP;
 
-use think\Facade;
+use think\Facade as ThinkFacade;
 
-class Facade extends Facade
+class Facade extends ThinkFacade
 {
     protected static function getFacadeClass(): string
     {

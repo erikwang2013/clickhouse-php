@@ -15,8 +15,8 @@ class NoPool implements PoolInterface
     private int $activeCount = 0;
 
     public function __construct(
-        private readonly \Closure $factory,
-        private readonly array $config = [],
+        private \Closure $factory,
+        private array $config = [],
     ) {
     }
 

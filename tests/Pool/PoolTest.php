@@ -34,6 +34,51 @@ class PoolTest extends TestCase
         $this->assertSame(0, $pool->stats()['active']);
     }
 
+    public function testNoPoolFactoryCalledPerGet(): void
+    {
+        $calls = 0;
+        $pool = new NoPool(function () use (&$calls) {
+            $calls++;
+            return Mockery::mock(ClientInterface::class);
+        });
+
+        $pool->get();
+        $pool->get();
+
+        $this->assertSame(2, $calls);
+    }
+
+    public function testNoPoolPutDoesNotGoBelowZero(): void
+    {
+        $pool = new NoPool(fn() => Mockery::mock(ClientInterface::class));
+
+        $pool->put(Mockery::mock(ClientInterface::class));
+
+        $this->assertSame(0, $pool->stats()['active']);
+    }
+
+    public function testNoPoolCloseResetsStats(): void
+    {
+        $pool = new NoPool(fn() => Mockery::mock(ClientInterface::class));
+        $pool->get();
+        $pool->get();
+
+        $pool->close();
+
+        $this->assertSame(['active' => 0, 'idle' => 0, 'total' => 0], $pool->stats());
+    }
+
+    public function testNoPoolDefaultsAllowUnlimitedGets(): void
+    {
+        $pool = new NoPool(fn() => Mockery::mock(ClientInterface::class));
+
+        for ($i = 0; $i < 100; $i++) {
+            $pool->get();
+        }
+
+        $this->assertSame(100, $pool->stats()['active']);
+    }
+
     public function testNoPoolMaxConnections(): void
     {
         $client = Mockery::mock(ClientInterface::class);

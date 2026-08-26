@@ -23,9 +23,10 @@ class Manager
     private string $defaultConnection;
 
     public function __construct(
-        private readonly array $config,
-        private readonly LoggerInterface $logger = new NullLogger(),
+        private array $config,
+        private ?LoggerInterface $logger = null,
     ) {
+        $this->logger ??= new NullLogger();
         $this->defaultConnection = $config['default'] ?? 'default';
     }
 

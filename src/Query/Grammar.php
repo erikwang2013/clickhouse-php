@@ -66,7 +66,8 @@ class Grammar
                 if (count((array) $value) !== 2) {
                     throw new \InvalidArgumentException('whereBetween requires exactly two values.');
                 }
-                $clauses[] = $prefix . Quoter::column($column) . ' BETWEEN ' . $this->quote($value[0]) . ' AND ' . $this->quote($value[1]);
+                $not = $operator === 'not between' ? 'NOT ' : '';
+                $clauses[] = $prefix . Quoter::column($column) . ' ' . $not . 'BETWEEN ' . $this->quote($value[0]) . ' AND ' . $this->quote($value[1]);
             } elseif ($type === 'null') {
                 $not = $operator === 'not null' ? 'NOT ' : '';
                 $clauses[] = $prefix . Quoter::column($column) . ' IS ' . $not . 'NULL';

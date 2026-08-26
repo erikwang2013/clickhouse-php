@@ -12,9 +12,10 @@ use Erikwang2013\ClickHouse\Client\ClientInterface;
 class Builder
 {
     public function __construct(
-        private readonly ClientInterface $client,
-        private readonly Grammar $grammar = new Grammar(),
+        private ClientInterface $client,
+        private ?Grammar $grammar = null,
     ) {
+        $this->grammar ??= new Grammar();
     }
 
     public function create(string $table, \Closure $callback): void

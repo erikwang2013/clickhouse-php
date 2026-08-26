@@ -19,7 +19,7 @@ class HttpTransport implements TransportInterface
     private ?Client $httpClient;
 
     public function __construct(
-        private readonly Config $config,
+        private Config $config,
     ) {
         $this->httpClient = null;
     }

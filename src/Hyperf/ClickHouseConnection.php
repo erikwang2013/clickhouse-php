@@ -20,7 +20,7 @@ class ClickHouseConnection
     private string $connectionName;
 
     public function __construct(
-        private readonly PoolFactory $poolFactory,
+        private PoolFactory $poolFactory,
     ) {
         $this->connectionName = 'default';
     }

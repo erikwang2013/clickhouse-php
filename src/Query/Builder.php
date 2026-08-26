@@ -20,9 +20,10 @@ class Builder
     public ?int $offset = null;
 
     public function __construct(
-        private readonly ClientInterface $client,
-        private readonly Grammar $grammar = new Grammar(),
+        private ClientInterface $client,
+        private ?Grammar $grammar = null,
     ) {
+        $this->grammar ??= new Grammar();
     }
 
     public function table(string $table): static
@@ -58,7 +59,12 @@ class Builder
         if (!in_array($operator, $allowed, true)) {
             throw new \InvalidArgumentException("Unsupported operator: $operator");
         }
-        $this->wheres[] = ['basic', $column, $operator, $value, $boolean];
+        $type = match (true) {
+            in_array($operator, ['in', 'not in'], true) => 'in',
+            in_array($operator, ['between', 'not between'], true) => 'between',
+            default => 'basic',
+        };
+        $this->wheres[] = [$type, $column, $operator, $value, $boolean];
         return $this;
     }
 

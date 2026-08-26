@@ -13,8 +13,8 @@ use Erikwang2013\ClickHouse\Support\Quoter;
 class Repository
 {
     public function __construct(
-        private readonly ClientInterface $client,
-        private readonly string $table = 'migrations',
+        private ClientInterface $client,
+        private string $table = 'migrations',
     ) {
     }
 

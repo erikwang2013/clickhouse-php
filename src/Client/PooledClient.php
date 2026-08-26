@@ -13,7 +13,7 @@ use Erikwang2013\ClickHouse\Query\Result;
 class PooledClient implements ClientInterface
 {
     public function __construct(
-        private readonly PoolInterface $pool,
+        private PoolInterface $pool,
     ) {
     }
 

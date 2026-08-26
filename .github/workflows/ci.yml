@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: [8.0, 8.1, 8.2, 8.3, 8.4, 8.5]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+
+      - name: Install dependencies
+        if: ${{ matrix.php != '8.0' }}
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Run PHPUnit
+        if: ${{ matrix.php != '8.0' }}
+        run: vendor/bin/phpunit --no-coverage
+
+      # phpunit.xml is PHPUnit-10 format, which phpunit 9.6 (the version
+      # composer resolves on PHP 8.0) cannot parse, so 8.0 gets syntax and
+      # smoke checks instead of the full suite.
+      # --ignore-platform-req=php: composer.json currently declares php >=8.1;
+      # harmless no-op once the constraint is relaxed to >=8.0.
+      - name: Install runtime dependencies (PHP 8.0)
+        if: ${{ matrix.php == '8.0' }}
+        run: composer install --no-interaction --prefer-dist --no-dev --ignore-platform-req=php
+
+      - name: Syntax check (PHP 8.0)
+        if: ${{ matrix.php == '8.0' }}
+        run: find src -name '*.php' -exec php -l {} \;
+
+      - name: Smoke test (PHP 8.0)
+        if: ${{ matrix.php == '8.0' }}
+        run: |
+          php <<'PHP'
+          <?php
+          require 'vendor/autoload.php';
+
+          use Erikwang2013\ClickHouse\Client\ClientInterface;
+          use Erikwang2013\ClickHouse\Pool\NoPool;
+          use Erikwang2013\ClickHouse\Query\Builder as QueryBuilder;
+          use Erikwang2013\ClickHouse\Query\Result;
+          use Erikwang2013\ClickHouse\Schema\Builder as SchemaBuilder;
+          use Erikwang2013\ClickHouse\Support\Config;
+
+          $client = new class implements ClientInterface {
+              public function query(string $sql, array $bindings = []): Result
+              {
+                  return new Result([]);
+              }
+
+              public function select(string $sql, array $bindings = []): array
+              {
+                  return [];
+              }
+
+              public function insert(string $table, array $data): int
+              {
+                  return 1;
+              }
+
+              public function ping(): bool
+              {
+                  return true;
+              }
+          };
+
+          new Config(['host' => 'localhost', 'port' => 8123]);
+          new QueryBuilder($client);
+          new SchemaBuilder($client);
+          new NoPool(static fn () => $client);
+          new Result([['id' => 1]]);
+
+          echo "OK\n";
+          PHP

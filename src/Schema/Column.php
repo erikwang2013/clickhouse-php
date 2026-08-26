@@ -7,18 +7,20 @@
 
 namespace Erikwang2013\ClickHouse\Schema;
 
+use Erikwang2013\ClickHouse\Support\Quoter;
+
 class Column
 {
     public function __construct(
-        public readonly string $name,
-        public readonly string $type,
-        public readonly array $modifiers = [],
+        public string $name,
+        public string $type,
+        public array $modifiers = [],
     ) {
     }
 
     public function toSql(): string
     {
-        $sql = "`{$this->name}` {$this->type}";
+        $sql = Quoter::column($this->name) . ' ' . $this->type;
         foreach ($this->modifiers as $modifier) {
             $sql .= ' ' . $modifier;
         }

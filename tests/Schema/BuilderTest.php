@@ -84,6 +84,143 @@ class BuilderTest extends TestCase
         $this->assertTrue($builder->hasTable('logs'));
     }
 
+    public function testHasTableFalseWhenNoRow(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $client->shouldReceive('query')->once()->andReturn(new Result([]));
+        $builder = new \Erikwang2013\ClickHouse\Schema\Builder($client);
+        $this->assertFalse($builder->hasTable('logs'));
+    }
+
+    public function testHasTableFalseWhenCKeyMissing(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $client->shouldReceive('query')->once()->andReturn(new Result([['name' => 'logs']]));
+        $builder = new \Erikwang2013\ClickHouse\Schema\Builder($client);
+        $this->assertFalse($builder->hasTable('logs'));
+    }
+
+    public function testHasTableSendsQualifiedExistsQuery(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $client->shouldReceive('query')->once()
+            ->with("SELECT count() AS c FROM system.tables WHERE database = 'analytics' AND name = 'logs'")
+            ->andReturn(new Result([['c' => 0]]));
+        $builder = new \Erikwang2013\ClickHouse\Schema\Builder($client);
+        $this->assertFalse($builder->hasTable('analytics.logs'));
+    }
+
+    public function testCreateExecutesCompiledSql(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $sql = null;
+        $client->shouldReceive('query')->once()
+            ->with(Mockery::capture($sql))
+            ->andReturn(new Result([]));
+        $builder = new \Erikwang2013\ClickHouse\Schema\Builder($client);
+
+        $builder->create('logs', function (Blueprint $blueprint) {
+            $blueprint->string('name');
+            $blueprint->uint8('level');
+        });
+
+        $this->assertSame(
+            'CREATE TABLE IF NOT EXISTS `logs` (`name` String, `level` UInt8) ENGINE = MergeTree ORDER BY tuple()',
+            $sql,
+        );
+    }
+
+    public function testCreateSkipsQueryWhenBlueprintHasNoColumns(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $client->shouldNotReceive('query');
+        $builder = new \Erikwang2013\ClickHouse\Schema\Builder($client);
+
+        $builder->create('logs', function (Blueprint $blueprint) {
+            $blueprint->engine('MergeTree');
+        });
+
+        $this->expectNotToPerformAssertions();
+    }
+
+    public function testDropExecutesSql(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $sql = null;
+        $client->shouldReceive('query')->once()
+            ->with(Mockery::capture($sql))
+            ->andReturn(new Result([]));
+        $builder = new \Erikwang2013\ClickHouse\Schema\Builder($client);
+        $builder->drop('logs');
+
+        $this->assertSame('DROP TABLE IF EXISTS `logs`', $sql);
+    }
+
+    public function testAlterExecutesCompiledSql(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $sql = null;
+        $client->shouldReceive('query')->once()
+            ->with(Mockery::capture($sql))
+            ->andReturn(new Result([]));
+        $builder = new \Erikwang2013\ClickHouse\Schema\Builder($client);
+
+        $builder->alter('logs', function (Blueprint $blueprint) {
+            $blueprint->string('source');
+            $blueprint->nullable('description', 'String');
+        });
+
+        $this->assertSame(
+            'ALTER TABLE `logs` ADD COLUMN `source` String, ADD COLUMN `description` Nullable(String)',
+            $sql,
+        );
+    }
+
+    public function testAlterSkipsQueryWhenBlueprintHasNoColumns(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $client->shouldNotReceive('query');
+        $builder = new \Erikwang2013\ClickHouse\Schema\Builder($client);
+
+        $builder->alter('logs', function (Blueprint $blueprint) {
+        });
+
+        $this->expectNotToPerformAssertions();
+    }
+
+    public function testGetTablesDelegatesToSelect(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $client->shouldReceive('select')->once()
+            ->with('SHOW TABLES FROM `analytics`')
+            ->andReturn([['name' => 'logs'], ['name' => 'events']]);
+        $builder = new \Erikwang2013\ClickHouse\Schema\Builder($client);
+
+        $this->assertSame([['name' => 'logs'], ['name' => 'events']], $builder->getTables('analytics'));
+    }
+
+    public function testGetTablesDefaultsToDefaultDatabase(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $client->shouldReceive('select')->once()
+            ->with('SHOW TABLES FROM `default`')
+            ->andReturn([]);
+        $builder = new \Erikwang2013\ClickHouse\Schema\Builder($client);
+
+        $this->assertSame([], $builder->getTables());
+    }
+
+    public function testGetTableInfoDelegatesToSelect(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $client->shouldReceive('select')->once()
+            ->with('DESCRIBE TABLE `logs`')
+            ->andReturn([['name' => 'id', 'type' => 'UInt64']]);
+        $builder = new \Erikwang2013\ClickHouse\Schema\Builder($client);
+
+        $this->assertSame([['name' => 'id', 'type' => 'UInt64']], $builder->getTableInfo('logs'));
+    }
+
     protected function tearDown(): void
     {
         Mockery::close();

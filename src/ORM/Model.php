@@ -77,7 +77,7 @@ abstract class Model
 
     public static function where(string $column, mixed $operator = null, mixed $value = null): Builder
     {
-        return static::query()->where($column, $operator, $value);
+        return static::query()->where(...func_get_args());
     }
 
     public static function __callStatic(string $method, array $args): mixed

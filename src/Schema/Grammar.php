@@ -71,8 +71,7 @@ class Grammar
 
     public function compileTableList(string $database = 'default'): string
     {
-        $db = implode('.', array_map(fn($p) => "`$p`", explode('.', $database)));
-        return "SHOW TABLES FROM $db";
+        return 'SHOW TABLES FROM ' . Quoter::table($database);
     }
 
     public function compileTableInfo(string $table): string

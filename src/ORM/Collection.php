@@ -10,7 +10,7 @@ namespace Erikwang2013\ClickHouse\ORM;
 class Collection implements \IteratorAggregate, \Countable, \ArrayAccess
 {
     public function __construct(
-        private readonly array $items,
+        private array $items,
     ) {
     }
 

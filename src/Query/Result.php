@@ -12,11 +12,11 @@ class Result implements \IteratorAggregate, \Countable, \ArrayAccess
     private int $rowCount;
 
     public function __construct(
-        private readonly array $data,
-        int $rowCount = 0,
-        private readonly ?array $meta = null,
+        private array $data,
+        ?int $rowCount = null,
+        private ?array $meta = null,
     ) {
-        $this->rowCount = $rowCount ?: count($data);
+        $this->rowCount = $rowCount ?? count($data);
     }
 
     public function getIterator(): \Traversable

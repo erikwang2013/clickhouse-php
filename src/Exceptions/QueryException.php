@@ -11,8 +11,8 @@ class QueryException extends ClickHouseException
 {
     public function __construct(
         string $message,
-        private readonly string $sql,
-        private readonly array $bindings = [],
+        private string $sql,
+        private array $bindings = [],
         int $code = 0,
         ?\Throwable $previous = null,
     ) {

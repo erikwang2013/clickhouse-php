@@ -18,7 +18,7 @@ class PoolFactory
     private array $pools = [];
 
     public function __construct(
-        private readonly array $config,
+        private array $config,
     ) {
     }
 

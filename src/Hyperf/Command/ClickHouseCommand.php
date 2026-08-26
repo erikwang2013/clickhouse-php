@@ -18,7 +18,7 @@ class ClickHouseCommand extends Command
     protected string $description = 'List all tables in ClickHouse';
 
     public function __construct(
-        private readonly ClickHouseConnection $clickhouse,
+        private ClickHouseConnection $clickhouse,
     ) {
         parent::__construct();
     }

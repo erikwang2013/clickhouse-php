@@ -10,7 +10,7 @@ namespace Erikwang2013\ClickHouse\Support;
 class Config
 {
     public function __construct(
-        private readonly array $config
+        private array $config
     ) {
     }
 

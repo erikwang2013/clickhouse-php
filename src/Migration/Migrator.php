@@ -14,9 +14,9 @@ use Erikwang2013\ClickHouse\Schema\Builder;
 class Migrator
 {
     public function __construct(
-        private readonly ClientInterface $client,
-        private readonly Repository $repository,
-        private readonly string $path,
+        private ClientInterface $client,
+        private Repository $repository,
+        private string $path,
     ) {
     }
 
@@ -104,7 +104,7 @@ class Migrator
         $path = $this->path . '/' . $file . '.php';
 
         if (!file_exists($path)) {
-            throw new QueryException("Migration file not found: {$path}");
+            throw new QueryException("Migration file not found: {$path}", $path);
         }
 
         require_once $path;
@@ -114,7 +114,8 @@ class Migrator
 
         if (!class_exists($class)) {
             throw new QueryException(
-                "Migration class [{$class}] not found in file [{$path}]"
+                "Migration class [{$class}] not found in file [{$path}]",
+                $path,
             );
         }
 

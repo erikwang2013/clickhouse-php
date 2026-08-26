@@ -186,6 +186,20 @@ class BuilderTest extends TestCase
         $this->assertStringContainsString('1 = 1', $sql);
     }
 
+    public function testWhereWithInOperatorCompilesAsInClause(): void
+    {
+        $builder = $this->createBuilder();
+        $builder->table('logs')->where('level', 'in', ['error', 'warn']);
+        $this->assertStringContainsString("`level` IN ('error', 'warn')", $builder->toSql());
+    }
+
+    public function testWhereWithNotBetweenOperatorCompilesAsNotBetween(): void
+    {
+        $builder = $this->createBuilder();
+        $builder->table('logs')->where('date', 'not between', ['2024-01-01', '2024-01-31']);
+        $this->assertStringContainsString("`date` NOT BETWEEN '2024-01-01' AND '2024-01-31'", $builder->toSql());
+    }
+
     public function testInvalidOperatorThrows(): void
     {
         $builder = $this->createBuilder();
@@ -207,6 +221,139 @@ class BuilderTest extends TestCase
         }
 
         $this->assertStringNotContainsString('LIMIT 1', $builder->toSql());
+    }
+
+    public function testFromAlias(): void
+    {
+        $builder = $this->createBuilder();
+        $builder->from('logs');
+        $this->assertStringContainsString('FROM `logs`', $builder->toSql());
+    }
+
+    public function testSelectArrayAndMultipleArgs(): void
+    {
+        $builder = $this->createBuilder();
+        $builder->table('logs')->select(['id', 'name']);
+        $this->assertStringContainsString('SELECT id, name FROM', $builder->toSql());
+
+        $builder2 = $this->createBuilder();
+        $builder2->table('logs')->select('id', 'name');
+        $this->assertStringContainsString('SELECT id, name FROM', $builder2->toSql());
+    }
+
+    public function testSelectRawAppendsColumn(): void
+    {
+        $builder = $this->createBuilder();
+        $builder->table('logs')->select('id')->selectRaw('COUNT(*) as total');
+        $this->assertStringContainsString('SELECT id, COUNT(*) as total FROM', $builder->toSql());
+    }
+
+    public function testWhereLikeOperators(): void
+    {
+        $builder = $this->createBuilder();
+        $builder->table('logs')->where('name', 'like', 'a%')->where('tag', 'not like', 'x%')->where('code', 'ilike', 'b%')->where('path', 'glob', '*c');
+        $sql = $builder->toSql();
+        $this->assertStringContainsString("`name` like 'a%'", $sql);
+        $this->assertStringContainsString("`tag` not like 'x%'", $sql);
+        $this->assertStringContainsString("`code` ilike 'b%'", $sql);
+        $this->assertStringContainsString("`path` glob '*c'", $sql);
+    }
+
+    public function testOrWhereTwoArgs(): void
+    {
+        $builder = $this->createBuilder();
+        $builder->table('logs')->where('level', 'error')->orWhere('level', 'warn');
+        $sql = $builder->toSql();
+        $this->assertStringContainsString("`level` = 'error' OR `level` = 'warn'", $sql);
+    }
+
+    public function testOrderByInvalidDirectionThrows(): void
+    {
+        $builder = $this->createBuilder();
+        $this->expectException(\InvalidArgumentException::class);
+        $builder->orderBy('count', 'SIDEWAYS');
+    }
+
+    public function testGroupByMultipleArguments(): void
+    {
+        $builder = $this->createBuilder();
+        $builder->table('logs')->groupBy('level', 'status');
+        $sql = $builder->toSql();
+        $this->assertStringContainsString('GROUP BY `level`, `status`', $sql);
+    }
+
+    public function testGetReturnsResultAndPassesSql(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $client->shouldReceive('query')->once()->with('SELECT * FROM `logs`')->andReturn(new Result([['id' => 1]]));
+        $builder = new Builder($client);
+        $result = $builder->table('logs')->get();
+        $this->assertInstanceOf(Result::class, $result);
+        $this->assertSame(['id' => 1], $result->first());
+    }
+
+    public function testFirstReturnsNullOnEmptyResult(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $client->shouldReceive('query')->once()->andReturn(new Result([]));
+        $builder = new Builder($client);
+        $this->assertNull($builder->table('logs')->first());
+    }
+
+    public function testSumAvgMinMaxAggregates(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $client->shouldReceive('query')->andReturn(new Result([['aggregate' => 5]]));
+        $builder = new Builder($client);
+        $builder->table('logs');
+        $this->assertSame(5.0, $builder->sum('price'));
+        $this->assertSame(5.0, $builder->avg('price'));
+        $this->assertSame(5, $builder->min('price'));
+        $this->assertSame(5, $builder->max('price'));
+    }
+
+    public function testCountReturnsZeroOnEmptyResult(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $client->shouldReceive('query')->once()->andReturn(new Result([]));
+        $builder = new Builder($client);
+        $this->assertSame(0, $builder->table('logs')->count());
+    }
+
+    public function testAggregatesReturnNullOnEmptyResult(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $client->shouldReceive('query')->andReturn(new Result([]));
+        $builder = new Builder($client);
+        $builder->table('logs');
+        $this->assertNull($builder->min('price'));
+        $this->assertNull($builder->max('price'));
+        $this->assertSame(0.0, $builder->sum('price'));
+    }
+
+    public function testAggregateRestoresColumnsOnError(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $client->shouldReceive('query')->once()->andThrow(new QueryException('boom', 'SELECT 1'));
+        $builder = new Builder($client);
+        $builder->table('logs')->select('id', 'name');
+
+        try {
+            $builder->count();
+            $this->fail('expected QueryException');
+        } catch (QueryException) {
+        }
+
+        $this->assertStringContainsString('SELECT id, name FROM', $builder->toSql());
+    }
+
+    public function testDeleteMethodCallsClientAndReturnsCount(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $client->shouldReceive('query')->once()->with('ALTER TABLE `logs` DELETE WHERE `level` = \'debug\'')->andReturn(new Result([], 3));
+        $builder = new Builder($client);
+        $builder->table('logs')->where('level', 'debug');
+        $this->assertSame(3, $builder->delete());
     }
 
     protected function tearDown(): void

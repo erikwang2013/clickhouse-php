@@ -9,7 +9,6 @@ namespace Erikwang2013\ClickHouse\Tests\Support;
 
 use Erikwang2013\ClickHouse\Support\Arr;
 use Erikwang2013\ClickHouse\Support\Config;
-use Erikwang2013\ClickHouse\Support\Str;
 use PHPUnit\Framework\TestCase;
 
 class ConfigTest extends TestCase
@@ -31,5 +30,29 @@ class ConfigTest extends TestCase
     {
         $config = new Config(['connections' => ['default' => ['host' => 'localhost']]]);
         $this->assertSame('localhost', $config->get('connections.default.host'));
+    }
+
+    public function testGetMissingKeyReturnsNullDefault(): void
+    {
+        $config = new Config(['host' => 'localhost']);
+        $this->assertNull($config->get('port'));
+    }
+
+    public function testGetLiteralDottedKeyTakesPrecedence(): void
+    {
+        $config = new Config(['a.b' => 'literal']);
+        $this->assertSame('literal', $config->get('a.b'));
+    }
+
+    public function testGetNestedMissingReturnsDefault(): void
+    {
+        $config = new Config(['a' => ['b' => 1]]);
+        $this->assertSame('fallback', $config->get('a.b.c', 'fallback'));
+    }
+
+    public function testAllReturnsConfigArray(): void
+    {
+        $config = new Config(['host' => 'localhost', 'port' => 8123]);
+        $this->assertSame(['host' => 'localhost', 'port' => 8123], $config->all());
     }
 }

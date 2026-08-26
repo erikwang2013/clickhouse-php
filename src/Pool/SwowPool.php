@@ -20,8 +20,8 @@ class SwowPool implements PoolInterface
     private float $connectionTimeout;
 
     public function __construct(
-        private readonly \Closure $factory,
-        private readonly array $config = [],
+        private \Closure $factory,
+        private array $config = [],
     ) {
         $this->minConnections = $config['min_connections'] ?? 2;
         $this->maxConnections = $config['max_connections'] ?? 16;

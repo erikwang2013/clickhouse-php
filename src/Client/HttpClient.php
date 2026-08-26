@@ -15,8 +15,8 @@ use Erikwang2013\ClickHouse\Transport\TransportInterface;
 class HttpClient implements ClientInterface
 {
     public function __construct(
-        private readonly TransportInterface $transport,
-        private readonly Config $config,
+        private TransportInterface $transport,
+        private Config $config,
     ) {
     }
 
@@ -26,7 +26,7 @@ class HttpClient implements ClientInterface
 
         if (is_array($result)) {
             if (isset($result['rows'])) {
-                return new Result($result['rows'], $result['rows_before_limit_at_least'] ?? 0, $result['meta'] ?? null);
+                return new Result($result['rows'], $result['rows_before_limit_at_least'] ?? null, $result['meta'] ?? null);
             }
             return new Result($result);
         }

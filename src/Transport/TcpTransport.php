@@ -15,7 +15,7 @@ class TcpTransport implements TransportInterface
     private mixed $socket = null;
 
     public function __construct(
-        private readonly Config $config,
+        private Config $config,
     ) {
     }
 

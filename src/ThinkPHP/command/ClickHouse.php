@@ -7,7 +7,7 @@
 
 namespace Erikwang2013\ClickHouse\ThinkPHP\command;
 
-use Erikwang2013\ClickHouse\ClickHouse;
+use Erikwang2013\ClickHouse\ClickHouse as ClickHouseClient;
 use think\console\Command;
 use think\console\Input;
 use think\console\Output;
@@ -22,7 +22,7 @@ class ClickHouse extends Command
 
     protected function execute(Input $input, Output $output): void
     {
-        $tables = ClickHouse::schema()->getTables();
+        $tables = ClickHouseClient::schema()->getTables();
         $output->writeln('<info>ClickHouse Tables:</info>');
         foreach ($tables as $table) {
             $output->writeln('  ' . ($table['name'] ?? $table));

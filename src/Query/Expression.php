@@ -10,7 +10,7 @@ namespace Erikwang2013\ClickHouse\Query;
 class Expression
 {
     public function __construct(
-        private readonly string $value,
+        private string $value,
     ) {
     }
 
