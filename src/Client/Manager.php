@@ -11,10 +11,8 @@ use Erikwang2013\ClickHouse\Exceptions\ConnectionException;
 use Erikwang2013\ClickHouse\Pool\PoolInterface;
 use Erikwang2013\ClickHouse\Support\Config;
 use Erikwang2013\ClickHouse\Transport\HttpTransport;
-use Erikwang2013\ClickHouse\Transport\TcpTransport;
 use Erikwang2013\ClickHouse\Transport\TransportInterface;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
 class Manager
 {
@@ -26,7 +24,6 @@ class Manager
         private array $config,
         private ?LoggerInterface $logger = null,
     ) {
-        $this->logger ??= new NullLogger();
         $this->defaultConnection = $config['default'] ?? 'default';
     }
 
@@ -61,7 +58,7 @@ class Manager
         $connConfig = new Config($connections[$name]);
         $transport = $this->createTransport($connConfig);
 
-        return new HttpClient($transport, $connConfig);
+        return new HttpClient($transport, $connConfig, $this->logger);
     }
 
     private function createTransport(Config $config): TransportInterface
@@ -69,8 +66,9 @@ class Manager
         $driver = $config->get('driver', 'http');
 
         return match ($driver) {
-            'native', 'tcp' => new TcpTransport($config),
-            default => new HttpTransport($config),
+            'http' => new HttpTransport($config),
+            'native', 'tcp' => throw new ConnectionException('Native TCP transport not yet implemented. Use HTTP driver.'),
+            default => throw new ConnectionException("Unsupported ClickHouse driver [{$driver}]."),
         };
     }
 }

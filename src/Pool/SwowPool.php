@@ -7,68 +7,25 @@
 
 namespace Erikwang2013\ClickHouse\Pool;
 
-use Erikwang2013\ClickHouse\Client\ClientInterface;
-use Erikwang2013\ClickHouse\Exceptions\PoolException;
-use Swow\Channel;
-
-class SwowPool implements PoolInterface
+class SwowPool extends AbstractPool
 {
-    private Channel $channel;
-    private int $activeCount = 0;
-    private int $minConnections;
-    private int $maxConnections;
-    private float $connectionTimeout;
-
-    public function __construct(
-        private \Closure $factory,
-        private array $config = [],
-    ) {
-        $this->minConnections = $config['min_connections'] ?? 2;
-        $this->maxConnections = $config['max_connections'] ?? 16;
-        $this->connectionTimeout = $config['connection_timeout'] ?? 5.0;
-
-        $this->channel = new Channel($this->maxConnections);
-
-        for ($i = 0; $i < $this->minConnections; $i++) {
-            $this->channel->push(($this->factory)(), (int) ($this->connectionTimeout * 1000));
-            $this->activeCount++;
-        }
+    protected function newChannel(int $capacity): mixed
+    {
+        return new \Swow\Channel($capacity);
     }
 
-    public function get(): ClientInterface
+    protected function push(mixed $client, float $timeout): bool
     {
-        $client = $this->channel->pop((int) ($this->connectionTimeout * 1000));
-
-        if ($client === false) {
-            if ($this->activeCount < $this->maxConnections) {
-                $client = ($this->factory)();
-                $this->activeCount++;
-            } else {
-                throw new PoolException('SwowPool: connection pool exhausted');
-            }
-        }
-
-        return $client;
+        return $this->channel->push($client, (int) ($timeout * 1000));
     }
 
-    public function put(ClientInterface $client): void
+    protected function pop(float $timeout): mixed
     {
-        if ($this->channel->push($client, (int) ($this->connectionTimeout * 1000)) === false) {
-            $this->activeCount--;
-        }
+        return $this->channel->pop((int) ($timeout * 1000));
     }
 
-    public function stats(): array
+    protected function idleCount(): int
     {
-        return [
-            'active' => $this->activeCount,
-            'idle' => $this->channel->getLength(),
-            'total' => $this->activeCount,
-        ];
-    }
-
-    public function close(): void
-    {
-        $this->channel->close();
+        return $this->channel->getLength();
     }
 }

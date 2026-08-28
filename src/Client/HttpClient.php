@@ -11,17 +11,21 @@ use Erikwang2013\ClickHouse\Query\Result;
 use Erikwang2013\ClickHouse\Support\Config;
 use Erikwang2013\ClickHouse\Support\Quoter;
 use Erikwang2013\ClickHouse\Transport\TransportInterface;
+use Psr\Log\LoggerInterface;
 
 class HttpClient implements ClientInterface
 {
     public function __construct(
         private TransportInterface $transport,
         private Config $config,
+        private ?LoggerInterface $logger = null,
     ) {
     }
 
     public function query(string $sql, array $bindings = []): Result
     {
+        $this->logger?->debug($sql, ['bindings' => $bindings]);
+
         $result = $this->transport->send($sql, $bindings);
 
         if (is_array($result)) {

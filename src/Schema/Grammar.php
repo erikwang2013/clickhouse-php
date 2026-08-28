@@ -57,14 +57,9 @@ class Grammar
 
     public function compileTableExists(string $table): string
     {
-        $pos = strrpos($table, '.');
-        if ($pos === false) {
-            $database = 'default';
-            $name = $table;
-        } else {
-            $database = substr($table, 0, $pos);
-            $name = substr($table, $pos + 1);
-        }
+        $parts = explode('.', $table);
+        $name = array_pop($parts);
+        $database = $parts === [] ? 'default' : implode('.', $parts);
         return 'SELECT count() AS c FROM system.tables WHERE database = ' . Quoter::value($database)
             . ' AND name = ' . Quoter::value($name);
     }

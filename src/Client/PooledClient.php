@@ -19,39 +19,29 @@ class PooledClient implements ClientInterface
 
     public function query(string $sql, array $bindings = []): Result
     {
-        $client = $this->pool->get();
-        try {
-            return $client->query($sql, $bindings);
-        } finally {
-            $this->pool->put($client);
-        }
+        return $this->withClient(fn(ClientInterface $c) => $c->query($sql, $bindings));
     }
 
     public function select(string $sql, array $bindings = []): array
     {
-        $client = $this->pool->get();
-        try {
-            return $client->select($sql, $bindings);
-        } finally {
-            $this->pool->put($client);
-        }
+        return $this->withClient(fn(ClientInterface $c) => $c->select($sql, $bindings));
     }
 
     public function insert(string $table, array $data): int
     {
-        $client = $this->pool->get();
-        try {
-            return $client->insert($table, $data);
-        } finally {
-            $this->pool->put($client);
-        }
+        return $this->withClient(fn(ClientInterface $c) => $c->insert($table, $data));
     }
 
     public function ping(): bool
     {
+        return $this->withClient(fn(ClientInterface $c) => $c->ping());
+    }
+
+    private function withClient(callable $fn): mixed
+    {
         $client = $this->pool->get();
         try {
-            return $client->ping();
+            return $fn($client);
         } finally {
             $this->pool->put($client);
         }
