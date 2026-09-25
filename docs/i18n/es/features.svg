@@ -20,7 +20,7 @@
   <text class="ttl ctr" x="450" y="44">Funcionalidades de clickhouse-php</text>
   <text class="sub ctr" x="450" y="66">Seis módulos funcionales, todos ya implementados</text>
 
-  <!-- 卡片 1：查询构建器 -->
+  <!-- Tarjeta 1: Query builder -->
   <rect class="card" x="40" y="96" width="260" height="252" rx="14"/>
   <text class="ct" x="58" y="126">Query builder</text>
   <text class="cs ctr" x="250" y="126">Query\Builder</text>
@@ -37,7 +37,7 @@
     <circle cx="64" cy="318" r="2.5" fill="#777BB4"/><text class="li" x="76" y="322">toSql() devuelve el SQL compilado</text>
   </g>
 
-  <!-- 卡片 2：Schema Builder -->
+  <!-- Tarjeta 2: Schema Builder -->
   <rect class="card" x="320" y="96" width="260" height="252" rx="14"/>
   <text class="ct" x="338" y="126">Schema Builder</text>
   <text class="cs ctr" x="530" y="126">Schema\Builder</text>
@@ -54,7 +54,7 @@
     <circle cx="344" cy="318" r="2.5" fill="#777BB4"/><text class="li" x="356" y="322">Motor: partitionBy / orderBy / ttl</text>
   </g>
 
-  <!-- 卡片 3：迁移系统 -->
+  <!-- Tarjeta 3: Migraciones -->
   <rect class="card" x="600" y="96" width="260" height="252" rx="14"/>
   <text class="ct" x="618" y="126">Migraciones</text>
   <text class="cs ctr" x="810" y="126">Migration</text>
@@ -71,7 +71,7 @@
     <circle cx="624" cy="318" r="2.5" fill="#777BB4"/><text class="li" x="636" y="322">clase migration usa Schema Builder</text>
   </g>
 
-  <!-- 卡片 4：ORM -->
+  <!-- Tarjeta 4: ORM -->
   <rect class="card" x="40" y="368" width="260" height="252" rx="14"/>
   <text class="ct" x="58" y="398">ORM</text>
   <text class="cs ctr" x="250" y="398">ORM\Model</text>
@@ -88,7 +88,7 @@
     <circle cx="64" cy="590" r="2.5" fill="#777BB4"/><text class="li" x="76" y="594">solo lectura, lanza LogicException</text>
   </g>
 
-  <!-- 卡片 5：多连接与连接池 -->
+  <!-- Tarjeta 5: Conexiones y pool -->
   <rect class="card" x="320" y="368" width="260" height="252" rx="14"/>
   <text class="ct" x="338" y="398">Conexiones y pool</text>
   <text class="cs ctr" x="530" y="398">Manager · Pool</text>
@@ -105,7 +105,7 @@
     <circle cx="344" cy="590" r="2.5" fill="#777BB4"/><text class="li" x="356" y="594">ping() sondeo · stats() estado del pool</text>
   </g>
 
-  <!-- 卡片 6：框架集成 -->
+  <!-- Tarjeta 6: Integración -->
   <rect class="card" x="600" y="368" width="260" height="252" rx="14"/>
   <text class="ct" x="618" y="398">Integración</text>
   <text class="cs ctr" x="810" y="398">4 adaptadores</text>
@@ -122,7 +122,7 @@
     <circle cx="624" cy="590" r="2.5" fill="#777BB4"/><text class="li" x="636" y="594">CLI de tablas y migraciones</text>
   </g>
 
-  <!-- 安全与异常 -->
+  <!-- Seguridad y excepciones -->
   <rect class="bar" x="40" y="640" width="820" height="80" rx="14"/>
   <text class="bt" x="64" y="672">Seguridad</text>
   <text class="bl" x="64" y="696">Enlace de parámetros con ? + escape con Quoter</text>

@@ -34,7 +34,7 @@
   <text class="sub" x="40" y="44">PHP &gt;= 8.0 · PSR-4 · Guzzle ^7.0</text>
   <text class="sub ctr" x="450" y="66">▼ ऊपर से नीचे कॉल की दिशा, हर लेयर केवल अपनी नीचे की लेयर की इंटरफ़ेस पर निर्भर है</text>
 
-  <!-- L1 入口层 -->
+  <!-- L1 एंट्री लेयर -->
   <rect class="band" x="40" y="76" width="820" height="88" rx="14" fill="#FFF6D0"/>
   <rect class="bar" x="56" y="102" width="5" height="36" rx="2.5" fill="#FFD400"/>
   <text class="lt" x="72" y="118">एंट्री लेयर</text>
@@ -59,7 +59,7 @@
 
   <line class="link" x1="450" y1="166" x2="450" y2="182" marker-end="url(#arw)"/>
 
-  <!-- L2 构建层 -->
+  <!-- L2 बिल्डर लेयर -->
   <rect class="band" x="40" y="186" width="820" height="88" rx="14" fill="#EDEEF8"/>
   <rect class="bar" x="56" y="212" width="5" height="36" rx="2.5" fill="#777BB4"/>
   <text class="lt" x="72" y="228">बिल्डर लेयर</text>
@@ -81,7 +81,7 @@
 
   <line class="link" x1="450" y1="276" x2="450" y2="292" marker-end="url(#arw)"/>
 
-  <!-- L3 客户端层 -->
+  <!-- L3 क्लाइंट लेयर -->
   <rect class="band" x="40" y="296" width="820" height="88" rx="14" fill="#EDEEF8"/>
   <rect class="bar" x="56" y="322" width="5" height="36" rx="2.5" fill="#777BB4"/>
   <text class="lt" x="72" y="338">क्लाइंट लेयर</text>
@@ -101,7 +101,7 @@
 
   <line class="link" x1="450" y1="386" x2="450" y2="402" marker-end="url(#arw)"/>
 
-  <!-- L4 连接池层 -->
+  <!-- L4 कनेक्शन पूल लेयर -->
   <rect class="band" x="40" y="406" width="820" height="88" rx="14" fill="#EDEEF8"/>
   <rect class="bar" x="56" y="432" width="5" height="36" rx="2.5" fill="#777BB4"/>
   <text class="lt" x="72" y="448">पूल लेयर</text>
@@ -117,7 +117,7 @@
 
   <line class="link" x1="450" y1="496" x2="450" y2="512" marker-end="url(#arw)"/>
 
-  <!-- L5 传输层 -->
+  <!-- L5 ट्रांसपोर्ट लेयर -->
   <rect class="band" x="40" y="516" width="820" height="88" rx="14" fill="#EDEEF8"/>
   <rect class="bar" x="56" y="542" width="5" height="36" rx="2.5" fill="#777BB4"/>
   <text class="lt" x="72" y="558">ट्रांसपोर्ट लेयर</text>
@@ -133,7 +133,7 @@
 
   <line class="link" x1="450" y1="606" x2="450" y2="622" marker-end="url(#arw)"/>
 
-  <!-- L6 支撑层 -->
+  <!-- L6 सपोर्ट लेयर -->
   <rect class="band" x="40" y="626" width="820" height="88" rx="14" fill="#F2F3F5"/>
   <rect class="bar" x="56" y="652" width="5" height="36" rx="2.5" fill="#8A90A6"/>
   <text class="lt" x="72" y="668">सपोर्ट लेयर</text>
@@ -150,7 +150,7 @@
 
   <line class="link" x1="450" y1="716" x2="450" y2="732" marker-end="url(#arw)"/>
 
-  <!-- 服务端 -->
+  <!-- सर्वर -->
   <rect x="40" y="736" width="820" height="88" rx="14" fill="#1E2233"/>
   <rect x="56" y="762" width="5" height="36" rx="2.5" fill="#FFD400"/>
   <text class="y" x="72" y="778">सर्वर</text>

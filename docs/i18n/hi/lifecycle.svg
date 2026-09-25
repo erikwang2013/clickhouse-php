@@ -34,7 +34,7 @@
   <text class="sec" x="40" y="102">① क्वेरी लाइफ़साइकल</text>
   <text class="sec" x="620" y="102">एक्सेप्शन ब्रांच</text>
 
-  <!-- 纵向主干 -->
+  <!-- मुख्य ऊर्ध्वाधर रेखा -->
   <line x1="78" y1="140" x2="78" y2="588" stroke="#D5D8E3" stroke-width="3"/>
   <line x1="78" y1="140" x2="78" y2="588" stroke="#777BB4" stroke-width="3"/>
 
@@ -74,7 +74,7 @@
   <text class="st" x="106" y="584">कनेक्शन वापस करें</text>
   <text class="sd" x="106" y="602">finally { pool-&gt;put($client) }: सफलता और एक्सेप्शन, दोनों में वापसी</text>
 
-  <!-- 异常列 -->
+  <!-- Exception कॉलम -->
   <rect class="ebx" x="620" y="168" width="240" height="50" rx="10"/>
   <text class="et" x="634" y="188">चरण 2 · कनेक्शन कॉन्फ़िग नहीं</text>
   <text class="ed" x="634" y="206">ConnectionException</text>
@@ -96,7 +96,7 @@
   <text class="sd" x="620" y="578">ping() पहले जाँच ले, जिससे कनेक्शन फ़ेल</text>
   <text class="sd" x="620" y="596">होना क्वेरी पथ पर न आए।</text>
 
-  <!-- 迁移生命周期 -->
+  <!-- माइग्रेशन लाइफ़साइकल -->
   <text class="sec" x="40" y="654">② माइग्रेशन लाइफ़साइकल</text>
   <line x1="40" y1="668" x2="860" y2="668" stroke="#E2E4EC" stroke-width="1.5"/>
 

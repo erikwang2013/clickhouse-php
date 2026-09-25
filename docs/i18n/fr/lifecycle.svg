@@ -34,7 +34,7 @@
   <text class="sec" x="40" y="102">① Cycle de vie d'une requête</text>
   <text class="sec" x="620" y="102">Branches d'exception</text>
 
-  <!-- 纵向主干 -->
+  <!-- Tronc vertical -->
   <line x1="78" y1="140" x2="78" y2="588" stroke="#D5D8E3" stroke-width="3"/>
   <line x1="78" y1="140" x2="78" y2="588" stroke="#777BB4" stroke-width="3"/>
 
@@ -74,7 +74,7 @@
   <text class="st" x="106" y="584">Rendre la connexion</text>
   <text class="sd" x="106" y="602">finally { pool-&gt;put($client) } : rendue en cas de succès comme d'erreur</text>
 
-  <!-- 异常列 -->
+  <!-- Colonne des exceptions -->
   <rect class="ebx" x="620" y="168" width="240" height="50" rx="10"/>
   <text class="et" x="634" y="188">Étape 2 · connexion absente</text>
   <text class="ed" x="634" y="206">ConnectionException</text>
@@ -96,7 +96,7 @@
   <text class="sd" x="620" y="578">ping() sonde en amont pour éviter</text>
   <text class="sd" x="620" y="596">qu'une panne touche vos requêtes.</text>
 
-  <!-- 迁移生命周期 -->
+  <!-- Cycle de vie des migrations -->
   <text class="sec" x="40" y="654">② Cycle de vie des migrations</text>
   <line x1="40" y1="668" x2="860" y2="668" stroke="#E2E4EC" stroke-width="1.5"/>
 
