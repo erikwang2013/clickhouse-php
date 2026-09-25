@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="780" viewBox="0 0 900 780" role="img" aria-labelledby="featTitle featDesc">
+  <title id="featTitle">Desain Fitur clickhouse-php</title>
+  <desc id="featDesc">Enam modul fitur: query builder, Schema Builder, sistem migrasi, ORM, multi-koneksi dan connection pool, integrasi framework, serta keamanan dan hierarki exception.</desc>
+  <style>
+    text{font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#1E2233}
+    .ttl{font-size:20px;font-weight:700}
+    .sub{font-size:12px;fill:#5A6172}
+    .ctr{text-anchor:middle}
+    .card{fill:#fff;stroke:#1E2233;stroke-width:2}
+    .ct{font-size:14px;font-weight:700}
+    .cs{font-size:10px;fill:#8A90A6}
+    .li{font-size:11.5px;fill:#333A4D}
+    .hr{stroke:#E2E4EC;stroke-width:1.5}
+    .bar{fill:#F2F3F5;stroke:#1E2233;stroke-width:2}
+    .bt{font-size:13.5px;font-weight:700}
+    .bl{font-size:11.5px;fill:#333A4D}
+  </style>
+
+  <rect x="0" y="0" width="900" height="780" fill="#FFFFFF"/>
+  <text class="ttl ctr" x="450" y="44">Desain Fitur clickhouse-php</text>
+  <text class="sub ctr" x="450" y="66">Enam modul fitur, semuanya kemampuan yang sudah diimplementasikan</text>
+
+  <!-- Kartu 1: query builder -->
+  <rect class="card" x="40" y="96" width="260" height="252" rx="14"/>
+  <text class="ct" x="58" y="126">Query Builder</text>
+  <text class="cs ctr" x="250" y="126">Query\Builder</text>
+  <rect x="58" y="136" width="48" height="4" rx="2" fill="#FFD400"/>
+  <line class="hr" x1="40" y1="150" x2="300" y2="150"/>
+  <g>
+    <circle cx="64" cy="171" r="2.5" fill="#777BB4"/><text class="li" x="76" y="175">Berantai, membangun tanpa IO</text>
+    <circle cx="64" cy="192" r="2.5" fill="#777BB4"/><text class="li" x="76" y="196">where / orWhere / whereIn / whereNotIn</text>
+    <circle cx="64" cy="213" r="2.5" fill="#777BB4"/><text class="li" x="76" y="217">whereBetween / whereNull / whereRaw</text>
+    <circle cx="64" cy="234" r="2.5" fill="#777BB4"/><text class="li" x="76" y="238">orderBy / groupBy / limit / offset</text>
+    <circle cx="64" cy="255" r="2.5" fill="#777BB4"/><text class="li" x="76" y="259">Agregasi count/sum/avg/min/max</text>
+    <circle cx="64" cy="276" r="2.5" fill="#777BB4"/><text class="li" x="76" y="280">insert satu &amp; batch (1000 baris)</text>
+    <circle cx="64" cy="297" r="2.5" fill="#777BB4"/><text class="li" x="76" y="301">delete → ALTER TABLE … DELETE</text>
+    <circle cx="64" cy="318" r="2.5" fill="#777BB4"/><text class="li" x="76" y="322">toSql() hasilkan SQL terkompilasi</text>
+  </g>
+
+  <!-- Kartu 2: Schema Builder -->
+  <rect class="card" x="320" y="96" width="260" height="252" rx="14"/>
+  <text class="ct" x="338" y="126">Schema Builder</text>
+  <text class="cs ctr" x="530" y="126">Schema\Builder</text>
+  <rect x="338" y="136" width="48" height="4" rx="2" fill="#777BB4"/>
+  <line class="hr" x1="320" y1="150" x2="580" y2="150"/>
+  <g>
+    <circle cx="344" cy="171" r="2.5" fill="#777BB4"/><text class="li" x="356" y="175">create / alter / drop tabel</text>
+    <circle cx="344" cy="192" r="2.5" fill="#777BB4"/><text class="li" x="356" y="196">hasTable / getTables / getTableInfo</text>
+    <circle cx="344" cy="213" r="2.5" fill="#777BB4"/><text class="li" x="356" y="217">Mencakup 21 tipe kolom ClickHouse</text>
+    <circle cx="344" cy="234" r="2.5" fill="#777BB4"/><text class="li" x="356" y="238">Numerik Int8-64 / UInt8-64 / Float32-64</text>
+    <circle cx="344" cy="255" r="2.5" fill="#777BB4"/><text class="li" x="356" y="259">Decimal(P,S) · Date / DateTime64</text>
+    <circle cx="344" cy="276" r="2.5" fill="#777BB4"/><text class="li" x="356" y="280">Modifier Array / Nullable / LowCardinality</text>
+    <circle cx="344" cy="297" r="2.5" fill="#777BB4"/><text class="li" x="356" y="301">Lainnya: UUID / Bool / FixedString(N)</text>
+    <circle cx="344" cy="318" r="2.5" fill="#777BB4"/><text class="li" x="356" y="322">Engine: partitionBy / orderBy / ttl</text>
+  </g>
+
+  <!-- Kartu 3: sistem migrasi -->
+  <rect class="card" x="600" y="96" width="260" height="252" rx="14"/>
+  <text class="ct" x="618" y="126">Sistem Migrasi</text>
+  <text class="cs ctr" x="810" y="126">Migration</text>
+  <rect x="618" y="136" width="48" height="4" rx="2" fill="#FFD400"/>
+  <line class="hr" x1="600" y1="150" x2="860" y2="150"/>
+  <g>
+    <circle cx="624" cy="171" r="2.5" fill="#777BB4"/><text class="li" x="636" y="175">install() buat tabel migrations</text>
+    <circle cx="624" cy="192" r="2.5" fill="#777BB4"/><text class="li" x="636" y="196">run() urut, saring yang jalan</text>
+    <circle cx="624" cy="213" r="2.5" fill="#777BB4"/><text class="li" x="636" y="217">batch +1, up() lalu dicatat</text>
+    <circle cx="624" cy="234" r="2.5" fill="#777BB4"/><text class="li" x="636" y="238">rollback(steps) balik batch</text>
+    <circle cx="624" cy="255" r="2.5" fill="#777BB4"/><text class="li" x="636" y="259">refresh(): rollback → tunggu → run</text>
+    <circle cx="624" cy="276" r="2.5" fill="#777BB4"/><text class="li" x="636" y="280">gagal → QueryException + konteks</text>
+    <circle cx="624" cy="297" r="2.5" fill="#777BB4"/><text class="li" x="636" y="301">tabel MergeTree ORDER BY migration</text>
+    <circle cx="624" cy="318" r="2.5" fill="#777BB4"/><text class="li" x="636" y="322">kelas migrasi pakai Schema Builder</text>
+  </g>
+
+  <!-- Kartu 4: ORM -->
+  <rect class="card" x="40" y="368" width="260" height="252" rx="14"/>
+  <text class="ct" x="58" y="398">ORM</text>
+  <text class="cs ctr" x="250" y="398">ORM\Model</text>
+  <rect x="58" y="408" width="48" height="4" rx="2" fill="#777BB4"/>
+  <line class="hr" x1="40" y1="422" x2="300" y2="422"/>
+  <g>
+    <circle cx="64" cy="443" r="2.5" fill="#777BB4"/><text class="li" x="76" y="447">Model diwarisi → ActiveRecord</text>
+    <circle cx="64" cy="464" r="2.5" fill="#777BB4"/><text class="li" x="76" y="468">Statis: where / find / all / insert</text>
+    <circle cx="64" cy="485" r="2.5" fill="#777BB4"/><text class="li" x="76" y="489">__callStatic ke metode Builder</text>
+    <circle cx="64" cy="506" r="2.5" fill="#777BB4"/><text class="li" x="76" y="510">save() tulis kembali attributes</text>
+    <circle cx="64" cy="527" r="2.5" fill="#777BB4"/><text class="li" x="76" y="531">__get/__set field tanpa deklarasi</text>
+    <circle cx="64" cy="548" r="2.5" fill="#777BB4"/><text class="li" x="76" y="552">Collection map / filter / pluck</text>
+    <circle cx="64" cy="569" r="2.5" fill="#777BB4"/><text class="li" x="76" y="573">first / last / count / indeks</text>
+    <circle cx="64" cy="590" r="2.5" fill="#777BB4"/><text class="li" x="76" y="594">Koleksi hanya-baca: tulis ditolak</text>
+  </g>
+
+  <!-- Kartu 5: multi-koneksi dan connection pool -->
+  <rect class="card" x="320" y="368" width="260" height="252" rx="14"/>
+  <text class="ct" x="338" y="398">Multi-Koneksi &amp; Pool</text>
+  <text class="cs ctr" x="530" y="398">Manager · Pool</text>
+  <rect x="338" y="408" width="48" height="4" rx="2" fill="#FFD400"/>
+  <line class="hr" x1="320" y1="422" x2="580" y2="422"/>
+  <g>
+    <circle cx="344" cy="443" r="2.5" fill="#777BB4"/><text class="li" x="356" y="447">Manager ganti koneksi lewat nama</text>
+    <circle cx="344" cy="464" r="2.5" fill="#777BB4"/><text class="li" x="356" y="468">koneksi lazy load + cache instans</text>
+    <circle cx="344" cy="485" r="2.5" fill="#777BB4"/><text class="li" x="356" y="489">Swoole / Swow / Workerman korutin</text>
+    <circle cx="344" cy="506" r="2.5" fill="#777BB4"/><text class="li" x="356" y="510">NoPool untuk mode tradisional FPM</text>
+    <circle cx="344" cy="527" r="2.5" fill="#777BB4"/><text class="li" x="356" y="531">min / max_connections + timeout</text>
+    <circle cx="344" cy="548" r="2.5" fill="#777BB4"/><text class="li" x="356" y="552">idle pakai ulang → buat → error</text>
+    <circle cx="344" cy="569" r="2.5" fill="#777BB4"/><text class="li" x="356" y="573">PooledClient finally mengembalikan</text>
+    <circle cx="344" cy="590" r="2.5" fill="#777BB4"/><text class="li" x="356" y="594">ping() cek · stats() status pool</text>
+  </g>
+
+  <!-- Kartu 6: integrasi framework -->
+  <rect class="card" x="600" y="368" width="260" height="252" rx="14"/>
+  <text class="ct" x="618" y="398">Integrasi Framework</text>
+  <text class="cs ctr" x="810" y="398">Empat adaptor</text>
+  <rect x="618" y="408" width="48" height="4" rx="2" fill="#777BB4"/>
+  <line class="hr" x1="600" y1="422" x2="860" y2="422"/>
+  <g>
+    <circle cx="624" cy="443" r="2.5" fill="#777BB4"/><text class="li" x="636" y="447">Laravel auto + Facade + perintah</text>
+    <circle cx="624" cy="464" r="2.5" fill="#777BB4"/><text class="li" x="636" y="468">ThinkPHP Service + perintah think</text>
+    <circle cx="624" cy="485" r="2.5" fill="#777BB4"/><text class="li" x="636" y="489">Webman plugin config auto load</text>
+    <circle cx="624" cy="506" r="2.5" fill="#777BB4"/><text class="li" x="636" y="510">Hyperf ConfigProvider + korutin</text>
+    <circle cx="624" cy="527" r="2.5" fill="#777BB4"/><text class="li" x="636" y="531">Config terpadu connections / pool</text>
+    <circle cx="624" cy="548" r="2.5" fill="#777BB4"/><text class="li" x="636" y="552">Env CLICKHOUSE_* menimpa default</text>
+    <circle cx="624" cy="569" r="2.5" fill="#777BB4"/><text class="li" x="636" y="573">Log query PSR-3 opsional</text>
+    <circle cx="624" cy="590" r="2.5" fill="#777BB4"/><text class="li" x="636" y="594">CLI daftar tabel / migrasi</text>
+  </g>
+
+  <!-- Keamanan dan exception -->
+  <rect class="bar" x="40" y="640" width="820" height="80" rx="14"/>
+  <text class="bt" x="64" y="672">Keamanan</text>
+  <text class="bl" x="64" y="696">Pengikatan parameter ? + escaping Quoter</text>
+  <text class="bl" x="64" y="712">Identifier database / tabel / kolom pakai backtick</text>
+  <line x1="470" y1="656" x2="470" y2="704" stroke="#C9CCD8" stroke-width="1.5"/>
+  <text class="bt" x="500" y="672">Hierarki Exception</text>
+  <text class="bl" x="500" y="696">ClickHouseException sebagai kelas dasar, 4 subkelas</text>
+  <text class="bl" x="500" y="712">Connection (termasuk Timeout) · Query (getSql) · Pool</text>
+
+  <text class="sub ctr" x="450" y="754">Semua di atas sudah diimplementasikan; klausa JOIN / HAVING dan protokol Native TCP masih rencana</text>
+</svg>

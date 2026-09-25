@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="860" viewBox="0 0 900 860" role="img" aria-labelledby="lifeTitle lifeDesc">
+  <title id="lifeTitle">Ciclo de vida de clickhouse-php</title>
+  <desc id="lifeDesc">Ciclo de vida de una consulta en nueve pasos: inicialización, obtención del cliente, construcción, compilación, toma de conexión del pool, envío, análisis, consumo y devolución; a la derecha, las excepciones que puede lanzar cada etapa; abajo, el ciclo de vida de las migraciones.</desc>
+  <style>
+    text{font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#1E2233}
+    .ttl{font-size:20px;font-weight:700}
+    .sub{font-size:12px;fill:#5A6172}
+    .ctr{text-anchor:middle}
+    .sec{font-size:14px;font-weight:700}
+    .st{font-size:12.5px;font-weight:700}
+    .sd{font-size:11px;fill:#5A6172}
+    .num{font-size:13px;font-weight:700;fill:#fff;text-anchor:middle}
+    .et{font-size:11.5px;font-weight:700}
+    .ed{font-size:10.5px;fill:#5A6172}
+    .ebx{fill:#FFF1F0;stroke:#E05252;stroke-width:1.8}
+    .mt{font-size:12px;font-weight:700}
+    .md{font-size:10px;fill:#5A6172}
+    .bx{fill:#fff;stroke:#1E2233;stroke-width:2}
+    .mbx{fill:#FFF6D0;stroke:#1E2233;stroke-width:2}
+  </style>
+  <defs>
+    <marker id="arw" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#1E2233"/>
+    </marker>
+    <marker id="arwr" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#E05252"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="900" height="860" fill="#FFFFFF"/>
+  <text class="ttl ctr" x="450" y="44">Ciclo de vida de clickhouse-php</text>
+  <text class="sub ctr" x="450" y="66">A la izquierda, la consulta paso a paso; a la derecha, las excepciones; abajo, el ciclo de migraciones</text>
+
+  <text class="sec" x="40" y="102">① Ciclo de vida de la consulta</text>
+  <text class="sec" x="620" y="102">Ramas de excepción</text>
+
+  <!-- 纵向主干 -->
+  <line x1="78" y1="140" x2="78" y2="588" stroke="#D5D8E3" stroke-width="3"/>
+  <line x1="78" y1="140" x2="78" y2="588" stroke="#777BB4" stroke-width="3"/>
+
+  <circle cx="78" cy="140" r="14" fill="#777BB4"/><text class="num" x="78" y="145">1</text>
+  <text class="st" x="106" y="136">Inicialización</text>
+  <text class="sd" x="106" y="154">ClickHouse::setManager($manager); el adaptador lo enlaza como singleton</text>
+
+  <circle cx="78" cy="196" r="14" fill="#777BB4"/><text class="num" x="78" y="201">2</text>
+  <text class="st" x="106" y="192">Obtener el cliente</text>
+  <text class="sd" x="106" y="210">Manager::connection($name): PooledClient si hay pool; si no, HttpClient en caché</text>
+
+  <circle cx="78" cy="252" r="14" fill="#777BB4"/><text class="num" x="78" y="257">3</text>
+  <text class="st" x="106" y="248">Construir la consulta</text>
+  <text class="sd" x="106" y="266">ClickHouse::table('logs')-&gt;where(...)-&gt;limit(100); las condiciones se acumulan</text>
+
+  <circle cx="78" cy="308" r="14" fill="#777BB4"/><text class="num" x="78" y="313">4</text>
+  <text class="st" x="106" y="304">Compilar SQL</text>
+  <text class="sd" x="106" y="322">Grammar::compileSelect() genera SELECT … FROM `db`.`logs` WHERE … ORDER BY … LIMIT</text>
+
+  <circle cx="78" cy="364" r="14" fill="#777BB4"/><text class="num" x="78" y="369">5</text>
+  <text class="st" x="106" y="360">Tomar conexión</text>
+  <text class="sd" x="106" y="378">PooledClient::withClient() → pool-&gt;get(): reusa libre o crea si hay hueco</text>
+
+  <circle cx="78" cy="420" r="14" fill="#777BB4"/><text class="num" x="78" y="425">6</text>
+  <text class="st" x="106" y="416">Enlazar y enviar</text>
+  <text class="sd" x="106" y="434">HttpTransport::send(): sustituye los ?, envía el SQL + FORMAT JSON por POST</text>
+
+  <circle cx="78" cy="476" r="14" fill="#777BB4"/><text class="num" x="78" y="481">7</text>
+  <text class="st" x="106" y="472">Analizar respuesta</text>
+  <text class="sd" x="106" y="490">HTTP 200 → json_decode → Result(rows, meta); si no → QueryException</text>
+
+  <circle cx="78" cy="532" r="14" fill="#777BB4"/><text class="num" x="78" y="537">8</text>
+  <text class="st" x="106" y="528">Consumir resultado</text>
+  <text class="sd" x="106" y="546">Result::first() · toArray() · iteración; el resultado es de solo lectura</text>
+
+  <circle cx="78" cy="588" r="14" fill="#1E2233"/><text class="num" x="78" y="593">9</text>
+  <text class="st" x="106" y="584">Devolver conexión</text>
+  <text class="sd" x="106" y="602">finally { pool-&gt;put($client) }: se devuelve tanto en éxito como en error</text>
+
+  <!-- 异常列 -->
+  <rect class="ebx" x="620" y="168" width="240" height="50" rx="10"/>
+  <text class="et" x="634" y="188">Paso 2 · conexión sin configurar</text>
+  <text class="ed" x="634" y="206">ConnectionException</text>
+
+  <rect class="ebx" x="620" y="336" width="240" height="50" rx="10"/>
+  <text class="et" x="634" y="356">Paso 5 · pool agotado</text>
+  <text class="ed" x="634" y="374">PoolException (active ≥ max)</text>
+
+  <rect class="ebx" x="620" y="392" width="240" height="50" rx="10"/>
+  <text class="et" x="634" y="412">Paso 6 · red inaccesible</text>
+  <text class="ed" x="634" y="430">ConnectionException / TimeoutException</text>
+
+  <rect class="ebx" x="620" y="448" width="240" height="50" rx="10"/>
+  <text class="et" x="634" y="468">Paso 7 · error al ejecutar SQL</text>
+  <text class="ed" x="634" y="486">QueryException (getSql disponible)</text>
+
+  <text class="sd" x="620" y="530">Todas heredan de ClickHouseException y</text>
+  <text class="sd" x="620" y="548">se puede capturar la subclase concreta.</text>
+  <text class="sd" x="620" y="578">ping() permite sondear antes y no exponer</text>
+  <text class="sd" x="620" y="596">fallos de conexión a la consulta de negocio.</text>
+
+  <!-- 迁移生命周期 -->
+  <text class="sec" x="40" y="654">② Ciclo de vida de las migraciones</text>
+  <line x1="40" y1="668" x2="860" y2="668" stroke="#E2E4EC" stroke-width="1.5"/>
+
+  <rect class="mbx" x="40" y="690" width="140" height="62" rx="10"/>
+  <text class="mt ctr" x="110" y="714">install()</text>
+  <text class="md ctr" x="110" y="733">crea la tabla migrations</text>
+
+  <rect class="mbx" x="210" y="690" width="140" height="62" rx="10"/>
+  <text class="mt ctr" x="280" y="714">run()</text>
+  <text class="md ctr" x="280" y="733">filtra hechas · batch+1</text>
+
+  <rect class="mbx" x="380" y="690" width="140" height="62" rx="10"/>
+  <text class="mt ctr" x="450" y="714">up()</text>
+  <text class="md ctr" x="450" y="733">ejecuta y registra</text>
+
+  <rect class="mbx" x="550" y="690" width="140" height="62" rx="10"/>
+  <text class="mt ctr" x="620" y="714">rollback()</text>
+  <text class="md ctr" x="620" y="733">down() del último lote</text>
+
+  <rect class="mbx" x="720" y="690" width="140" height="62" rx="10"/>
+  <text class="mt ctr" x="790" y="714">refresh()</text>
+  <text class="md ctr" x="790" y="733">espera mutation y rerun</text>
+
+  <line x1="182" y1="721" x2="204" y2="721" stroke="#1E2233" stroke-width="1.8" marker-end="url(#arw)"/>
+  <line x1="352" y1="721" x2="374" y2="721" stroke="#1E2233" stroke-width="1.8" marker-end="url(#arw)"/>
+  <line x1="522" y1="721" x2="544" y2="721" stroke="#1E2233" stroke-width="1.8" marker-end="url(#arw)"/>
+  <line x1="692" y1="721" x2="714" y2="721" stroke="#1E2233" stroke-width="1.8" marker-end="url(#arw)"/>
+
+  <text class="sd" x="40" y="782">Si falla lanza QueryException, con el batch y la lista de migraciones ya ejecutadas.</text>
+  <text class="sd" x="40" y="802">El rollback de refresh() depende de la mutation asíncrona de ALTER TABLE … DELETE, así que hay que esperar a que termine para volver a run().</text>
+  <text class="sd" x="40" y="822">Los archivos se ejecutan ordenados por nombre; el nombre de la clase se deduce del archivo (sin el prefijo de timestamp, en camelCase).</text>
+</svg>

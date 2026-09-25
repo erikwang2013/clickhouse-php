@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="780" viewBox="0 0 900 780" role="img" aria-labelledby="featTitle featDesc">
+  <title id="featTitle">Funcionalidades de clickhouse-php</title>
+  <desc id="featDesc">Seis módulos funcionales: query builder, Schema Builder, sistema de migraciones, ORM, multiconexión y connection pool, integración con frameworks, además de seguridad y jerarquía de excepciones.</desc>
+  <style>
+    text{font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#1E2233}
+    .ttl{font-size:20px;font-weight:700}
+    .sub{font-size:12px;fill:#5A6172}
+    .ctr{text-anchor:middle}
+    .card{fill:#fff;stroke:#1E2233;stroke-width:2}
+    .ct{font-size:14px;font-weight:700}
+    .cs{font-size:10px;fill:#8A90A6}
+    .li{font-size:11.5px;fill:#333A4D}
+    .hr{stroke:#E2E4EC;stroke-width:1.5}
+    .bar{fill:#F2F3F5;stroke:#1E2233;stroke-width:2}
+    .bt{font-size:13.5px;font-weight:700}
+    .bl{font-size:11.5px;fill:#333A4D}
+  </style>
+
+  <rect x="0" y="0" width="900" height="780" fill="#FFFFFF"/>
+  <text class="ttl ctr" x="450" y="44">Funcionalidades de clickhouse-php</text>
+  <text class="sub ctr" x="450" y="66">Seis módulos funcionales, todos ya implementados</text>
+
+  <!-- 卡片 1：查询构建器 -->
+  <rect class="card" x="40" y="96" width="260" height="252" rx="14"/>
+  <text class="ct" x="58" y="126">Query builder</text>
+  <text class="cs ctr" x="250" y="126">Query\Builder</text>
+  <rect x="58" y="136" width="48" height="4" rx="2" fill="#FFD400"/>
+  <line class="hr" x1="40" y1="150" x2="300" y2="150"/>
+  <g>
+    <circle cx="64" cy="171" r="2.5" fill="#777BB4"/><text class="li" x="76" y="175">API en cadena, sin IO al construir</text>
+    <circle cx="64" cy="192" r="2.5" fill="#777BB4"/><text class="li" x="76" y="196">where / orWhere / whereIn / whereNotIn</text>
+    <circle cx="64" cy="213" r="2.5" fill="#777BB4"/><text class="li" x="76" y="217">whereBetween / whereNull / whereRaw</text>
+    <circle cx="64" cy="234" r="2.5" fill="#777BB4"/><text class="li" x="76" y="238">orderBy / groupBy / limit / offset</text>
+    <circle cx="64" cy="255" r="2.5" fill="#777BB4"/><text class="li" x="76" y="259">Agregados count / sum / avg / min / max</text>
+    <circle cx="64" cy="276" r="2.5" fill="#777BB4"/><text class="li" x="76" y="280">insert de fila o lote (trozos de 1000)</text>
+    <circle cx="64" cy="297" r="2.5" fill="#777BB4"/><text class="li" x="76" y="301">delete → ALTER TABLE … DELETE</text>
+    <circle cx="64" cy="318" r="2.5" fill="#777BB4"/><text class="li" x="76" y="322">toSql() devuelve el SQL compilado</text>
+  </g>
+
+  <!-- 卡片 2：Schema Builder -->
+  <rect class="card" x="320" y="96" width="260" height="252" rx="14"/>
+  <text class="ct" x="338" y="126">Schema Builder</text>
+  <text class="cs ctr" x="530" y="126">Schema\Builder</text>
+  <rect x="338" y="136" width="48" height="4" rx="2" fill="#777BB4"/>
+  <line class="hr" x1="320" y1="150" x2="580" y2="150"/>
+  <g>
+    <circle cx="344" cy="171" r="2.5" fill="#777BB4"/><text class="li" x="356" y="175">create / alter / drop de tablas</text>
+    <circle cx="344" cy="192" r="2.5" fill="#777BB4"/><text class="li" x="356" y="196">hasTable / getTables / getTableInfo</text>
+    <circle cx="344" cy="213" r="2.5" fill="#777BB4"/><text class="li" x="356" y="217">Cubre 21 tipos de columna de ClickHouse</text>
+    <circle cx="344" cy="234" r="2.5" fill="#777BB4"/><text class="li" x="356" y="238">Numéricos Int8-64 / UInt8-64 / Float32-64</text>
+    <circle cx="344" cy="255" r="2.5" fill="#777BB4"/><text class="li" x="356" y="259">Decimal(P,S) · Date / DateTime64</text>
+    <circle cx="344" cy="276" r="2.5" fill="#777BB4"/><text class="li" x="356" y="280">Array / Nullable / LowCardinality</text>
+    <circle cx="344" cy="297" r="2.5" fill="#777BB4"/><text class="li" x="356" y="301">Otros: UUID / Bool / FixedString(N)</text>
+    <circle cx="344" cy="318" r="2.5" fill="#777BB4"/><text class="li" x="356" y="322">Motor: partitionBy / orderBy / ttl</text>
+  </g>
+
+  <!-- 卡片 3：迁移系统 -->
+  <rect class="card" x="600" y="96" width="260" height="252" rx="14"/>
+  <text class="ct" x="618" y="126">Migraciones</text>
+  <text class="cs ctr" x="810" y="126">Migration</text>
+  <rect x="618" y="136" width="48" height="4" rx="2" fill="#FFD400"/>
+  <line class="hr" x1="600" y1="150" x2="860" y2="150"/>
+  <g>
+    <circle cx="624" cy="171" r="2.5" fill="#777BB4"/><text class="li" x="636" y="175">install() crea la tabla migrations</text>
+    <circle cx="624" cy="192" r="2.5" fill="#777BB4"/><text class="li" x="636" y="196">run() ordena y filtra las aplicadas</text>
+    <circle cx="624" cy="213" r="2.5" fill="#777BB4"/><text class="li" x="636" y="217">cada lote batch+1, up() y registro</text>
+    <circle cx="624" cy="234" r="2.5" fill="#777BB4"/><text class="li" x="636" y="238">rollback(steps) revierte el último lote</text>
+    <circle cx="624" cy="255" r="2.5" fill="#777BB4"/><text class="li" x="636" y="259">refresh() rollback, espera mutation, rerun</text>
+    <circle cx="624" cy="276" r="2.5" fill="#777BB4"/><text class="li" x="636" y="280">fallo: QueryException con contexto</text>
+    <circle cx="624" cy="297" r="2.5" fill="#777BB4"/><text class="li" x="636" y="301">tabla MergeTree ORDER BY migration</text>
+    <circle cx="624" cy="318" r="2.5" fill="#777BB4"/><text class="li" x="636" y="322">clase migration usa Schema Builder</text>
+  </g>
+
+  <!-- 卡片 4：ORM -->
+  <rect class="card" x="40" y="368" width="260" height="252" rx="14"/>
+  <text class="ct" x="58" y="398">ORM</text>
+  <text class="cs ctr" x="250" y="398">ORM\Model</text>
+  <rect x="58" y="408" width="48" height="4" rx="2" fill="#777BB4"/>
+  <line class="hr" x1="40" y1="422" x2="300" y2="422"/>
+  <g>
+    <circle cx="64" cy="443" r="2.5" fill="#777BB4"/><text class="li" x="76" y="447">heredar Model da ActiveRecord</text>
+    <circle cx="64" cy="464" r="2.5" fill="#777BB4"/><text class="li" x="76" y="468">estático: where / find / all / insert</text>
+    <circle cx="64" cy="485" r="2.5" fill="#777BB4"/><text class="li" x="76" y="489">__callStatic delega en Builder</text>
+    <circle cx="64" cy="506" r="2.5" fill="#777BB4"/><text class="li" x="76" y="510">save() escribe los attributes</text>
+    <circle cx="64" cy="527" r="2.5" fill="#777BB4"/><text class="li" x="76" y="531">__get / __set sin declarar campos</text>
+    <circle cx="64" cy="548" r="2.5" fill="#777BB4"/><text class="li" x="76" y="552">Collection map / filter / pluck</text>
+    <circle cx="64" cy="569" r="2.5" fill="#777BB4"/><text class="li" x="76" y="573">first / last / count / por índice</text>
+    <circle cx="64" cy="590" r="2.5" fill="#777BB4"/><text class="li" x="76" y="594">solo lectura, lanza LogicException</text>
+  </g>
+
+  <!-- 卡片 5：多连接与连接池 -->
+  <rect class="card" x="320" y="368" width="260" height="252" rx="14"/>
+  <text class="ct" x="338" y="398">Conexiones y pool</text>
+  <text class="cs ctr" x="530" y="398">Manager · Pool</text>
+  <rect x="338" y="408" width="48" height="4" rx="2" fill="#FFD400"/>
+  <line class="hr" x1="320" y1="422" x2="580" y2="422"/>
+  <g>
+    <circle cx="344" cy="443" r="2.5" fill="#777BB4"/><text class="li" x="356" y="447">Manager: conexión por nombre</text>
+    <circle cx="344" cy="464" r="2.5" fill="#777BB4"/><text class="li" x="356" y="468">carga diferida + caché de instancias</text>
+    <circle cx="344" cy="485" r="2.5" fill="#777BB4"/><text class="li" x="356" y="489">Swoole / Swow / Workerman pools</text>
+    <circle cx="344" cy="506" r="2.5" fill="#777BB4"/><text class="li" x="356" y="510">NoPool cubre el modo FPM clásico</text>
+    <circle cx="344" cy="527" r="2.5" fill="#777BB4"/><text class="li" x="356" y="531">min / max_connections y timeout</text>
+    <circle cx="344" cy="548" r="2.5" fill="#777BB4"/><text class="li" x="356" y="552">reusa libre → crea → error si lleno</text>
+    <circle cx="344" cy="569" r="2.5" fill="#777BB4"/><text class="li" x="356" y="573">PooledClient: finally devuelve</text>
+    <circle cx="344" cy="590" r="2.5" fill="#777BB4"/><text class="li" x="356" y="594">ping() sondeo · stats() estado del pool</text>
+  </g>
+
+  <!-- 卡片 6：框架集成 -->
+  <rect class="card" x="600" y="368" width="260" height="252" rx="14"/>
+  <text class="ct" x="618" y="398">Integración</text>
+  <text class="cs ctr" x="810" y="398">4 adaptadores</text>
+  <rect x="618" y="408" width="48" height="4" rx="2" fill="#777BB4"/>
+  <line class="hr" x1="600" y1="422" x2="860" y2="422"/>
+  <g>
+    <circle cx="624" cy="443" r="2.5" fill="#777BB4"/><text class="li" x="636" y="447">Laravel: autodiscover + Facade + comandos</text>
+    <circle cx="624" cy="464" r="2.5" fill="#777BB4"/><text class="li" x="636" y="468">ThinkPHP: Service + comandos think</text>
+    <circle cx="624" cy="485" r="2.5" fill="#777BB4"/><text class="li" x="636" y="489">Webman carga el config del plugin</text>
+    <circle cx="624" cy="506" r="2.5" fill="#777BB4"/><text class="li" x="636" y="510">Hyperf ConfigProvider + corrutinas</text>
+    <circle cx="624" cy="527" r="2.5" fill="#777BB4"/><text class="li" x="636" y="531">config unificada: connections / pool</text>
+    <circle cx="624" cy="548" r="2.5" fill="#777BB4"/><text class="li" x="636" y="552">env CLICKHOUSE_* sobreescriben valores</text>
+    <circle cx="624" cy="569" r="2.5" fill="#777BB4"/><text class="li" x="636" y="573">log de consultas PSR-3 opcional</text>
+    <circle cx="624" cy="590" r="2.5" fill="#777BB4"/><text class="li" x="636" y="594">CLI de tablas y migraciones</text>
+  </g>
+
+  <!-- 安全与异常 -->
+  <rect class="bar" x="40" y="640" width="820" height="80" rx="14"/>
+  <text class="bt" x="64" y="672">Seguridad</text>
+  <text class="bl" x="64" y="696">Enlace de parámetros con ? + escape con Quoter</text>
+  <text class="bl" x="64" y="712">Identificadores de BD / tabla / columna entre backticks</text>
+  <line x1="470" y1="656" x2="470" y2="704" stroke="#C9CCD8" stroke-width="1.5"/>
+  <text class="bt" x="500" y="672">Excepciones</text>
+  <text class="bl" x="500" y="696">ClickHouseException es la base; 4 subclases</text>
+  <text class="bl" x="500" y="712">Connection (con Timeout) · Query (getSql) · Pool</text>
+
+  <text class="sub ctr" x="450" y="754">Todo lo anterior ya está implementado; JOIN / HAVING y Native TCP son planes futuros</text>
+</svg>

@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="860" viewBox="0 0 900 860" role="img" aria-labelledby="lifeTitle lifeDesc">
+  <title id="lifeTitle">clickhouse-php लाइफ़साइकल</title>
+  <desc id="lifeDesc">क्वेरी लाइफ़साइकल के नौ चरण: इनिशियलाइज़, क्लाइंट प्राप्ति, बिल्ड, कंपाइल, पूल से कनेक्शन, सेंड, पार्स, उपयोग, वापसी; दाईं ओर हर चरण के संभावित एक्सेप्शन; नीचे माइग्रेशन लाइफ़साइकल।</desc>
+  <style>
+    text{font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#1E2233}
+    .ttl{font-size:20px;font-weight:700}
+    .sub{font-size:12px;fill:#5A6172}
+    .ctr{text-anchor:middle}
+    .sec{font-size:14px;font-weight:700}
+    .st{font-size:12.5px;font-weight:700}
+    .sd{font-size:11px;fill:#5A6172}
+    .num{font-size:13px;font-weight:700;fill:#fff;text-anchor:middle}
+    .et{font-size:11.5px;font-weight:700}
+    .ed{font-size:10.5px;fill:#5A6172}
+    .ebx{fill:#FFF1F0;stroke:#E05252;stroke-width:1.8}
+    .mt{font-size:12px;font-weight:700}
+    .md{font-size:10px;fill:#5A6172}
+    .bx{fill:#fff;stroke:#1E2233;stroke-width:2}
+    .mbx{fill:#FFF6D0;stroke:#1E2233;stroke-width:2}
+  </style>
+  <defs>
+    <marker id="arw" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#1E2233"/>
+    </marker>
+    <marker id="arwr" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#E05252"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="900" height="860" fill="#FFFFFF"/>
+  <text class="ttl ctr" x="450" y="44">clickhouse-php लाइफ़साइकल</text>
+  <text class="sub ctr" x="450" y="66">बाईं ओर एक क्वेरी का पूरा फ़्लो, दाईं ओर हर चरण के संभावित एक्सेप्शन, नीचे माइग्रेशन लाइफ़साइकल</text>
+
+  <text class="sec" x="40" y="102">① क्वेरी लाइफ़साइकल</text>
+  <text class="sec" x="620" y="102">एक्सेप्शन ब्रांच</text>
+
+  <!-- 纵向主干 -->
+  <line x1="78" y1="140" x2="78" y2="588" stroke="#D5D8E3" stroke-width="3"/>
+  <line x1="78" y1="140" x2="78" y2="588" stroke="#777BB4" stroke-width="3"/>
+
+  <circle cx="78" cy="140" r="14" fill="#777BB4"/><text class="num" x="78" y="145">1</text>
+  <text class="st" x="106" y="136">इनिशियलाइज़ करें</text>
+  <text class="sd" x="106" y="154">ClickHouse::setManager($manager), फ्रेमवर्क एडाप्टर कंटेनर में सिंगलटन बाइंड होते हैं</text>
+
+  <circle cx="78" cy="196" r="14" fill="#777BB4"/><text class="num" x="78" y="201">2</text>
+  <text class="st" x="106" y="192">क्लाइंट प्राप्त करें</text>
+  <text class="sd" x="106" y="210">Manager::connection($name): पूल में कनेक्शन मिले तो PooledClient, वरना HttpClient बनाकर कैश</text>
+
+  <circle cx="78" cy="252" r="14" fill="#777BB4"/><text class="num" x="78" y="257">3</text>
+  <text class="st" x="106" y="248">क्वेरी बनाएँ</text>
+  <text class="sd" x="106" y="266">ClickHouse::table('logs')-&gt;where(...)-&gt;limit(100), शर्तें चेन कॉल में जुड़ती हैं</text>
+
+  <circle cx="78" cy="308" r="14" fill="#777BB4"/><text class="num" x="78" y="313">4</text>
+  <text class="st" x="106" y="304">SQL कंपाइल करें</text>
+  <text class="sd" x="106" y="322">Grammar::compileSelect() से SELECT … FROM `db`.`logs` WHERE … ORDER BY … LIMIT</text>
+
+  <circle cx="78" cy="364" r="14" fill="#777BB4"/><text class="num" x="78" y="369">5</text>
+  <text class="st" x="106" y="360">पूल से कनेक्शन लें</text>
+  <text class="sd" x="106" y="378">PooledClient::withClient() → pool-&gt;get(): खाली कनेक्शन रीयूज़ / सीमा तक नया</text>
+
+  <circle cx="78" cy="420" r="14" fill="#777BB4"/><text class="num" x="78" y="425">6</text>
+  <text class="st" x="106" y="416">बाइंड और सेंड करें</text>
+  <text class="sd" x="106" y="434">HttpTransport::send(): ? प्लेसहोल्डर बदलता है, POST बॉडी SQL + FORMAT JSON</text>
+
+  <circle cx="78" cy="476" r="14" fill="#777BB4"/><text class="num" x="78" y="481">7</text>
+  <text class="st" x="106" y="472">रिस्पॉन्स पार्स करें</text>
+  <text class="sd" x="106" y="490">HTTP 200 → json_decode → Result(rows, meta); 200 नहीं → QueryException</text>
+
+  <circle cx="78" cy="532" r="14" fill="#777BB4"/><text class="num" x="78" y="537">8</text>
+  <text class="st" x="106" y="528">रिज़ल्ट उपयोग करें</text>
+  <text class="sd" x="106" y="546">Result::first() · toArray() · इटरेशन से एक्सेस, रिज़ल्ट रीड-ओनली</text>
+
+  <circle cx="78" cy="588" r="14" fill="#1E2233"/><text class="num" x="78" y="593">9</text>
+  <text class="st" x="106" y="584">कनेक्शन वापस करें</text>
+  <text class="sd" x="106" y="602">finally { pool-&gt;put($client) }: सफलता और एक्सेप्शन, दोनों में वापसी</text>
+
+  <!-- 异常列 -->
+  <rect class="ebx" x="620" y="168" width="240" height="50" rx="10"/>
+  <text class="et" x="634" y="188">चरण 2 · कनेक्शन कॉन्फ़िग नहीं</text>
+  <text class="ed" x="634" y="206">ConnectionException</text>
+
+  <rect class="ebx" x="620" y="336" width="240" height="50" rx="10"/>
+  <text class="et" x="634" y="356">चरण 5 · पूल ख़त्म</text>
+  <text class="ed" x="634" y="374">PoolException (active ≥ max)</text>
+
+  <rect class="ebx" x="620" y="392" width="240" height="50" rx="10"/>
+  <text class="et" x="634" y="412">चरण 6 · नेटवर्क अनुपलब्ध</text>
+  <text class="ed" x="634" y="430">ConnectionException / TimeoutException</text>
+
+  <rect class="ebx" x="620" y="448" width="240" height="50" rx="10"/>
+  <text class="et" x="634" y="468">चरण 7 · SQL एरर</text>
+  <text class="ed" x="634" y="486">QueryException (getSql उपलब्ध)</text>
+
+  <text class="sd" x="620" y="530">सभी एक्सेप्शन ClickHouseException से</text>
+  <text class="sd" x="620" y="548">व्युत्पन्न; ज़रूरत पर सब-क्लास पकड़ें।</text>
+  <text class="sd" x="620" y="578">ping() पहले जाँच ले, जिससे कनेक्शन फ़ेल</text>
+  <text class="sd" x="620" y="596">होना क्वेरी पथ पर न आए।</text>
+
+  <!-- 迁移生命周期 -->
+  <text class="sec" x="40" y="654">② माइग्रेशन लाइफ़साइकल</text>
+  <line x1="40" y1="668" x2="860" y2="668" stroke="#E2E4EC" stroke-width="1.5"/>
+
+  <rect class="mbx" x="40" y="690" width="140" height="62" rx="10"/>
+  <text class="mt ctr" x="110" y="714">install()</text>
+  <text class="md ctr" x="110" y="733">migrations टेबल बनाएँ</text>
+
+  <rect class="mbx" x="210" y="690" width="140" height="62" rx="10"/>
+  <text class="mt ctr" x="280" y="714">run()</text>
+  <text class="md ctr" x="280" y="733">चली छाँटें · batch+1</text>
+
+  <rect class="mbx" x="380" y="690" width="140" height="62" rx="10"/>
+  <text class="mt ctr" x="450" y="714">up()</text>
+  <text class="md ctr" x="450" y="733">माइग्रेशन चलाएँ, रिकॉर्ड लिखें</text>
+
+  <rect class="mbx" x="550" y="690" width="140" height="62" rx="10"/>
+  <text class="mt ctr" x="620" y="714">rollback()</text>
+  <text class="md ctr" x="620" y="733">अंतिम बैच down() + डिलीट</text>
+
+  <rect class="mbx" x="720" y="690" width="140" height="62" rx="10"/>
+  <text class="mt ctr" x="790" y="714">refresh()</text>
+  <text class="md ctr" x="790" y="733">mutation बाद रीरन करें</text>
+
+  <line x1="182" y1="721" x2="204" y2="721" stroke="#1E2233" stroke-width="1.8" marker-end="url(#arw)"/>
+  <line x1="352" y1="721" x2="374" y2="721" stroke="#1E2233" stroke-width="1.8" marker-end="url(#arw)"/>
+  <line x1="522" y1="721" x2="544" y2="721" stroke="#1E2233" stroke-width="1.8" marker-end="url(#arw)"/>
+  <line x1="692" y1="721" x2="714" y2="721" stroke="#1E2233" stroke-width="1.8" marker-end="url(#arw)"/>
+
+  <text class="sd" x="40" y="782">विफल होने पर QueryException, साथ में batch और चली माइग्रेशन की सूची।</text>
+  <text class="sd" x="40" y="802">refresh() का रोलबैक ALTER TABLE … DELETE के async mutation पर निर्भर है; पूरा होने के बाद ही दोबारा run() करें।</text>
+  <text class="sd" x="40" y="822">माइग्रेशन फ़ाइलें नाम से सॉर्ट होकर चलती हैं; क्लास नाम फ़ाइल नाम से बनता है (टाइमस्टैम्प हटाकर camelCase)।</text>
+</svg>

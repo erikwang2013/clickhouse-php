@@ -1,6 +1,6 @@
 {
     "name": "erikwang2013/clickhouse-php",
-    "description": "A full-featured PHP ClickHouse client with HTTP and Native TCP support, query builder, schema builder, migration system, and ORM.",
+    "description": "PHP ClickHouse client over HTTP with query builder, schema builder, migration system and ORM, plus Laravel, ThinkPHP, Webman and Hyperf adapters.",
     "type": "library",
     "license": "MIT",
     "keywords": ["clickhouse", "database", "client", "php"],

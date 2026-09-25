@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="860" viewBox="0 0 900 860" role="img" aria-labelledby="lifeTitle lifeDesc">
+  <title id="lifeTitle">Cycle de vie de clickhouse-php</title>
+  <desc id="lifeDesc">Cycle de vie d'une requête en neuf étapes : initialisation, client, construction, compilation, connexion du pool, envoi, analyse, consommation, restitution ; à droite les exceptions possibles par étape ; en bas le cycle des migrations.</desc>
+  <style>
+    text{font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#1E2233}
+    .ttl{font-size:20px;font-weight:700}
+    .sub{font-size:12px;fill:#5A6172}
+    .ctr{text-anchor:middle}
+    .sec{font-size:14px;font-weight:700}
+    .st{font-size:12.5px;font-weight:700}
+    .sd{font-size:11px;fill:#5A6172}
+    .num{font-size:13px;font-weight:700;fill:#fff;text-anchor:middle}
+    .et{font-size:11.5px;font-weight:700}
+    .ed{font-size:10.5px;fill:#5A6172}
+    .ebx{fill:#FFF1F0;stroke:#E05252;stroke-width:1.8}
+    .mt{font-size:12px;font-weight:700}
+    .md{font-size:10px;fill:#5A6172}
+    .bx{fill:#fff;stroke:#1E2233;stroke-width:2}
+    .mbx{fill:#FFF6D0;stroke:#1E2233;stroke-width:2}
+  </style>
+  <defs>
+    <marker id="arw" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#1E2233"/>
+    </marker>
+    <marker id="arwr" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#E05252"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="900" height="860" fill="#FFFFFF"/>
+  <text class="ttl ctr" x="450" y="44">Cycle de vie de clickhouse-php</text>
+  <text class="sub ctr" x="450" y="66">À gauche le parcours complet d'une requête, à droite les exceptions possibles à chaque étape, en bas le cycle des migrations</text>
+
+  <text class="sec" x="40" y="102">① Cycle de vie d'une requête</text>
+  <text class="sec" x="620" y="102">Branches d'exception</text>
+
+  <!-- 纵向主干 -->
+  <line x1="78" y1="140" x2="78" y2="588" stroke="#D5D8E3" stroke-width="3"/>
+  <line x1="78" y1="140" x2="78" y2="588" stroke="#777BB4" stroke-width="3"/>
+
+  <circle cx="78" cy="140" r="14" fill="#777BB4"/><text class="num" x="78" y="145">1</text>
+  <text class="st" x="106" y="136">Initialisation</text>
+  <text class="sd" x="106" y="154">ClickHouse::setManager($manager) ; les adaptateurs sont liés en singleton au conteneur</text>
+
+  <circle cx="78" cy="196" r="14" fill="#777BB4"/><text class="num" x="78" y="201">2</text>
+  <text class="st" x="106" y="192">Obtenir le client</text>
+  <text class="sd" x="106" y="210">Manager::connection($name) : PooledClient si le pool répond, sinon HttpClient mis en cache</text>
+
+  <circle cx="78" cy="252" r="14" fill="#777BB4"/><text class="num" x="78" y="257">3</text>
+  <text class="st" x="106" y="248">Construire la requête</text>
+  <text class="sd" x="106" y="266">ClickHouse::table('logs')-&gt;where(...)-&gt;limit(100) : les conditions s'accumulent</text>
+
+  <circle cx="78" cy="308" r="14" fill="#777BB4"/><text class="num" x="78" y="313">4</text>
+  <text class="st" x="106" y="304">Compiler le SQL</text>
+  <text class="sd" x="106" y="322">Grammar::compileSelect() produit SELECT … FROM `db`.`logs` WHERE … ORDER BY … LIMIT</text>
+
+  <circle cx="78" cy="364" r="14" fill="#777BB4"/><text class="num" x="78" y="369">5</text>
+  <text class="st" x="106" y="360">Prendre une connexion</text>
+  <text class="sd" x="106" y="378">PooledClient::withClient() → pool-&gt;get() : réutiliser, sinon créer</text>
+
+  <circle cx="78" cy="420" r="14" fill="#777BB4"/><text class="num" x="78" y="425">6</text>
+  <text class="st" x="106" y="416">Lier et envoyer</text>
+  <text class="sd" x="106" y="434">HttpTransport::send() : remplace les ?, corps POST = SQL + FORMAT JSON</text>
+
+  <circle cx="78" cy="476" r="14" fill="#777BB4"/><text class="num" x="78" y="481">7</text>
+  <text class="st" x="106" y="472">Analyser la réponse</text>
+  <text class="sd" x="106" y="490">HTTP 200 → json_decode → Result(rows, meta) ; sinon QueryException</text>
+
+  <circle cx="78" cy="532" r="14" fill="#777BB4"/><text class="num" x="78" y="537">8</text>
+  <text class="st" x="106" y="528">Consommer le résultat</text>
+  <text class="sd" x="106" y="546">Result::first() · toArray() · itération ; résultat en lecture seule</text>
+
+  <circle cx="78" cy="588" r="14" fill="#1E2233"/><text class="num" x="78" y="593">9</text>
+  <text class="st" x="106" y="584">Rendre la connexion</text>
+  <text class="sd" x="106" y="602">finally { pool-&gt;put($client) } : rendue en cas de succès comme d'erreur</text>
+
+  <!-- 异常列 -->
+  <rect class="ebx" x="620" y="168" width="240" height="50" rx="10"/>
+  <text class="et" x="634" y="188">Étape 2 · connexion absente</text>
+  <text class="ed" x="634" y="206">ConnectionException</text>
+
+  <rect class="ebx" x="620" y="336" width="240" height="50" rx="10"/>
+  <text class="et" x="634" y="356">Étape 5 · pool épuisé</text>
+  <text class="ed" x="634" y="374">PoolException (active ≥ max)</text>
+
+  <rect class="ebx" x="620" y="392" width="240" height="50" rx="10"/>
+  <text class="et" x="634" y="412">Étape 6 · réseau injoignable</text>
+  <text class="ed" x="634" y="430">ConnectionException / TimeoutException</text>
+
+  <rect class="ebx" x="620" y="448" width="240" height="50" rx="10"/>
+  <text class="et" x="634" y="468">Étape 7 · erreur SQL</text>
+  <text class="ed" x="634" y="486">QueryException (getSql disponible)</text>
+
+  <text class="sd" x="620" y="530">Héritage commun : ClickHouseException,</text>
+  <text class="sd" x="620" y="548">capturez la sous-classe pour réessayer.</text>
+  <text class="sd" x="620" y="578">ping() sonde en amont pour éviter</text>
+  <text class="sd" x="620" y="596">qu'une panne touche vos requêtes.</text>
+
+  <!-- 迁移生命周期 -->
+  <text class="sec" x="40" y="654">② Cycle de vie des migrations</text>
+  <line x1="40" y1="668" x2="860" y2="668" stroke="#E2E4EC" stroke-width="1.5"/>
+
+  <rect class="mbx" x="40" y="690" width="140" height="62" rx="10"/>
+  <text class="mt ctr" x="110" y="714">install()</text>
+  <text class="md ctr" x="110" y="733">Crée table migrations</text>
+
+  <rect class="mbx" x="210" y="690" width="140" height="62" rx="10"/>
+  <text class="mt ctr" x="280" y="714">run()</text>
+  <text class="md ctr" x="280" y="733">Filtre · batch+1</text>
+
+  <rect class="mbx" x="380" y="690" width="140" height="62" rx="10"/>
+  <text class="mt ctr" x="450" y="714">up()</text>
+  <text class="md ctr" x="450" y="733">Exécute et enregistre</text>
+
+  <rect class="mbx" x="550" y="690" width="140" height="62" rx="10"/>
+  <text class="mt ctr" x="620" y="714">rollback()</text>
+  <text class="md ctr" x="620" y="733">down() inverse + effacer</text>
+
+  <rect class="mbx" x="720" y="690" width="140" height="62" rx="10"/>
+  <text class="mt ctr" x="790" y="714">refresh()</text>
+  <text class="md ctr" x="790" y="733">attend mutation puis run</text>
+
+  <line x1="182" y1="721" x2="204" y2="721" stroke="#1E2233" stroke-width="1.8" marker-end="url(#arw)"/>
+  <line x1="352" y1="721" x2="374" y2="721" stroke="#1E2233" stroke-width="1.8" marker-end="url(#arw)"/>
+  <line x1="522" y1="721" x2="544" y2="721" stroke="#1E2233" stroke-width="1.8" marker-end="url(#arw)"/>
+  <line x1="692" y1="721" x2="714" y2="721" stroke="#1E2233" stroke-width="1.8" marker-end="url(#arw)"/>
+
+  <text class="sd" x="40" y="782">En cas d'échec, QueryException porte le batch et la liste déjà exécutée.</text>
+  <text class="sd" x="40" y="802">Le rollback de refresh() dépend d'une mutation asynchrone ALTER TABLE … DELETE : attendre sa fin avant de relancer run().</text>
+  <text class="sd" x="40" y="822">Les fichiers sont exécutés par ordre de nom ; le nom de classe en découle (horodatage retiré, puis camelCase).</text>
+</svg>

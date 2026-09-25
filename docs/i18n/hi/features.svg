@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="780" viewBox="0 0 900 780" role="img" aria-labelledby="featTitle featDesc">
+  <title id="featTitle">clickhouse-php फ़ीचर डिज़ाइन</title>
+  <desc id="featDesc">छह मुख्य मॉड्यूल: Query Builder, Schema Builder, Migration सिस्टम, ORM, मल्टी-कनेक्शन और पूल, फ्रेमवर्क इंटीग्रेशन, साथ में सुरक्षा और Exception सिस्टम।</desc>
+  <style>
+    text{font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#1E2233}
+    .ttl{font-size:20px;font-weight:700}
+    .sub{font-size:12px;fill:#5A6172}
+    .ctr{text-anchor:middle}
+    .card{fill:#fff;stroke:#1E2233;stroke-width:2}
+    .ct{font-size:14px;font-weight:700}
+    .cs{font-size:10px;fill:#8A90A6}
+    .li{font-size:11.5px;fill:#333A4D}
+    .hr{stroke:#E2E4EC;stroke-width:1.5}
+    .bar{fill:#F2F3F5;stroke:#1E2233;stroke-width:2}
+    .bt{font-size:13.5px;font-weight:700}
+    .bl{font-size:11.5px;fill:#333A4D}
+  </style>
+
+  <rect x="0" y="0" width="900" height="780" fill="#FFFFFF"/>
+  <text class="ttl ctr" x="450" y="44">clickhouse-php फ़ीचर डिज़ाइन</text>
+  <text class="sub ctr" x="450" y="66">छह मुख्य मॉड्यूल, सभी वर्तमान में लागू</text>
+
+  <!-- 卡片 1：查询构建器 -->
+  <rect class="card" x="40" y="96" width="260" height="252" rx="14"/>
+  <text class="ct" x="58" y="126">Query Builder</text>
+  <text class="cs ctr" x="250" y="126">Query\Builder</text>
+  <rect x="58" y="136" width="48" height="4" rx="2" fill="#FFD400"/>
+  <line class="hr" x1="40" y1="150" x2="300" y2="150"/>
+  <g>
+    <circle cx="64" cy="171" r="2.5" fill="#777BB4"/><text class="li" x="76" y="175">चेन कॉल, बिल्डिंग बिना IO</text>
+    <circle cx="64" cy="192" r="2.5" fill="#777BB4"/><text class="li" x="76" y="196">where / orWhere / whereIn / whereNotIn</text>
+    <circle cx="64" cy="213" r="2.5" fill="#777BB4"/><text class="li" x="76" y="217">whereBetween / whereNull / whereRaw</text>
+    <circle cx="64" cy="234" r="2.5" fill="#777BB4"/><text class="li" x="76" y="238">orderBy / groupBy / limit / offset</text>
+    <circle cx="64" cy="255" r="2.5" fill="#777BB4"/><text class="li" x="76" y="259">एग्रीगेट count / sum / avg / min / max</text>
+    <circle cx="64" cy="276" r="2.5" fill="#777BB4"/><text class="li" x="76" y="280">insert सिंगल और बल्क (हर 1000 रो चंक)</text>
+    <circle cx="64" cy="297" r="2.5" fill="#777BB4"/><text class="li" x="76" y="301">delete() → ALTER TABLE … DELETE</text>
+    <circle cx="64" cy="318" r="2.5" fill="#777BB4"/><text class="li" x="76" y="322">toSql() कंपाइल्ड SQL देता है</text>
+  </g>
+
+  <!-- 卡片 2：Schema Builder -->
+  <rect class="card" x="320" y="96" width="260" height="252" rx="14"/>
+  <text class="ct" x="338" y="126">Schema Builder</text>
+  <text class="cs ctr" x="530" y="126">Schema\Builder</text>
+  <rect x="338" y="136" width="48" height="4" rx="2" fill="#777BB4"/>
+  <line class="hr" x1="320" y1="150" x2="580" y2="150"/>
+  <g>
+    <circle cx="344" cy="171" r="2.5" fill="#777BB4"/><text class="li" x="356" y="175">create / alter / drop (DDL)</text>
+    <circle cx="344" cy="192" r="2.5" fill="#777BB4"/><text class="li" x="356" y="196">hasTable / getTables / getTableInfo</text>
+    <circle cx="344" cy="213" r="2.5" fill="#777BB4"/><text class="li" x="356" y="217">ClickHouse के 21 कॉलम टाइप कवर</text>
+    <circle cx="344" cy="234" r="2.5" fill="#777BB4"/><text class="li" x="356" y="238">न्यूमेरिक Int8-64/UInt8-64/Float32-64</text>
+    <circle cx="344" cy="255" r="2.5" fill="#777BB4"/><text class="li" x="356" y="259">Decimal(P,S) · Date / DateTime64</text>
+    <circle cx="344" cy="276" r="2.5" fill="#777BB4"/><text class="li" x="356" y="280">Array / Nullable / LowCardinality</text>
+    <circle cx="344" cy="297" r="2.5" fill="#777BB4"/><text class="li" x="356" y="301">अन्य UUID / Bool / FixedString(N)</text>
+    <circle cx="344" cy="318" r="2.5" fill="#777BB4"/><text class="li" x="356" y="322">इंजन पैरामीटर partitionBy / orderBy / ttl</text>
+  </g>
+
+  <!-- 卡片 3：迁移系统 -->
+  <rect class="card" x="600" y="96" width="260" height="252" rx="14"/>
+  <text class="ct" x="618" y="126">Migration सिस्टम</text>
+  <text class="cs ctr" x="810" y="126">Migration</text>
+  <rect x="618" y="136" width="48" height="4" rx="2" fill="#FFD400"/>
+  <line class="hr" x1="600" y1="150" x2="860" y2="150"/>
+  <g>
+    <circle cx="624" cy="171" r="2.5" fill="#777BB4"/><text class="li" x="636" y="175">install() migrations रिकॉर्ड टेबल बनाता है</text>
+    <circle cx="624" cy="192" r="2.5" fill="#777BB4"/><text class="li" x="636" y="196">run() सॉर्ट के बाद चली माइग्रेशन छाँटता है</text>
+    <circle cx="624" cy="213" r="2.5" fill="#777BB4"/><text class="li" x="636" y="217">हर बैच batch+1, हर up() के बाद रिकॉर्ड</text>
+    <circle cx="624" cy="234" r="2.5" fill="#777BB4"/><text class="li" x="636" y="238">rollback(steps) अंतिम बैच उल्टे क्रम में</text>
+    <circle cx="624" cy="255" r="2.5" fill="#777BB4"/><text class="li" x="636" y="259">refresh() रोलबैक → mutation → रीरन</text>
+    <circle cx="624" cy="276" r="2.5" fill="#777BB4"/><text class="li" x="636" y="280">विफल होने पर QueryException संदर्भ सहित</text>
+    <circle cx="624" cy="297" r="2.5" fill="#777BB4"/><text class="li" x="636" y="301">टेबल MergeTree ORDER BY migration</text>
+    <circle cx="624" cy="318" r="2.5" fill="#777BB4"/><text class="li" x="636" y="322">माइग्रेशन क्लास सीधे Schema Builder</text>
+  </g>
+
+  <!-- 卡片 4：ORM -->
+  <rect class="card" x="40" y="368" width="260" height="252" rx="14"/>
+  <text class="ct" x="58" y="398">ORM</text>
+  <text class="cs ctr" x="250" y="398">ORM\Model</text>
+  <rect x="58" y="408" width="48" height="4" rx="2" fill="#777BB4"/>
+  <line class="hr" x1="40" y1="422" x2="300" y2="422"/>
+  <g>
+    <circle cx="64" cy="443" r="2.5" fill="#777BB4"/><text class="li" x="76" y="447">Model एक्सटेंड करते ही ActiveRecord</text>
+    <circle cx="64" cy="464" r="2.5" fill="#777BB4"/><text class="li" x="76" y="468">स्टैटिक एंट्री where / find / all / insert</text>
+    <circle cx="64" cy="485" r="2.5" fill="#777BB4"/><text class="li" x="76" y="489">__callStatic Builder मेथड पास करता है</text>
+    <circle cx="64" cy="506" r="2.5" fill="#777BB4"/><text class="li" x="76" y="510">save() मौजूदा attributes लिखता है</text>
+    <circle cx="64" cy="527" r="2.5" fill="#777BB4"/><text class="li" x="76" y="531">__get / __set बिना घोषित फ़ील्ड एक्सेस</text>
+    <circle cx="64" cy="548" r="2.5" fill="#777BB4"/><text class="li" x="76" y="552">Collection map / filter / pluck</text>
+    <circle cx="64" cy="569" r="2.5" fill="#777BB4"/><text class="li" x="76" y="573">first / last / count / इंडेक्स एक्सेस</text>
+    <circle cx="64" cy="590" r="2.5" fill="#777BB4"/><text class="li" x="76" y="594">कलेक्शन रीड-ओनली, राइट पर LogicException</text>
+  </g>
+
+  <!-- 卡片 5：多连接与连接池 -->
+  <rect class="card" x="320" y="368" width="260" height="252" rx="14"/>
+  <text class="ct" x="338" y="398">मल्टी-कनेक्शन और पूल</text>
+  <text class="cs ctr" x="530" y="398">Manager · Pool</text>
+  <rect x="338" y="408" width="48" height="4" rx="2" fill="#FFD400"/>
+  <line class="hr" x1="320" y1="422" x2="580" y2="422"/>
+  <g>
+    <circle cx="344" cy="443" r="2.5" fill="#777BB4"/><text class="li" x="356" y="447">Manager कई कनेक्शन नाम से स्विच</text>
+    <circle cx="344" cy="464" r="2.5" fill="#777BB4"/><text class="li" x="356" y="468">कनेक्शन लेज़ी लोड + इंस्टेंस कैश रीयूज़</text>
+    <circle cx="344" cy="485" r="2.5" fill="#777BB4"/><text class="li" x="356" y="489">Swoole / Swow / Workerman कोरूटीन पूल</text>
+    <circle cx="344" cy="506" r="2.5" fill="#777BB4"/><text class="li" x="356" y="510">NoPool FPM पारंपरिक मोड के लिए</text>
+    <circle cx="344" cy="527" r="2.5" fill="#777BB4"/><text class="li" x="356" y="531">min / max_connections + टाइमआउट</text>
+    <circle cx="344" cy="548" r="2.5" fill="#777BB4"/><text class="li" x="356" y="552">खाली रीयूज़ → सीमा तक नया → सीमा पर एरर</text>
+    <circle cx="344" cy="569" r="2.5" fill="#777BB4"/><text class="li" x="356" y="573">PooledClient finally में वापसी सुनिश्चित</text>
+    <circle cx="344" cy="590" r="2.5" fill="#777BB4"/><text class="li" x="356" y="594">ping() एक्टिविटी · stats() पूल स्थिति</text>
+  </g>
+
+  <!-- 卡片 6：框架集成 -->
+  <rect class="card" x="600" y="368" width="260" height="252" rx="14"/>
+  <text class="ct" x="618" y="398">फ्रेमवर्क इंटीग्रेशन</text>
+  <text class="cs ctr" x="810" y="398">4 एडाप्टर</text>
+  <rect x="618" y="408" width="48" height="4" rx="2" fill="#777BB4"/>
+  <line class="hr" x1="600" y1="422" x2="860" y2="422"/>
+  <g>
+    <circle cx="624" cy="443" r="2.5" fill="#777BB4"/><text class="li" x="636" y="447">Laravel ऑटो-डिस्कवरी + Facade + कमांड</text>
+    <circle cx="624" cy="464" r="2.5" fill="#777BB4"/><text class="li" x="636" y="468">ThinkPHP Service रजिस्ट्रेशन + कमांड</text>
+    <circle cx="624" cy="485" r="2.5" fill="#777BB4"/><text class="li" x="636" y="489">Webman प्लगिन कॉन्फ़िग ऑटो-लोड</text>
+    <circle cx="624" cy="506" r="2.5" fill="#777BB4"/><text class="li" x="636" y="510">Hyperf ConfigProvider + कोरूटीन पूल</text>
+    <circle cx="624" cy="527" r="2.5" fill="#777BB4"/><text class="li" x="636" y="531">एक जैसा कॉन्फ़िग connections / pool</text>
+    <circle cx="624" cy="548" r="2.5" fill="#777BB4"/><text class="li" x="636" y="552">env वेरिएबल CLICKHOUSE_* ओवरराइड</text>
+    <circle cx="624" cy="569" r="2.5" fill="#777BB4"/><text class="li" x="636" y="573">वैकल्पिक PSR-3 क्वेरी लॉग</text>
+    <circle cx="624" cy="590" r="2.5" fill="#777BB4"/><text class="li" x="636" y="594">टेबल सूची / माइग्रेशन CLI टूल</text>
+  </g>
+
+  <!-- 安全与异常 -->
+  <rect class="bar" x="40" y="640" width="820" height="80" rx="14"/>
+  <text class="bt" x="64" y="672">सुरक्षा</text>
+  <text class="bl" x="64" y="696">? प्लेसहोल्डर पैरामीटर बाइंडिंग + Quoter एस्केपिंग</text>
+  <text class="bl" x="64" y="712">डेटाबेस / टेबल / कॉलम आइडेंटिफ़ायर बैकटिक में</text>
+  <line x1="470" y1="656" x2="470" y2="704" stroke="#C9CCD8" stroke-width="1.5"/>
+  <text class="bt" x="500" y="672">Exception सिस्टम</text>
+  <text class="bl" x="500" y="696">ClickHouseException बेस क्लास, कुल चार सब-क्लास</text>
+  <text class="bl" x="500" y="712">Connection (Timeout सहित) · Query (getSql) · Pool</text>
+
+  <text class="sub ctr" x="450" y="754">ऊपर दी गई सभी क्षमताएँ लागू हैं; JOIN / HAVING क्लॉज़ और Native TCP प्रोटोकॉल भविष्य की योजना</text>
+</svg>

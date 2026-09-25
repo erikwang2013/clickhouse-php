@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="780" viewBox="0 0 900 780" role="img" aria-labelledby="featTitle featDesc">
+  <title id="featTitle">clickhouse-php 功能设计</title>
+  <desc id="featDesc">六大功能模块：查询构建器、Schema Builder、迁移系统、ORM、多连接与连接池、框架集成，以及安全与异常体系。</desc>
+  <style>
+    text{font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#1E2233}
+    .ttl{font-size:20px;font-weight:700}
+    .sub{font-size:12px;fill:#5A6172}
+    .ctr{text-anchor:middle}
+    .card{fill:#fff;stroke:#1E2233;stroke-width:2}
+    .ct{font-size:14px;font-weight:700}
+    .cs{font-size:10px;fill:#8A90A6}
+    .li{font-size:11.5px;fill:#333A4D}
+    .hr{stroke:#E2E4EC;stroke-width:1.5}
+    .bar{fill:#F2F3F5;stroke:#1E2233;stroke-width:2}
+    .bt{font-size:13.5px;font-weight:700}
+    .bl{font-size:11.5px;fill:#333A4D}
+  </style>
+
+  <rect x="0" y="0" width="900" height="780" fill="#FFFFFF"/>
+  <text class="ttl ctr" x="450" y="44">clickhouse-php 功能设计</text>
+  <text class="sub ctr" x="450" y="66">六大功能模块，全部为当前已实现能力</text>
+
+  <!-- 卡片 1：查询构建器 -->
+  <rect class="card" x="40" y="96" width="260" height="252" rx="14"/>
+  <text class="ct" x="58" y="126">查询构建器</text>
+  <text class="cs ctr" x="250" y="126">Query\Builder</text>
+  <rect x="58" y="136" width="48" height="4" rx="2" fill="#FFD400"/>
+  <line class="hr" x1="40" y1="150" x2="300" y2="150"/>
+  <g>
+    <circle cx="64" cy="171" r="2.5" fill="#777BB4"/><text class="li" x="76" y="175">链式调用，纯构建不产生 IO</text>
+    <circle cx="64" cy="192" r="2.5" fill="#777BB4"/><text class="li" x="76" y="196">where / orWhere / whereIn / whereNotIn</text>
+    <circle cx="64" cy="213" r="2.5" fill="#777BB4"/><text class="li" x="76" y="217">whereBetween / whereNull / whereRaw</text>
+    <circle cx="64" cy="234" r="2.5" fill="#777BB4"/><text class="li" x="76" y="238">orderBy / groupBy / limit / offset</text>
+    <circle cx="64" cy="255" r="2.5" fill="#777BB4"/><text class="li" x="76" y="259">聚合 count / sum / avg / min / max</text>
+    <circle cx="64" cy="276" r="2.5" fill="#777BB4"/><text class="li" x="76" y="280">insert 单行与批量（每 1000 行分片）</text>
+    <circle cx="64" cy="297" r="2.5" fill="#777BB4"/><text class="li" x="76" y="301">delete 编译为 ALTER TABLE … DELETE</text>
+    <circle cx="64" cy="318" r="2.5" fill="#777BB4"/><text class="li" x="76" y="322">toSql() 输出编译后的 SQL</text>
+  </g>
+
+  <!-- 卡片 2：Schema Builder -->
+  <rect class="card" x="320" y="96" width="260" height="252" rx="14"/>
+  <text class="ct" x="338" y="126">Schema Builder</text>
+  <text class="cs ctr" x="530" y="126">Schema\Builder</text>
+  <rect x="338" y="136" width="48" height="4" rx="2" fill="#777BB4"/>
+  <line class="hr" x1="320" y1="150" x2="580" y2="150"/>
+  <g>
+    <circle cx="344" cy="171" r="2.5" fill="#777BB4"/><text class="li" x="356" y="175">create / alter / drop 建表改表</text>
+    <circle cx="344" cy="192" r="2.5" fill="#777BB4"/><text class="li" x="356" y="196">hasTable / getTables / getTableInfo</text>
+    <circle cx="344" cy="213" r="2.5" fill="#777BB4"/><text class="li" x="356" y="217">覆盖 ClickHouse 列类型共 21 种</text>
+    <circle cx="344" cy="234" r="2.5" fill="#777BB4"/><text class="li" x="356" y="238">数值 Int8-64 / UInt8-64 / Float32-64</text>
+    <circle cx="344" cy="255" r="2.5" fill="#777BB4"/><text class="li" x="356" y="259">Decimal(P,S) · Date / DateTime64</text>
+    <circle cx="344" cy="276" r="2.5" fill="#777BB4"/><text class="li" x="356" y="280">修饰 Array / Nullable / LowCardinality</text>
+    <circle cx="344" cy="297" r="2.5" fill="#777BB4"/><text class="li" x="356" y="301">其他 UUID / Bool / FixedString(N)</text>
+    <circle cx="344" cy="318" r="2.5" fill="#777BB4"/><text class="li" x="356" y="322">引擎参数 partitionBy / orderBy / ttl</text>
+  </g>
+
+  <!-- 卡片 3：迁移系统 -->
+  <rect class="card" x="600" y="96" width="260" height="252" rx="14"/>
+  <text class="ct" x="618" y="126">迁移系统</text>
+  <text class="cs ctr" x="810" y="126">Migration</text>
+  <rect x="618" y="136" width="48" height="4" rx="2" fill="#FFD400"/>
+  <line class="hr" x1="600" y1="150" x2="860" y2="150"/>
+  <g>
+    <circle cx="624" cy="171" r="2.5" fill="#777BB4"/><text class="li" x="636" y="175">install() 创建 migrations 记录表</text>
+    <circle cx="624" cy="192" r="2.5" fill="#777BB4"/><text class="li" x="636" y="196">run() 排序后过滤已执行迁移</text>
+    <circle cx="624" cy="213" r="2.5" fill="#777BB4"/><text class="li" x="636" y="217">每批 batch+1，逐条 up() 后落库</text>
+    <circle cx="624" cy="234" r="2.5" fill="#777BB4"/><text class="li" x="636" y="238">rollback(steps) 末批倒序回滚</text>
+    <circle cx="624" cy="255" r="2.5" fill="#777BB4"/><text class="li" x="636" y="259">refresh() 回滚 → 等 mutation → 重跑</text>
+    <circle cx="624" cy="276" r="2.5" fill="#777BB4"/><text class="li" x="636" y="280">失败抛 QueryException 携带上下文</text>
+    <circle cx="624" cy="297" r="2.5" fill="#777BB4"/><text class="li" x="636" y="301">记录表 MergeTree ORDER BY migration</text>
+    <circle cx="624" cy="318" r="2.5" fill="#777BB4"/><text class="li" x="636" y="322">迁移类支持直接使用 Schema Builder</text>
+  </g>
+
+  <!-- 卡片 4：ORM -->
+  <rect class="card" x="40" y="368" width="260" height="252" rx="14"/>
+  <text class="ct" x="58" y="398">ORM</text>
+  <text class="cs ctr" x="250" y="398">ORM\Model</text>
+  <rect x="58" y="408" width="48" height="4" rx="2" fill="#777BB4"/>
+  <line class="hr" x1="40" y1="422" x2="300" y2="422"/>
+  <g>
+    <circle cx="64" cy="443" r="2.5" fill="#777BB4"/><text class="li" x="76" y="447">Model 继承即得 ActiveRecord</text>
+    <circle cx="64" cy="464" r="2.5" fill="#777BB4"/><text class="li" x="76" y="468">静态入口 where / find / all / insert</text>
+    <circle cx="64" cy="485" r="2.5" fill="#777BB4"/><text class="li" x="76" y="489">__callStatic 透传 Builder 方法</text>
+    <circle cx="64" cy="506" r="2.5" fill="#777BB4"/><text class="li" x="76" y="510">save() 写回当前 attributes</text>
+    <circle cx="64" cy="527" r="2.5" fill="#777BB4"/><text class="li" x="76" y="531">__get / __set 免声明字段访问</text>
+    <circle cx="64" cy="548" r="2.5" fill="#777BB4"/><text class="li" x="76" y="552">Collection map / filter / pluck</text>
+    <circle cx="64" cy="569" r="2.5" fill="#777BB4"/><text class="li" x="76" y="573">first / last / count / 下标访问</text>
+    <circle cx="64" cy="590" r="2.5" fill="#777BB4"/><text class="li" x="76" y="594">集合只读，写入抛出 LogicException</text>
+  </g>
+
+  <!-- 卡片 5：多连接与连接池 -->
+  <rect class="card" x="320" y="368" width="260" height="252" rx="14"/>
+  <text class="ct" x="338" y="398">多连接与连接池</text>
+  <text class="cs ctr" x="530" y="398">Manager · Pool</text>
+  <rect x="338" y="408" width="48" height="4" rx="2" fill="#FFD400"/>
+  <line class="hr" x1="320" y1="422" x2="580" y2="422"/>
+  <g>
+    <circle cx="344" cy="443" r="2.5" fill="#777BB4"/><text class="li" x="356" y="447">Manager 多连接按名切换</text>
+    <circle cx="344" cy="464" r="2.5" fill="#777BB4"/><text class="li" x="356" y="468">连接懒加载 + 实例缓存复用</text>
+    <circle cx="344" cy="485" r="2.5" fill="#777BB4"/><text class="li" x="356" y="489">Swoole / Swow / Workerman 协程池</text>
+    <circle cx="344" cy="506" r="2.5" fill="#777BB4"/><text class="li" x="356" y="510">NoPool 为 FPM 传统模式兜底</text>
+    <circle cx="344" cy="527" r="2.5" fill="#777BB4"/><text class="li" x="356" y="531">min / max_connections 与超时参数</text>
+    <circle cx="344" cy="548" r="2.5" fill="#777BB4"/><text class="li" x="356" y="552">空闲复用 → 未达上限新建 → 超限报错</text>
+    <circle cx="344" cy="569" r="2.5" fill="#777BB4"/><text class="li" x="356" y="573">PooledClient finally 保证归还</text>
+    <circle cx="344" cy="590" r="2.5" fill="#777BB4"/><text class="li" x="356" y="594">ping() 探活 · stats() 查看池状态</text>
+  </g>
+
+  <!-- 卡片 6：框架集成 -->
+  <rect class="card" x="600" y="368" width="260" height="252" rx="14"/>
+  <text class="ct" x="618" y="398">框架集成</text>
+  <text class="cs ctr" x="810" y="398">四个框架适配器</text>
+  <rect x="618" y="408" width="48" height="4" rx="2" fill="#777BB4"/>
+  <line class="hr" x1="600" y1="422" x2="860" y2="422"/>
+  <g>
+    <circle cx="624" cy="443" r="2.5" fill="#777BB4"/><text class="li" x="636" y="447">Laravel 自动发现 + Facade + 命令</text>
+    <circle cx="624" cy="464" r="2.5" fill="#777BB4"/><text class="li" x="636" y="468">ThinkPHP Service 注册 + think 命令</text>
+    <circle cx="624" cy="485" r="2.5" fill="#777BB4"/><text class="li" x="636" y="489">Webman 插件配置自动加载</text>
+    <circle cx="624" cy="506" r="2.5" fill="#777BB4"/><text class="li" x="636" y="510">Hyperf ConfigProvider + 协程池</text>
+    <circle cx="624" cy="527" r="2.5" fill="#777BB4"/><text class="li" x="636" y="531">统一配置 connections / pool</text>
+    <circle cx="624" cy="548" r="2.5" fill="#777BB4"/><text class="li" x="636" y="552">环境变量 CLICKHOUSE_* 覆盖默认值</text>
+    <circle cx="624" cy="569" r="2.5" fill="#777BB4"/><text class="li" x="636" y="573">可选 PSR-3 查询日志</text>
+    <circle cx="624" cy="590" r="2.5" fill="#777BB4"/><text class="li" x="636" y="594">表清单 / 迁移 命令行工具</text>
+  </g>
+
+  <!-- 安全与异常 -->
+  <rect class="bar" x="40" y="640" width="820" height="80" rx="14"/>
+  <text class="bt" x="64" y="672">安全</text>
+  <text class="bl" x="64" y="696">? 占位符参数绑定 + Quoter 转义</text>
+  <text class="bl" x="64" y="712">库 / 表 / 列标识符反引号引用</text>
+  <line x1="470" y1="656" x2="470" y2="704" stroke="#C9CCD8" stroke-width="1.5"/>
+  <text class="bt" x="500" y="672">异常体系</text>
+  <text class="bl" x="500" y="696">ClickHouseException 为基类，共四类子异常</text>
+  <text class="bl" x="500" y="712">Connection（含 Timeout）· Query（getSql）· Pool</text>
+
+  <text class="sub ctr" x="450" y="754">以上均为已实现能力；JOIN / HAVING 子句与 Native TCP 协议为后续规划</text>
+</svg>

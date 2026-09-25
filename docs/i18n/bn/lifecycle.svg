@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="860" viewBox="0 0 900 860" role="img" aria-labelledby="lifeTitle lifeDesc">
+  <title id="lifeTitle">clickhouse-php লাইফসাইকল</title>
+  <desc id="lifeDesc">কুয়েরির লাইফসাইকলের নয় ধাপ: ইনিশিয়ালাইজ, ক্লায়েন্ট নেওয়া, বিল্ড, কম্পাইল, পুল থেকে কানেকশন, পাঠানো, পার্স, রেজাল্ট ব্যবহার, ফেরত দেওয়া; ডানে প্রতিটি ধাপে সম্ভাব্য Exception; নিচে Migration লাইফসাইকল।</desc>
+  <style>
+    text{font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#1E2233}
+    .ttl{font-size:20px;font-weight:700}
+    .sub{font-size:12px;fill:#5A6172}
+    .ctr{text-anchor:middle}
+    .sec{font-size:14px;font-weight:700}
+    .st{font-size:12.5px;font-weight:700}
+    .sd{font-size:11px;fill:#5A6172}
+    .num{font-size:13px;font-weight:700;fill:#fff;text-anchor:middle}
+    .et{font-size:11.5px;font-weight:700}
+    .ed{font-size:10.5px;fill:#5A6172}
+    .ebx{fill:#FFF1F0;stroke:#E05252;stroke-width:1.8}
+    .mt{font-size:12px;font-weight:700}
+    .md{font-size:10px;fill:#5A6172}
+    .bx{fill:#fff;stroke:#1E2233;stroke-width:2}
+    .mbx{fill:#FFF6D0;stroke:#1E2233;stroke-width:2}
+  </style>
+  <defs>
+    <marker id="arw" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#1E2233"/>
+    </marker>
+    <marker id="arwr" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#E05252"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="900" height="860" fill="#FFFFFF"/>
+  <text class="ttl ctr" x="450" y="44">clickhouse-php লাইফসাইকল</text>
+  <text class="sub ctr" x="450" y="66">বাঁয়ে একটি কুয়েরির সম্পূর্ণ চেইন, ডানে প্রতিটি ধাপে সম্ভাব্য Exception, নিচে Migration লাইফসাইকল</text>
+
+  <text class="sec" x="40" y="102">① কুয়েরি লাইফসাইকল</text>
+  <text class="sec" x="620" y="102">Exception শাখা</text>
+
+  <!-- মূল স্তম্ভ -->
+  <line x1="78" y1="140" x2="78" y2="588" stroke="#D5D8E3" stroke-width="3"/>
+  <line x1="78" y1="140" x2="78" y2="588" stroke="#777BB4" stroke-width="3"/>
+
+  <circle cx="78" cy="140" r="14" fill="#777BB4"/><text class="num" x="78" y="145">1</text>
+  <text class="st" x="106" y="136">ইনিশিয়ালাইজ</text>
+  <text class="sd" x="106" y="154">ClickHouse::setManager($manager), ফ্রেমওয়ার্ক অ্যাডাপ্টার কন্টেইনারে সিঙ্গেলটন হিসেবে বাইন্ড</text>
+
+  <circle cx="78" cy="196" r="14" fill="#777BB4"/><text class="num" x="78" y="201">2</text>
+  <text class="st" x="106" y="192">ক্লায়েন্ট নিন</text>
+  <text class="sd" x="106" y="210">Manager::connection($name): পুলে থাকলে PooledClient, নাহলে HttpClient বানিয়ে ক্যাশ করে</text>
+
+  <circle cx="78" cy="252" r="14" fill="#777BB4"/><text class="num" x="78" y="257">3</text>
+  <text class="st" x="106" y="248">কুয়েরি বিল্ড</text>
+  <text class="sd" x="106" y="266">ClickHouse::table('logs')-&gt;where(...)-&gt;limit(100), শর্ত চেইন কলে জমা হয়</text>
+
+  <circle cx="78" cy="308" r="14" fill="#777BB4"/><text class="num" x="78" y="313">4</text>
+  <text class="st" x="106" y="304">SQL কম্পাইল</text>
+  <text class="sd" x="106" y="322">Grammar::compileSelect() বানায় SELECT … FROM `db`.`logs` WHERE … ORDER BY … LIMIT</text>
+
+  <circle cx="78" cy="364" r="14" fill="#777BB4"/><text class="num" x="78" y="369">5</text>
+  <text class="st" x="106" y="360">পুল থেকে কানেকশন</text>
+  <text class="sd" x="106" y="378">PooledClient::withClient() → pool-&gt;get(): আইডল রিইউজ / সীমার নিচে হলে নতুন</text>
+
+  <circle cx="78" cy="420" r="14" fill="#777BB4"/><text class="num" x="78" y="425">6</text>
+  <text class="st" x="106" y="416">বাইন্ড ও পাঠানো</text>
+  <text class="sd" x="106" y="434">HttpTransport::send(): ? প্লেসহোল্ডার রিপ্লেস, POST বডি SQL + FORMAT JSON</text>
+
+  <circle cx="78" cy="476" r="14" fill="#777BB4"/><text class="num" x="78" y="481">7</text>
+  <text class="st" x="106" y="472">রেসপন্স পার্স</text>
+  <text class="sd" x="106" y="490">HTTP 200 → json_decode → Result(rows, meta); 200 নয় → QueryException</text>
+
+  <circle cx="78" cy="532" r="14" fill="#777BB4"/><text class="num" x="78" y="537">8</text>
+  <text class="st" x="106" y="528">রেজাল্ট ব্যবহার</text>
+  <text class="sd" x="106" y="546">Result::first() · toArray() · ইটারেট, রেজাল্ট সেট রিড-অনলি</text>
+
+  <circle cx="78" cy="588" r="14" fill="#1E2233"/><text class="num" x="78" y="593">9</text>
+  <text class="st" x="106" y="584">কানেকশন ফেরত</text>
+  <text class="sd" x="106" y="602">finally { pool-&gt;put($client) }: সফল ও Exception পথে ফেরত হয়</text>
+
+  <!-- Exception কলাম -->
+  <rect class="ebx" x="620" y="168" width="240" height="50" rx="10"/>
+  <text class="et" x="634" y="188">ধাপ 2 · কানেকশন নেই</text>
+  <text class="ed" x="634" y="206">ConnectionException</text>
+
+  <rect class="ebx" x="620" y="336" width="240" height="50" rx="10"/>
+  <text class="et" x="634" y="356">ধাপ 5 · পুল শেষ</text>
+  <text class="ed" x="634" y="374">PoolException（active ≥ max）</text>
+
+  <rect class="ebx" x="620" y="392" width="240" height="50" rx="10"/>
+  <text class="et" x="634" y="412">ধাপ 6 · নেটওয়ার্ক নেই</text>
+  <text class="ed" x="634" y="430">ConnectionException / TimeoutException</text>
+
+  <rect class="ebx" x="620" y="448" width="240" height="50" rx="10"/>
+  <text class="et" x="634" y="468">ধাপ 7 · SQL এক্সিকিউশন ভুল</text>
+  <text class="ed" x="634" y="486">QueryException (getSql আছে)</text>
+
+  <text class="sd" x="620" y="530">সব Exception আসে ClickHouseException থেকে,</text>
+  <text class="sd" x="620" y="548">প্রয়োজনে নির্দিষ্ট সাবক্লাস ধরে রিট্রাই বা ফলব্যাক।</text>
+  <text class="sd" x="620" y="578">ping() দিয়ে আগে লাইভ চেক করা যায়, যাতে</text>
+  <text class="sd" x="620" y="596">কানেকশন সমস্যা কুয়েরির পথে না পড়ে।</text>
+
+  <!-- Migration লাইফসাইকল -->
+  <text class="sec" x="40" y="654">② Migration লাইফসাইকল</text>
+  <line x1="40" y1="668" x2="860" y2="668" stroke="#E2E4EC" stroke-width="1.5"/>
+
+  <rect class="mbx" x="40" y="690" width="140" height="62" rx="10"/>
+  <text class="mt ctr" x="110" y="714">install()</text>
+  <text class="md ctr" x="110" y="733">migrations টেবিল তৈরি</text>
+
+  <rect class="mbx" x="210" y="690" width="140" height="62" rx="10"/>
+  <text class="mt ctr" x="280" y="714">run()</text>
+  <text class="md ctr" x="280" y="733">চালিত বাদ · batch+1</text>
+
+  <rect class="mbx" x="380" y="690" width="140" height="62" rx="10"/>
+  <text class="mt ctr" x="450" y="714">up()</text>
+  <text class="md ctr" x="450" y="733">চালায় ও রেকর্ড লেখে</text>
+
+  <rect class="mbx" x="550" y="690" width="140" height="62" rx="10"/>
+  <text class="mt ctr" x="620" y="714">rollback()</text>
+  <text class="md ctr" x="620" y="733">শেষ ব্যাচ down() + ডিলিট</text>
+
+  <rect class="mbx" x="720" y="690" width="140" height="62" rx="10"/>
+  <text class="mt ctr" x="790" y="714">refresh()</text>
+  <text class="md ctr" x="790" y="733">mutation শেষে আবার চালান</text>
+
+  <line x1="182" y1="721" x2="204" y2="721" stroke="#1E2233" stroke-width="1.8" marker-end="url(#arw)"/>
+  <line x1="352" y1="721" x2="374" y2="721" stroke="#1E2233" stroke-width="1.8" marker-end="url(#arw)"/>
+  <line x1="522" y1="721" x2="544" y2="721" stroke="#1E2233" stroke-width="1.8" marker-end="url(#arw)"/>
+  <line x1="692" y1="721" x2="714" y2="721" stroke="#1E2233" stroke-width="1.8" marker-end="url(#arw)"/>
+
+  <text class="sd" x="40" y="782">ব্যর্থ হলে QueryException, সাথে batch ও চালিত Migration-এর তালিকা।</text>
+  <text class="sd" x="40" y="802">refresh()-এর রোলব্যাক নির্ভর করে ALTER TABLE … DELETE অ্যাসিংক mutation-এর উপর, শেষ হলে তবেই আবার run()।</text>
+  <text class="sd" x="40" y="822">Migration ফাইল নাম অনুযায়ী সাজিয়ে চলে, ক্লাসের নাম ফাইল নাম থেকে আসে (টাইমস্ট্যাম্প প্রিফিক্স বাদ দিয়ে ক্যামেল কেস)।</text>
+</svg>

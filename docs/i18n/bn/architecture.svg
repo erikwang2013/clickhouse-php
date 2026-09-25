@@ -1,0 +1,162 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="880" viewBox="0 0 900 880" role="img" aria-labelledby="archTitle archDesc">
+  <title id="archTitle">clickhouse-php আর্কিটেকচার ডিজাইন</title>
+  <desc id="archDesc">ছয় স্তরের আর্কিটেকচার: এন্ট্রি স্তর, বিল্ড স্তর, ক্লায়েন্ট স্তর, Connection Pool স্তর, Transport স্তর, সাপোর্ট স্তর, উপরে থেকে নিচে ClickHouse Server কল করে।</desc>
+  <style>
+    text{font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#1E2233}
+    .ttl{font-size:20px;font-weight:700}
+    .sub{font-size:12px;fill:#5A6172}
+    .lt{font-size:15px;font-weight:700}
+    .ls{font-size:10.5px;fill:#5A6172}
+    .n{font-size:12.5px;font-weight:600}
+    .d{font-size:10.5px;fill:#5A6172}
+    .ctr{text-anchor:middle}
+    .y{font-size:15px;font-weight:700;fill:#FFD400}
+    .y2{font-size:10.5px;fill:#8F97AE}
+    .w{font-size:12.5px;font-weight:600;fill:#FFFFFF}
+    .w2{font-size:10.5px;fill:#FFD400}
+    .bar{stroke:none}
+    .bx{fill:#fff;stroke:#1E2233;stroke-width:2}
+    .band{stroke:#1E2233;stroke-width:2}
+    .link{stroke:#1E2233;stroke-width:1.8;fill:none}
+    .dash{stroke:#8A90A6;stroke-width:1.6;fill:none;stroke-dasharray:5 4}
+  </style>
+  <defs>
+    <marker id="arw" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#1E2233"/>
+    </marker>
+    <marker id="arwg" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#8A90A6"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="900" height="880" fill="#FFFFFF"/>
+  <text class="ttl ctr" x="450" y="44">clickhouse-php আর্কিটেকচার ডিজাইন</text>
+  <text class="sub" x="40" y="44">PHP &gt;= 8.0 · PSR-4 · Guzzle ^7.0</text>
+  <text class="sub ctr" x="450" y="66">▼ উপরে থেকে নিচে কলের দিক, প্রতিটি স্তর কেবল পরের স্তরের ইন্টারফেসে নির্ভর করে</text>
+
+  <!-- L1 এন্ট্রি স্তর -->
+  <rect class="band" x="40" y="76" width="820" height="88" rx="14" fill="#FFF6D0"/>
+  <rect class="bar" x="56" y="102" width="5" height="36" rx="2.5" fill="#FFD400"/>
+  <text class="lt" x="72" y="118">এন্ট্রি স্তর</text>
+  <text class="ls" x="72" y="136">Facade / Entry</text>
+  <g>
+    <rect class="bx" x="216" y="94" width="116" height="52" rx="10"/>
+    <text class="n ctr" x="274" y="117">ClickHouse</text>
+    <text class="d ctr" x="274" y="134">স্ট্যাটিক ফেসাড</text>
+    <rect class="bx" x="344" y="94" width="116" height="52" rx="10"/>
+    <text class="n ctr" x="402" y="117">Laravel</text>
+    <text class="d ctr" x="402" y="134">Provider+Facade</text>
+    <rect class="bx" x="472" y="94" width="116" height="52" rx="10"/>
+    <text class="n ctr" x="530" y="117">ThinkPHP</text>
+    <text class="d ctr" x="530" y="134">Service+Facade</text>
+    <rect class="bx" x="600" y="94" width="116" height="52" rx="10"/>
+    <text class="n ctr" x="658" y="117">Webman</text>
+    <text class="d ctr" x="658" y="134">Service+Install</text>
+    <rect class="bx" x="728" y="94" width="116" height="52" rx="10"/>
+    <text class="n ctr" x="786" y="117">Hyperf</text>
+    <text class="d ctr" x="786" y="134">Provider+Pool</text>
+  </g>
+
+  <line class="link" x1="450" y1="166" x2="450" y2="182" marker-end="url(#arw)"/>
+
+  <!-- L2 বিল্ড স্তর -->
+  <rect class="band" x="40" y="186" width="820" height="88" rx="14" fill="#EDEEF8"/>
+  <rect class="bar" x="56" y="212" width="5" height="36" rx="2.5" fill="#777BB4"/>
+  <text class="lt" x="72" y="228">বিল্ড স্তর</text>
+  <text class="ls" x="72" y="246">Builder</text>
+  <g>
+    <rect class="bx" x="216" y="204" width="148" height="52" rx="10"/>
+    <text class="n ctr" x="290" y="227">Query\Builder</text>
+    <text class="d ctr" x="290" y="244">Grammar · Result</text>
+    <rect class="bx" x="376" y="204" width="148" height="52" rx="10"/>
+    <text class="n ctr" x="450" y="227">Schema\Builder</text>
+    <text class="d ctr" x="450" y="244">Blueprint · Column</text>
+    <rect class="bx" x="536" y="204" width="148" height="52" rx="10"/>
+    <text class="n ctr" x="610" y="227">ORM\Model</text>
+    <text class="d ctr" x="610" y="244">Collection</text>
+    <rect class="bx" x="696" y="204" width="148" height="52" rx="10"/>
+    <text class="n ctr" x="770" y="227">Migration</text>
+    <text class="d ctr" x="770" y="244">Migrator · Repository</text>
+  </g>
+
+  <line class="link" x1="450" y1="276" x2="450" y2="292" marker-end="url(#arw)"/>
+
+  <!-- L3 ক্লায়েন্ট স্তর -->
+  <rect class="band" x="40" y="296" width="820" height="88" rx="14" fill="#EDEEF8"/>
+  <rect class="bar" x="56" y="322" width="5" height="36" rx="2.5" fill="#777BB4"/>
+  <text class="lt" x="72" y="338">ক্লায়েন্ট স্তর</text>
+  <text class="ls" x="72" y="356">Client</text>
+  <rect class="bx" x="216" y="302" width="200" height="76" rx="10"/>
+  <text class="n ctr" x="316" y="332">Manager</text>
+  <text class="d ctr" x="316" y="352">মাল্টি-কানেকশন · লেজি লোড · ক্যাশ</text>
+  <rect class="bx" x="470" y="302" width="190" height="32" rx="9"/>
+  <text class="n ctr" x="565" y="323">HttpClient · ডিরেক্ট মোড</text>
+  <rect class="bx" x="470" y="346" width="190" height="32" rx="9"/>
+  <text class="n ctr" x="565" y="367">PooledClient · পুলড মোড</text>
+  <line class="dash" x1="418" y1="330" x2="464" y2="318" marker-end="url(#arwg)"/>
+  <line class="dash" x1="418" y1="350" x2="464" y2="362" marker-end="url(#arwg)"/>
+  <rect class="bx" x="688" y="306" width="156" height="68" rx="10"/>
+  <text class="d ctr" x="766" y="332">কমন ইমপ্লিমেন্টেশন</text>
+  <text class="n ctr" x="766" y="352">ClientInterface</text>
+
+  <line class="link" x1="450" y1="386" x2="450" y2="402" marker-end="url(#arw)"/>
+
+  <!-- L4 Connection Pool স্তর -->
+  <rect class="band" x="40" y="406" width="820" height="88" rx="14" fill="#EDEEF8"/>
+  <rect class="bar" x="56" y="432" width="5" height="36" rx="2.5" fill="#777BB4"/>
+  <text class="lt" x="72" y="448">Connection Pool স্তর</text>
+  <text class="ls" x="72" y="466">Pool</text>
+  <rect class="bx" x="216" y="424" width="140" height="52" rx="10"/>
+  <text class="n ctr" x="286" y="455">PoolInterface</text>
+  <rect class="bx" x="386" y="424" width="250" height="52" rx="10"/>
+  <text class="n ctr" x="511" y="447">AbstractPool</text>
+  <text class="d ctr" x="511" y="464">Swoole · Swow · Workerman কোরুটিন পুল</text>
+  <rect class="bx" x="666" y="424" width="178" height="52" rx="10"/>
+  <text class="n ctr" x="755" y="447">NoPool</text>
+  <text class="d ctr" x="755" y="464">FPM প্রচলিত মোড</text>
+
+  <line class="link" x1="450" y1="496" x2="450" y2="512" marker-end="url(#arw)"/>
+
+  <!-- L5 Transport স্তর -->
+  <rect class="band" x="40" y="516" width="820" height="88" rx="14" fill="#EDEEF8"/>
+  <rect class="bar" x="56" y="542" width="5" height="36" rx="2.5" fill="#777BB4"/>
+  <text class="lt" x="72" y="558">Transport স্তর</text>
+  <text class="ls" x="72" y="576">Transport</text>
+  <rect class="bx" x="216" y="534" width="150" height="52" rx="10"/>
+  <text class="n ctr" x="291" y="565">TransportInterface</text>
+  <rect class="bx" x="396" y="534" width="280" height="52" rx="10"/>
+  <text class="n ctr" x="536" y="557">HttpTransport</text>
+  <text class="d ctr" x="536" y="574">Guzzle · প্যারামিটার বাইন্ডিং · FORMAT JSON</text>
+  <rect class="bx" x="706" y="534" width="138" height="52" rx="10"/>
+  <text class="n ctr" x="775" y="557">TcpTransport</text>
+  <text class="d ctr" x="775" y="574">পরিকল্পিত (অসম্পূর্ণ)</text>
+
+  <line class="link" x1="450" y1="606" x2="450" y2="622" marker-end="url(#arw)"/>
+
+  <!-- L6 সাপোর্ট স্তর -->
+  <rect class="band" x="40" y="626" width="820" height="88" rx="14" fill="#F2F3F5"/>
+  <rect class="bar" x="56" y="652" width="5" height="36" rx="2.5" fill="#8A90A6"/>
+  <text class="lt" x="72" y="668">সাপোর্ট স্তর</text>
+  <text class="ls" x="72" y="686">Support</text>
+  <rect class="bx" x="216" y="644" width="200" height="52" rx="10"/>
+  <text class="n ctr" x="316" y="667">Support টুলস</text>
+  <text class="d ctr" x="316" y="684">Config · Quoter · Arr</text>
+  <rect class="bx" x="446" y="644" width="200" height="52" rx="10"/>
+  <text class="n ctr" x="546" y="667">Exceptions</text>
+  <text class="d ctr" x="546" y="684">ClickHouse / Connection / Query</text>
+  <rect class="bx" x="676" y="644" width="168" height="52" rx="10"/>
+  <text class="n ctr" x="760" y="667">PSR-3 Logger</text>
+  <text class="d ctr" x="760" y="684">ঐচ্ছিক কুয়েরি লগ</text>
+
+  <line class="link" x1="450" y1="716" x2="450" y2="732" marker-end="url(#arw)"/>
+
+  <!-- সার্ভার -->
+  <rect x="40" y="736" width="820" height="88" rx="14" fill="#1E2233"/>
+  <rect x="56" y="762" width="5" height="36" rx="2.5" fill="#FFD400"/>
+  <text class="y" x="72" y="778">সার্ভার</text>
+  <text class="y2" x="72" y="796">Server</text>
+  <text class="w ctr" x="546" y="778">ClickHouse Server</text>
+  <text class="w2 ctr" x="546" y="798">HTTP :8123 সমর্থিত ｜ Native TCP :9000 পরিকল্পিত</text>
+
+  <text class="sub ctr" x="450" y="856">নির্ভরতা একমুখী: উপরের স্তর শুধু অ্যাবস্ট্রাক্ট ইন্টারফেসে নির্ভর করে, নিচেরটাই বদলযোগ্য (Manager → ClientInterface → PoolInterface → TransportInterface)</text>
+</svg>

@@ -1,8 +1,93 @@
 # clickhouse-php
 
-A full-featured PHP ClickHouse client with HTTP & Native TCP support, query builder, schema builder, migration system, and ORM. Deep integration with Laravel, ThinkPHP, Webman, and Hyperf.
+A PHP ClickHouse client. It talks to the ClickHouse HTTP interface (port 8123) by default and ships with a query builder, schema builder, migration system, and ORM, plus adapters for Laravel, ThinkPHP, Webman, and Hyperf.
 
-[中文文档](README.md)
+Clean layering: `Manager → ClientInterface → PoolInterface → TransportInterface`. Client flavour, connection pool, and transport protocol each sit behind an interface and can be swapped. The Native TCP protocol has its slot reserved in the transport layer but is not implemented yet.
+
+[简体中文](README.md) | **English** | [한국어](docs/i18n/ko/README.md) | [Русский](docs/i18n/ru/README.md) | [Deutsch](docs/i18n/de/README.md) | [Français](docs/i18n/fr/README.md) | [Español](docs/i18n/es/README.md) | [Português](docs/i18n/pt/README.md) | [हिन्दी](docs/i18n/hi/README.md) | [العربية](docs/i18n/ar/README.md) | [বাংলা](docs/i18n/bn/README.md) | [Bahasa Indonesia](docs/i18n/id/README.md) | [日本語](docs/i18n/ja/README.md)
+
+<p align="center">
+  <img src="docs/pet.svg" width="160" alt="clickhouse-php project pet: the elephant house">
+</p>
+
+## Project Structure
+
+```
+clickhouse-php/
+├── src/
+│   ├── ClickHouse.php                  # static facade entry point
+│   ├── Client/                         # client layer: multi-connection, direct or pooled
+│   │   ├── ClientInterface.php         # query / select / insert / ping
+│   │   ├── Manager.php                 # multi-connection, lazy + cached instances
+│   │   ├── HttpClient.php              # direct client: SQL assembly and response parsing
+│   │   └── PooledClient.php            # pooled client: acquires and returns connections
+│   ├── Query/                          # query builder
+│   │   ├── Builder.php                 # fluent API and aggregate entry points
+│   │   ├── Grammar.php                 # SELECT / DELETE compilation
+│   │   ├── Expression.php              # raw expressions
+│   │   └── Result.php                  # read-only result set
+│   ├── Schema/                         # schema builder
+│   │   ├── Builder.php                 # create / alter / drop / introspection
+│   │   ├── Blueprint.php               # column and engine-parameter collection
+│   │   ├── Column.php                  # column definition
+│   │   └── Grammar.php                 # DDL compilation
+│   ├── Migration/                      # migration system
+│   │   ├── Migration.php               # base migration class
+│   │   ├── Migrator.php                # run / rollback / refresh
+│   │   └── Repository.php              # migration table IO and mutation waiting
+│   ├── ORM/                            # ORM
+│   │   ├── Model.php                   # ActiveRecord base class
+│   │   └── Collection.php              # read-only model collection
+│   ├── Pool/                           # connection pool
+│   │   ├── PoolInterface.php           # get / put / stats / close
+│   │   ├── AbstractPool.php            # shared pooling logic (counts, timeout, warmup)
+│   │   ├── SwoolePool.php              # Swoole coroutine channel
+│   │   ├── SwowPool.php                # Swow coroutine channel
+│   │   ├── WorkermanPool.php           # Workerman coroutine channel
+│   │   └── NoPool.php                  # classic FPM mode
+│   ├── Transport/                      # transport layer
+│   │   ├── TransportInterface.php      # send / close
+│   │   ├── HttpTransport.php           # Guzzle HTTP, parameter binding, FORMAT JSON
+│   │   └── TcpTransport.php            # Native TCP (planned)
+│   ├── Support/                        # Config / Quoter / Arr
+│   ├── Exceptions/                     # exception hierarchy (1 base + 4 subclasses)
+│   ├── Laravel/                        # ServiceProvider · Facade · Artisan commands
+│   ├── ThinkPHP/                       # Service · Facade · command
+│   ├── Webman/                         # Service · installer
+│   └── Hyperf/                         # ConfigProvider · coroutine pool · command
+├── tests/                              # PHPUnit tests, mirrors src layout
+├── docs/                               # design diagrams and docs
+└── composer.json
+```
+
+## Architecture
+
+<p align="center">
+  <img src="docs/i18n/en/architecture.svg" width="880" alt="clickhouse-php architecture: entry, builder, client, pool, transport, support layers">
+</p>
+
+Six layers, each depending only on the abstract interface of the layer below:
+
+| Layer | Responsibility | Key types |
+|-------|----------------|-----------|
+| Entry | Facade and framework adapters | `ClickHouse`, four framework adapters |
+| Builder | Assembles queries and DDL without IO | `Query\Builder`, `Schema\Builder`, `ORM\Model`, `Migration\Migrator` |
+| Client | Multi-connection management and execution entry | `Manager`, `HttpClient`, `PooledClient` |
+| Pool | Connection reuse and concurrency ceiling | `PoolInterface`, `AbstractPool`, `NoPool` |
+| Transport | Protocol encoding and error mapping | `HttpTransport`, `TcpTransport` (planned) |
+| Support | Config, quoting, exceptions, logging | `Support\*`, `Exceptions\*`, PSR-3 `LoggerInterface` |
+
+## Features
+
+<p align="center">
+  <img src="docs/i18n/en/features.svg" width="880" alt="clickhouse-php features: query builder, schema builder, migrations, ORM, pooling, framework integration">
+</p>
+
+## Lifecycle
+
+<p align="center">
+  <img src="docs/i18n/en/lifecycle.svg" width="880" alt="clickhouse-php lifecycle: the nine-step query path, error branches, and migration lifecycle">
+</p>
 
 ## Installation
 
