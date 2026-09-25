@@ -73,6 +73,52 @@ class QuoterTest extends TestCase
         $this->assertSame('`a`.`b\\`c`', Quoter::column('a.b`c'));
     }
 
+    public function testValueKeepsFloatPrecision(): void
+    {
+        // 默认 precision=14 会输出 1.2345678901235，存进去就是另一个数
+        $this->assertSame('1.2345678901234567', Quoter::value(1.2345678901234567));
+        $this->assertSame('0.1', Quoter::value(0.1));
+        // json_encode 会把 1.0 写成 "1"，对 Float64 列仍是合法字面量
+        $this->assertSame('1', Quoter::value(1.0));
+    }
+
+    public function testValueRejectsNanAndInf(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        Quoter::value(NAN);
+    }
+
+    public function testValueRejectsInfinity(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        Quoter::value(INF);
+    }
+
+    public function testValueQuotesArrayAsClickHouseArrayLiteral(): void
+    {
+        $this->assertSame('[1, 2, 3]', Quoter::value([1, 2, 3]));
+        $this->assertSame("['a', 'b']", Quoter::value(['a', 'b']));
+        $this->assertSame('[]', Quoter::value([]));
+    }
+
+    public function testValueRejectsObjectWithoutToString(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        Quoter::value(new \stdClass());
+    }
+
+    public function testValueQuotesStringableObject(): void
+    {
+        $object = new class {
+            public function __toString(): string
+            {
+                return 'x';
+            }
+        };
+
+        $this->assertSame("'x'", Quoter::value($object));
+    }
+
     public function testColumnHandlesEmptyString(): void
     {
         $this->assertSame('``', Quoter::column(''));

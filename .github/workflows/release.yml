@@ -19,11 +19,31 @@ jobs:
         id: version
         run: |
           PREV=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+          SUBJECT=$(git log -1 --pretty=%s)
+
+          # 按提交信息判定升级级别：破坏性变更 major、新功能 minor、其余 patch
+          # （中英文标记都认，因为本仓库的提交信息以中文为主）
+          case "$SUBJECT" in
+            *BREAKING*|*破坏性*|*!:*|*!：*) BUMP=major ;;
+            feat*|feature*|*新增*|*特性*) BUMP=minor ;;
+            *) BUMP=patch ;;
+          esac
+
           if [ -z "$PREV" ]; then
             NEXT="v0.1.0"
           else
-            NEXT=$(echo "$PREV" | awk -F. '{print $1"."$2"."($3+1)}')
+            MAJOR=$(echo "$PREV" | cut -d. -f1 | tr -d 'v')
+            MINOR=$(echo "$PREV" | cut -d. -f2)
+            PATCH=$(echo "$PREV" | cut -d. -f3)
+            case "$BUMP" in
+              major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+              minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+              patch) PATCH=$((PATCH + 1)) ;;
+            esac
+            NEXT="v$MAJOR.$MINOR.$PATCH"
           fi
+
+          echo "prev=$PREV  subject=$SUBJECT  bump=$BUMP  next=$NEXT"
           echo "next=$NEXT" >> "$GITHUB_OUTPUT"
           echo "prev=$PREV" >> "$GITHUB_OUTPUT"
 

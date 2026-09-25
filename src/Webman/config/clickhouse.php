@@ -5,17 +5,21 @@
  */
 
 
+// 变量名与 Laravel/ThinkPHP 配置一致；环境变量为空串时回落默认值
+$connection = getenv('CLICKHOUSE_CONNECTION') ?: 'clickhouse';
+
 return [
-    'default' => 'clickhouse',
+    'default' => $connection,
     'connections' => [
-        'clickhouse' => [
-            'driver' => 'http',
+        $connection => [
+            'driver' => getenv('CLICKHOUSE_DRIVER') ?: 'http',
             'host' => getenv('CLICKHOUSE_HOST') ?: 'localhost',
-            'port' => getenv('CLICKHOUSE_PORT') ?: 8123,
+            'port' => (int) (getenv('CLICKHOUSE_PORT') ?: 8123),
             'database' => getenv('CLICKHOUSE_DB') ?: 'default',
             'username' => getenv('CLICKHOUSE_USER') ?: 'default',
             'password' => getenv('CLICKHOUSE_PASS') ?: '',
-            'timeout' => 30,
+            'timeout' => (int) (getenv('CLICKHOUSE_TIMEOUT') ?: 30),
+            'https' => filter_var(getenv('CLICKHOUSE_HTTPS') ?: false, FILTER_VALIDATE_BOOL),
         ],
     ],
     'migrations' => [
@@ -24,9 +28,9 @@ return [
     ],
     'pool' => [
         'driver' => 'workerman',
-        'min_connections' => 1,
-        'max_connections' => 8,
-        'connection_timeout' => 5,
+        'min_connections' => (int) (getenv('CLICKHOUSE_POOL_MIN') ?: 1),
+        'max_connections' => (int) (getenv('CLICKHOUSE_POOL_MAX') ?: 8),
+        'connection_timeout' => (float) (getenv('CLICKHOUSE_POOL_TIMEOUT') ?: 5),
     ],
-    'query_log' => false,
+    'query_log' => filter_var(getenv('CLICKHOUSE_QUERY_LOG') ?: false, FILTER_VALIDATE_BOOL),
 ];

@@ -387,22 +387,53 @@ class LogController
 | メソッド | 説明 |
 |------|------|
 | `table($name)` / `from($name)` | テーブル名を指定 |
-| `select([...])` / `selectRaw($expr)` | SELECT のカラム |
-| `where($col, $op, $val)` | 条件（2 引数のとき `$op` は既定で `=`） |
+| `select([...])` / `selectRaw($expr)` | SELECT のカラム。`select()` のカラム名はバッククォートで引用されます（`` `order` `` のような予約語も使えます）。別名 `id as uid` は両側をそれぞれ引用。関数やサブクエリを書くときは `selectRaw()` か `Expression` を使ってください |
+| `where($col, $op, $val)` | 条件（2 引数のとき `$op` は既定で `=`）。値が `null` のときは自動で `IS NULL` / `IS NOT NULL` に変換されます |
 | `orWhere($col, $op, $val)` | OR 条件 |
 | `whereIn($col, $arr)` / `whereNotIn($col, $arr)` | IN / NOT IN |
 | `whereBetween($col, [$min, $max])` | BETWEEN |
 | `whereNull($col)` / `whereNotNull($col)` | IS NULL / IS NOT NULL |
-| `whereRaw($sql)` | 生の WHERE |
+| `whereRaw($sql)` | 生の WHERE（ユーザー入力を渡さないこと） |
+| `prewhere($col, $op, $val)` | PREWHERE。位置は WHERE の前です（ClickHouse で最も効果的なスキャン絞り込み） |
 | `orderBy($col, $dir)` | 並べ替え（既定は ASC） |
 | `groupBy(...$cols)` | グループ化 |
+| `having($col, $op, $val)` / `havingRaw($sql)` | HAVING。位置は GROUP BY の後です。`having()` はカラム名を識別子として引用するため、集計条件（`count() > 100` など）は `havingRaw()` か `new Expression('count()')` を使ってください |
 | `limit($n)` / `offset($n)` | ページング |
+| `final()` | 読み取り時に重複排除してマージ（ReplacingMergeTree など） |
+| `sample($ratio)` | SAMPLE サンプリング（例：`sample(0.1)`） |
+| `settings([...])` | クエリ単位の SETTINGS（例：`settings(['max_execution_time' => 30])`） |
 | `count()` / `sum($col)` / `avg($col)` / `min($col)` / `max($col)` | 集計 |
-| `insert($data)` | 挿入（単行または一括） |
-| `delete()` | 削除 |
+| `insert($data)` | 挿入（単行または一括）。同じバッチ内では各行のカラムが揃っている必要があり、カラムの不足や過多はそのままエラーになります（値が位置ずれで書き込まれるのを防ぐため） |
+| `delete()` | 削除（`ALTER TABLE ... DELETE` にコンパイルされます。**WHERE が必須**で、なければ例外を投げます） |
 | `get()` | クエリを実行し Result を返す |
 | `first()` | 先頭の 1 件を返す |
 | `toSql()` | 生成された SQL を取得 |
+
+### 大きな結果セットとストリーミング読み取り
+
+`get()` は結果セット全体を PHP の配列に展開するため、メモリ消費は応答サイズの約 7 倍になります（5 カラムの細いテーブルでの実測：ペイロード 93 B/行 → デコード後 677 B/行、10 万行で約 73 MB）。データ量が多いときは `stream()` で 1 行ずつ消費してください。メモリ使用量は結果セットの大きさに依存しません：
+
+```php
+use Erikwang2013\ClickHouse\Client\StreamingClientInterface;
+
+$client = ClickHouse::client();           // 低レベルクライアントが必要なときはこれを使う（connection() が返すのはビルダー）
+if ($client instanceof StreamingClientInterface) {
+    foreach ($client->stream('SELECT * FROM logs') as $row) {   // FORMAT JSONEachRow
+        echo $row['message'], PHP_EOL;
+    }
+}
+
+// FORMAT を自前で指定するクエリ（CSV/TSV など）は raw() を使い、応答ボディをそのまま受け取る
+$csv = $client->raw('SELECT * FROM logs FORMAT CSV');
+```
+
+プールモードでも `stream()` は同様に使えます。接続はジェネレータの消費が完了したとき（または途中で break して破棄されたとき）に返却されます。
+
+### 生の SQL 入口
+
+以下の入口は**そのまま連結される**生の SQL チャネルであり、ユーザー入力を渡すことはデータベースを明け渡すのと同じです：`selectRaw()`、`whereRaw()`、`havingRaw()`、`new Expression($sql)`、`Blueprint::settings()` の値、そして `$table->string('col')` のようなカラム型の文字列（`array($name, $type)`）。識別子と値そのものはエスケープ済みです（カラム名はバッククォート、値は型に応じてエスケープ）が、生の SQL 断片は一切処理されません。
+
+`Expression` は `select()`（配列に入れて渡します）、`where()`、`prewhere()`、`having()`、`orderBy()`、`groupBy()` に渡すことができ、`rand()` や `toStartOfHour(ts)` のような式に使います。
 
 ## Schema のカラム型
 
@@ -449,6 +480,8 @@ class LogController
 ];
 ```
 
+コネクションプールについて：`pool` 設定は**利用可能なコルーチンチャネルが存在する場合**にのみ有効です（Swoole / Swow / Workerman）。FPM などの同期環境では無視されて直結となり、同時実行数の上限はかかりません。また HTTP ドライバは同期 Guzzle を使うため、プール化の実際の利点は「同時接続数の制限 + 接続オブジェクトの再利用」であり、**自動的にノンブロッキングになるわけではありません** —— 本当にノンブロッキングにするには Swoole の curl フック（`Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_NATIVE_CURL)`、これは `SWOOLE_HOOK_ALL` には含まれません）を自分で有効にするか、hyperf/guzzle の CoroutineHandler を導入する必要があります。`pool.driver` で `swoole|swow|workerman|none` を明示的に指定できます。
+
 ## 環境変数
 
 | 変数 | 既定値 | 説明 |
@@ -466,7 +499,7 @@ class LogController
 | `CLICKHOUSE_POOL_MAX` | 16 | 最大接続数 |
 | `CLICKHOUSE_POOL_TIMEOUT` | 5.0 | 接続取得タイムアウト（秒） |
 
-ネイティブ PHP では以上の変数を `ClickHouse::bootstrap()` / `Manager::fromEnv()` が読み取ります。4 つのフレームワークの設定ファイルは同じ変数名のセットを読み取りますが、カバー範囲は異なります（Laravel は全項目、Hyperf は `CLICKHOUSE_CONNECTION`/`CLICKHOUSE_DRIVER`/`CLICKHOUSE_HTTPS` を除く、Webman は接続に関する 5 項目のみ、ThinkPHP は現時点で環境変数を読み取りません）。各フレームワークの設定ファイルを優先してください。
+以上の変数はネイティブ PHP では `ClickHouse::bootstrap()` / `Manager::fromEnv()` が読み取ります。4 つのフレームワークの設定ファイルも同じ変数名のセット（`CLICKHOUSE_HTTPS` を含む）を読み取ります。
 
 ## 例外処理
 

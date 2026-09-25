@@ -8,16 +8,24 @@
 namespace Erikwang2013\ClickHouse\Query;
 
 use Erikwang2013\ClickHouse\Client\ClientInterface;
+use Erikwang2013\ClickHouse\Support\Quoter;
 
 class Builder
 {
     public array $columns = [];
     public string $from = '';
     public array $wheres = [];
+    public array $prewheres = [];
+    public array $havings = [];
     public array $orders = [];
     public array $groups = [];
+    public array $settings = [];
+    public bool $final = false;
+    public ?float $sample = null;
     public ?int $limit = null;
     public ?int $offset = null;
+
+    private const OPERATORS = ['=', '!=', '<>', '<', '>', '<=', '>=', 'like', 'not like', 'ilike', 'not ilike', 'in', 'not in', 'between', 'not between', 'glob', 'not glob'];
 
     public function __construct(
         private ClientInterface $client,
@@ -45,18 +53,59 @@ class Builder
 
     public function selectRaw(string $expression): static
     {
-        $this->columns[] = $expression;
+        $this->columns[] = new Expression($expression);
         return $this;
     }
 
-    public function where(string $column, mixed $operator = null, mixed $value = null, string $boolean = 'and'): static
+    public function final(): static
+    {
+        $this->final = true;
+        return $this;
+    }
+
+    public function sample(float $ratio): static
+    {
+        $this->sample = $ratio;
+        return $this;
+    }
+
+    public function settings(array $settings): static
+    {
+        $this->settings = array_merge($this->settings, $settings);
+        return $this;
+    }
+
+    public function where(string|Expression $column, mixed $operator = null, mixed $value = null, string $boolean = 'and'): static
     {
         if (func_num_args() === 2) {
             [$value, $operator] = [$operator, '='];
         }
-        $operator = strtolower($operator);
-        $allowed = ['=', '!=', '<>', '<', '>', '<=', '>=', 'like', 'not like', 'ilike', 'not ilike', 'in', 'not in', 'between', 'not between', 'glob', 'not glob'];
-        if (!in_array($operator, $allowed, true)) {
+        $this->wheres[] = $this->makeCondition($column, $operator, $value, $boolean);
+        return $this;
+    }
+
+    public function prewhere(string|Expression $column, mixed $operator = null, mixed $value = null): static
+    {
+        if (func_num_args() === 2) {
+            [$value, $operator] = [$operator, '='];
+        }
+        $this->prewheres[] = $this->makeCondition($column, $operator, $value, 'and');
+        return $this;
+    }
+
+    public function having(string|Expression $column, mixed $operator = null, mixed $value = null): static
+    {
+        if (func_num_args() === 2) {
+            [$value, $operator] = [$operator, '='];
+        }
+        $this->havings[] = $this->makeCondition($column, $operator, $value, 'and');
+        return $this;
+    }
+
+    private function makeCondition(string|Expression $column, mixed $operator, mixed $value, string $boolean): array
+    {
+        $operator = strtolower((string) $operator);
+        if (!in_array($operator, self::OPERATORS, true)) {
             throw new \InvalidArgumentException("Unsupported operator: $operator");
         }
         $type = match (true) {
@@ -64,11 +113,10 @@ class Builder
             in_array($operator, ['between', 'not between'], true) => 'between',
             default => 'basic',
         };
-        $this->wheres[] = [$type, $column, $operator, $value, $boolean];
-        return $this;
+        return [$type, $column, $operator, $value, $boolean];
     }
 
-    public function orWhere(string $column, mixed $operator = null, mixed $value = null): static
+    public function orWhere(string|Expression $column, mixed $operator = null, mixed $value = null): static
     {
         if (func_num_args() === 2) {
             [$value, $operator] = [$operator, '='];
@@ -112,7 +160,18 @@ class Builder
         return $this;
     }
 
-    public function orderBy(string $column, string $direction = 'ASC'): static
+    /**
+     * 原生 HAVING 片段。having() 会把第一个参数当标识符加反引号，
+     * 因此聚合条件（如 count() > 100）要用这里，或传 new Expression('count()')。
+     * 与 whereRaw 一样是原生 SQL 通道，勿传用户输入。
+     */
+    public function havingRaw(string $sql, string $boolean = 'and'): static
+    {
+        $this->havings[] = ['raw', $sql, null, null, $boolean];
+        return $this;
+    }
+
+    public function orderBy(string|Expression $column, string $direction = 'ASC'): static
     {
         $direction = strtoupper($direction);
         if (!in_array($direction, ['ASC', 'DESC'], true)) {
@@ -122,7 +181,7 @@ class Builder
         return $this;
     }
 
-    public function groupBy(string ...$columns): static
+    public function groupBy(string|Expression ...$columns): static
     {
         $this->groups = array_merge($this->groups, $columns);
         return $this;
@@ -184,8 +243,8 @@ class Builder
     private function aggregate(string $fn, ?string $column = null): mixed
     {
         $original = $this->columns;
-        $expr = $column ? "$fn($column)" : "$fn(*)";
-        $this->columns = ["$expr as aggregate"];
+        $target = $column === null || $column === '*' || str_ends_with($column, '.*') ? '*' : Quoter::column($column);
+        $this->columns = [new Expression("$fn($target) as aggregate")];
         try {
             return $this->get()->first()['aggregate'] ?? null;
         } finally {

@@ -37,7 +37,7 @@ class Grammar
         if ($settings = $blueprint->getSettings()) {
             $pairs = [];
             foreach ($settings as $k => $v) {
-                $pairs[] = "$k = $v";
+                $pairs[] = Quoter::column((string) $k) . ' = ' . Quoter::value($v);
             }
             $sql .= ' SETTINGS ' . implode(', ', $pairs);
         }

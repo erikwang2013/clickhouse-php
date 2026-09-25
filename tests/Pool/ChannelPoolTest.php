@@ -65,7 +65,7 @@ class ChannelPoolTest extends TestCase
             ]);
 
             $this->assertSame(3, $created);
-            $this->assertSame(['active' => 3, 'idle' => 3, 'total' => 3], $pool->stats());
+            $this->assertSame(['active' => 0, 'idle' => 3, 'total' => 3], $pool->stats());
         });
     }
 
@@ -86,7 +86,7 @@ class ChannelPoolTest extends TestCase
 
             $this->assertInstanceOf(ClientInterface::class, $client);
             $this->assertSame(2, $created);
-            $this->assertSame(['active' => 2, 'idle' => 1, 'total' => 2], $pool->stats());
+            $this->assertSame(['active' => 1, 'idle' => 1, 'total' => 2], $pool->stats());
         });
     }
 
@@ -177,10 +177,11 @@ class ChannelPoolTest extends TestCase
 
             $pool->put(Mockery::mock(ClientInterface::class));
             $pool->put(Mockery::mock(ClientInterface::class));
-            $pool->put(Mockery::mock(ClientInterface::class)); // channel full: dropped, active decremented
+            $pool->put(Mockery::mock(ClientInterface::class)); // channel full: dropped
 
-            $this->assertSame(-1, $pool->stats()['active']);
+            $this->assertSame(0, $pool->stats()['active']);
             $this->assertSame(2, $pool->stats()['idle']);
+            $this->assertSame(2, $pool->stats()['total']);
         });
     }
 

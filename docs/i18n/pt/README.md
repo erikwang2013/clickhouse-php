@@ -387,22 +387,53 @@ class LogController
 | Método | Descrição |
 |------|------|
 | `table($name)` / `from($name)` | Define o nome da tabela |
-| `select([...])` / `selectRaw($expr)` | Colunas do SELECT |
-| `where($col, $op, $val)` | Condição (com 2 argumentos, `$op` assume `=`) |
+| `select([...])` / `selectRaw($expr)` | Colunas do SELECT. Os nomes de coluna em `select()` recebem crase (palavras reservadas como `` `order` `` funcionam), e no alias `id as uid` cada lado é citado separadamente; para funções ou subqueries use `selectRaw()` ou `Expression` |
+| `where($col, $op, $val)` | Condição (com 2 argumentos, `$op` assume `=`). Valor `null` vira `IS NULL` / `IS NOT NULL` automaticamente |
 | `orWhere($col, $op, $val)` | Condição OR |
 | `whereIn($col, $arr)` / `whereNotIn($col, $arr)` | IN / NOT IN |
 | `whereBetween($col, [$min, $max])` | BETWEEN |
 | `whereNull($col)` / `whereNotNull($col)` | IS NULL / IS NOT NULL |
-| `whereRaw($sql)` | WHERE nativo |
+| `whereRaw($sql)` | WHERE nativo (não passe entrada do usuário) |
+| `prewhere($col, $op, $val)` | PREWHERE, posicionado antes do WHERE (o corte de varredura mais eficaz do ClickHouse) |
 | `orderBy($col, $dir)` | Ordenação (padrão ASC) |
 | `groupBy(...$cols)` | Agrupamento |
+| `having($col, $op, $val)` / `havingRaw($sql)` | HAVING, posicionado depois do GROUP BY. O `having()` trata o nome da coluna como identificador, então condições de agregação (como `count() > 100`) devem usar `havingRaw()` ou `new Expression('count()')` |
 | `limit($n)` / `offset($n)` | Paginação |
+| `final()` | Desduplicação/merge na leitura (ReplacingMergeTree etc.) |
+| `sample($ratio)` | Amostragem SAMPLE, ex.: `sample(0.1)` |
+| `settings([...])` | SETTINGS em nível de consulta, ex.: `settings(['max_execution_time' => 30])` |
 | `count()` / `sum($col)` / `avg($col)` / `min($col)` / `max($col)` | Agregação |
-| `insert($data)` | Inserção (linha única ou lote) |
-| `delete()` | Exclusão |
+| `insert($data)` | Inserção (linha única ou lote). Todas as linhas do mesmo lote precisam ter as mesmas colunas; faltar ou sobrar coluna dá erro na hora (evita gravar valores deslocados por posição) |
+| `delete()` | Exclusão (compila para `ALTER TABLE ... DELETE`, **exige WHERE**, senão lança exceção) |
 | `get()` | Executa a consulta e retorna Result |
 | `first()` | Retorna o primeiro registro |
 | `toSql()` | Obtém o SQL gerado |
+
+### Resultados grandes e leitura em streaming
+
+O `get()` analisa o conjunto de resultados inteiro para um array PHP, ocupando cerca de 7x o tamanho da resposta em memória (medido numa tabela estreita de 5 colunas: 93 B/linha de payload → 677 B/linha já decodificado, ~73 MB para 100 mil linhas). Com volume grande, use `stream()` para consumir linha a linha — a memória não depende do tamanho do resultado:
+
+```php
+use Erikwang2013\ClickHouse\Client\StreamingClientInterface;
+
+$client = ClickHouse::client();           // use este quando precisar do cliente de baixo nível (connection() devolve o builder)
+if ($client instanceof StreamingClientInterface) {
+    foreach ($client->stream('SELECT * FROM logs') as $row) {   // FORMAT JSONEachRow
+        echo $row['message'], PHP_EOL;
+    }
+}
+
+// Consultas com FORMAT próprio (CSV/TSV etc.) usam raw(), que devolve o corpo da resposta como está
+$csv = $client->raw('SELECT * FROM logs FORMAT CSV');
+```
+
+No modo com pool o `stream()` também funciona: a conexão é devolvida quando o gerador termina de ser consumido (ou quando um `break` antecipado o destrói).
+
+### Entradas de SQL nativo
+
+As entradas abaixo são canais de SQL nativo **concatenados como estão**; passar entrada do usuário por elas equivale a entregar o banco: `selectRaw()`, `whereRaw()`, `havingRaw()`, `new Expression($sql)`, os valores de `Blueprint::settings()` e strings de tipo de coluna como `$table->string('col')` (`array($name, $type)`). Identificadores e valores já são escapados (crase nos nomes de coluna, valores escapados por tipo), mas fragmentos de SQL nativo não recebem tratamento nenhum.
+
+Um `Expression` pode ser passado para `select()` (dentro do array), `where()`, `prewhere()`, `having()`, `orderBy()` e `groupBy()`, para expressões como `rand()` ou `toStartOfHour(ts)`.
 
 ## Tipos de coluna do Schema
 
@@ -449,6 +480,8 @@ class LogController
 ];
 ```
 
+Sobre o pool de conexões: a configuração `pool` só entra em ação quando **existe um canal de corrotina disponível** (Swoole / Swow / Workerman); em ambientes síncronos como o FPM ela é ignorada e a conexão vai direto, sem impor nenhum limite de concorrência. Além disso, o driver HTTP usa Guzzle síncrono, então o ganho real do pool é "limitar o número de conexões concorrentes + reutilizar objetos de conexão" — **ele não vira não-bloqueante sozinho**. Para ser de fato não-bloqueante é preciso habilitar o hook de curl do Swoole (`Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_NATIVE_CURL)`, que não está em `SWOOLE_HOOK_ALL`) ou usar o CoroutineHandler do hyperf/guzzle. Dá para forçar com `pool.driver`: `swoole|swow|workerman|none`.
+
 ## Variáveis de ambiente
 
 | Variável | Padrão | Descrição |
@@ -466,7 +499,7 @@ class LogController
 | `CLICKHOUSE_POOL_MAX` | 16 | Conexões máximas |
 | `CLICKHOUSE_POOL_TIMEOUT` | 5.0 | Timeout para obter conexão (segundos) |
 
-Em PHP puro, essas variáveis são lidas por `ClickHouse::bootstrap()` / `Manager::fromEnv()`. Os arquivos de configuração dos quatro frameworks usam os mesmos nomes de variável, mas com cobertura diferente (Laravel cobre todas, o Hyperf não tem `CLICKHOUSE_CONNECTION`/`CLICKHOUSE_DRIVER`/`CLICKHOUSE_HTTPS`, o Webman lê só as cinco de conexão e o ThinkPHP hoje não lê variáveis de ambiente) — vale o que estiver no arquivo de configuração de cada um.
+Em PHP puro, essas variáveis são lidas por `ClickHouse::bootstrap()` / `Manager::fromEnv()`, e os arquivos de configuração dos quatro frameworks usam os mesmos nomes de variável (incluindo `CLICKHOUSE_HTTPS`).
 
 ## Tratamento de exceções
 

@@ -387,22 +387,53 @@ class LogController
 | मेथड | विवरण |
 |------|------|
 | `table($name)` / `from($name)` | टेबल नाम निर्दिष्ट करें |
-| `select([...])` / `selectRaw($expr)` | SELECT कॉलम |
-| `where($col, $op, $val)` | शर्त (2 पैरामीटर होने पर `$op` डिफ़ॉल्ट `=`) |
+| `select([...])` / `selectRaw($expr)` | SELECT कॉलम। `select()` के कॉलम नाम बैकटिक में आते हैं (`` `order` `` जैसे रिज़र्व्ड शब्द चल जाते हैं), और एलियस `id as uid` के दोनों ओर अलग-अलग बैकटिक लगते हैं; फ़ंक्शन या सब-क्वेरी लिखनी हो तो `selectRaw()` या `Expression` इस्तेमाल करें |
+| `where($col, $op, $val)` | शर्त (2 पैरामीटर होने पर `$op` डिफ़ॉल्ट `=`)। मान `null` हो तो अपने-आप `IS NULL` / `IS NOT NULL` बन जाता है |
 | `orWhere($col, $op, $val)` | OR शर्त |
 | `whereIn($col, $arr)` / `whereNotIn($col, $arr)` | IN / NOT IN |
 | `whereBetween($col, [$min, $max])` | BETWEEN |
 | `whereNull($col)` / `whereNotNull($col)` | IS NULL / IS NOT NULL |
-| `whereRaw($sql)` | रॉ WHERE |
+| `whereRaw($sql)` | रॉ WHERE (यूज़र इनपुट न भेजें) |
+| `prewhere($col, $op, $val)` | PREWHERE, WHERE से पहले (ClickHouse की सबसे कारगर स्कैन छँटाई) |
 | `orderBy($col, $dir)` | सॉर्ट (डिफ़ॉल्ट ASC) |
 | `groupBy(...$cols)` | ग्रुपिंग |
+| `having($col, $op, $val)` / `havingRaw($sql)` | HAVING, GROUP BY के बाद। `having()` कॉलम नाम को आइडेंटिफ़ायर मानकर बैकटिक लगाता है, इसलिए एग्रीगेट शर्त (जैसे `count() > 100`) के लिए `havingRaw()` या `new Expression('count()')` इस्तेमाल करें |
 | `limit($n)` / `offset($n)` | पेजिंग |
+| `final()` | पढ़ते समय डिडुप्लिकेट मर्ज (ReplacingMergeTree आदि) |
+| `sample($ratio)` | SAMPLE सैंपलिंग, जैसे `sample(0.1)` |
+| `settings([...])` | क्वेरी-स्तर के SETTINGS, जैसे `settings(['max_execution_time' => 30])` |
 | `count()` / `sum($col)` / `avg($col)` / `min($col)` / `max($col)` | एग्रीगेशन |
-| `insert($data)` | इन्सर्ट (सिंगल रो या बल्क) |
-| `delete()` | डिलीट |
+| `insert($data)` | इन्सर्ट (सिंगल रो या बल्क)। एक ही बैच की सभी रो में कॉलम एक जैसे होने चाहिए — कॉलम कम या ज़्यादा होने पर सीधे एरर, ताकि मान गलत जगह न लिखे जाएँ |
+| `delete()` | डिलीट (`ALTER TABLE ... DELETE` में कंपाइल होता है, **WHERE ज़रूरी है**, वरना Exception) |
 | `get()` | क्वेरी चलाएँ, Result लौटाएँ |
 | `first()` | पहला रिकॉर्ड लौटाएँ |
 | `toSql()` | जनरेट किया गया SQL पाएँ |
+
+### बड़े रिज़ल्ट सेट और स्ट्रीमिंग रीडिंग
+
+`get()` पूरे रिज़ल्ट सेट को PHP ऐरे में पार्स करता है, जिससे मेमोरी रिस्पॉन्स के साइज़ की लगभग 7 गुना हो जाती है (5 कॉलम की पतली टेबल पर मापा गया: पेलोड 93 B/रो → डिकोड के बाद 677 B/रो, 1 लाख रो पर लगभग 73 MB)। डेटा बड़ा हो तो `stream()` से एक-एक रो पढ़ें — मेमोरी रिज़ल्ट सेट के साइज़ पर निर्भर नहीं रहेगी:
+
+```php
+use Erikwang2013\ClickHouse\Client\StreamingClientInterface;
+
+$client = ClickHouse::client();           // अंदरूनी क्लाइंट चाहिए तो यही (connection() बिल्डर लौटाता है)
+if ($client instanceof StreamingClientInterface) {
+    foreach ($client->stream('SELECT * FROM logs') as $row) {   // FORMAT JSONEachRow
+        echo $row['message'], PHP_EOL;
+    }
+}
+
+// जिन क्वेरी में FORMAT पहले से है (CSV/TSV आदि) उनके लिए raw(); रिस्पॉन्स बॉडी ज्यों-की-त्यों मिलती है
+$csv = $client->raw('SELECT * FROM logs FORMAT CSV');
+```
+
+पूल्ड मोड में भी `stream()` वैसे ही चलता है: जनरेटर पूरा खप जाने पर (या जल्दी break करने पर नष्ट होने पर) कनेक्शन वापस लौट जाता है।
+
+### रॉ SQL एंट्री
+
+ये एंट्री **ज्यों-की-त्यों जोड़े जाने वाले** रॉ SQL चैनल हैं — इनमें यूज़र इनपुट भेजना यानी डेटाबेस सौंप देना: `selectRaw()`, `whereRaw()`, `havingRaw()`, `new Expression($sql)`, `Blueprint::settings()` के मान, और `$table->string('col')` जैसी कॉलम-टाइप स्ट्रिंग (`array($name, $type)`)। आइडेंटिफ़ायर और मान ख़ुद एस्केप हो जाते हैं (कॉलम नाम बैकटिक में, मान टाइप के हिसाब से), लेकिन रॉ SQL फ़्रैगमेंट पर कोई प्रोसेसिंग नहीं होती।
+
+`Expression` को `select()` (ऐरे के अंदर), `where()`, `prewhere()`, `having()`, `orderBy()`, `groupBy()` में पास किया जा सकता है — `rand()`, `toStartOfHour(ts)` जैसे एक्सप्रेशन के लिए।
 
 ## Schema कॉलम टाइप
 
@@ -449,6 +480,8 @@ class LogController
 ];
 ```
 
+कनेक्शन पूल के बारे में: `pool` कॉन्फ़िग तभी असर करती है जब **कोरूटीन चैनल उपलब्ध हों** (Swoole / Swow / Workerman); FPM जैसे सिंक्रोनस माहौल में यह नज़रअंदाज़ होती है और सीधे कनेक्ट होता है — कोई समवर्ती सीमा नहीं मिलती। साथ ही HTTP ड्राइवर सिंक्रोनस Guzzle इस्तेमाल करता है, इसलिए पूलिंग का असली फ़ायदा "समवर्ती कनेक्शन की सीमा + कनेक्शन ऑब्जेक्ट का रीयूज़" है — **यह अपने-आप नॉन-ब्लॉकिंग नहीं हो जाता**। सचमुच नॉन-ब्लॉकिंग चाहिए तो Swoole का curl हुक ख़ुद चालू करें (`Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_NATIVE_CURL)`, जो `SWOOLE_HOOK_ALL` में नहीं आता) या hyperf/guzzle का CoroutineHandler लगाएँ। `pool.driver` से `swoole|swow|workerman|none` साफ़-साफ़ तय कर सकते हैं।
+
 ## एनवायरनमेंट वेरिएबल
 
 | वेरिएबल | डिफ़ॉल्ट | विवरण |
@@ -466,7 +499,7 @@ class LogController
 | `CLICKHOUSE_POOL_MAX` | 16 | अधिकतम कनेक्शन |
 | `CLICKHOUSE_POOL_TIMEOUT` | 5.0 | कनेक्शन लेने का टाइमआउट (सेकंड) |
 
-नेटिव PHP में ऊपर दिए गए वेरिएबल `ClickHouse::bootstrap()` / `Manager::fromEnv()` पढ़ते हैं। चारों फ्रेमवर्क की कॉन्फ़िग फ़ाइलें यही वेरिएबल नाम पढ़ती हैं, लेकिन उनका दायरा अलग-अलग है (Laravel पूरा, Hyperf में `CLICKHOUSE_CONNECTION`/`CLICKHOUSE_DRIVER`/`CLICKHOUSE_HTTPS` नहीं हैं, Webman में केवल कनेक्शन के पाँच वेरिएबल, ThinkPHP अभी एनवायरनमेंट वेरिएबल नहीं पढ़ता) — अंतिम आधार अपनी-अपनी कॉन्फ़िग फ़ाइल ही है।
+ऊपर दिए गए वेरिएबल नेटिव PHP में `ClickHouse::bootstrap()` / `Manager::fromEnv()` पढ़ते हैं, और चारों फ्रेमवर्क की कॉन्फ़िग फ़ाइलें भी यही वेरिएबल नाम पढ़ती हैं (`CLICKHOUSE_HTTPS` सहित)।
 
 ## Exception हैंडलिंग
 

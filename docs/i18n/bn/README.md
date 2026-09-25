@@ -387,22 +387,53 @@ class LogController
 | মেথড | বিবরণ |
 |------|------|
 | `table($name)` / `from($name)` | টেবিলের নাম নির্দিষ্ট করুন |
-| `select([...])` / `selectRaw($expr)` | SELECT কলাম |
-| `where($col, $op, $val)` | শর্ত (২টি আর্গুমেন্ট হলে `$op` ডিফল্ট `=`) |
+| `select([...])` / `selectRaw($expr)` | SELECT কলাম। `select()`-এর কলাম নাম ব্যাকটিক-এ কোট হয় (`` `order` ``-এর মতো রিজার্ভড ওয়ার্ড চলে), অ্যালিয়াস `id as uid`-এর দুই পাশ আলাদা আলাদা কোট হয়; ফাংশন বা সাবকুয়েরি লিখতে `selectRaw()` বা `Expression` ব্যবহার করুন |
+| `where($col, $op, $val)` | শর্ত (২টি আর্গুমেন্ট হলে `$op` ডিফল্ট `=`)। মান `null` হলে স্বয়ংক্রিয়ভাবে `IS NULL` / `IS NOT NULL` হয় |
 | `orWhere($col, $op, $val)` | OR শর্ত |
 | `whereIn($col, $arr)` / `whereNotIn($col, $arr)` | IN / NOT IN |
 | `whereBetween($col, [$min, $max])` | BETWEEN |
 | `whereNull($col)` / `whereNotNull($col)` | IS NULL / IS NOT NULL |
-| `whereRaw($sql)` | র' WHERE |
+| `whereRaw($sql)` | র' WHERE (ইউজার ইনপুট দেবেন না) |
+| `prewhere($col, $op, $val)` | PREWHERE, WHERE-এর আগে বসে (ClickHouse-এ সবচেয়ে কার্যকর স্ক্যান কাটছাঁট) |
 | `orderBy($col, $dir)` | সাজানো (ডিফল্ট ASC) |
 | `groupBy(...$cols)` | গ্রুপিং |
+| `having($col, $op, $val)` / `havingRaw($sql)` | HAVING, GROUP BY-এর পরে বসে। `having()` কলাম নামকে আইডেন্টিফায়ার হিসেবে কোট করে, অ্যাগ্রিগেট শর্ত (যেমন `count() > 100`) হলে `havingRaw()` বা `new Expression('count()')` ব্যবহার করুন |
 | `limit($n)` / `offset($n)` | পেজিনেশন |
+| `final()` | পড়ার সময় ডিডুপ-মার্জ (ReplacingMergeTree ইত্যাদি) |
+| `sample($ratio)` | SAMPLE স্যাম্পলিং, যেমন `sample(0.1)` |
+| `settings([...])` | কুয়েরি-লেভেল SETTINGS, যেমন `settings(['max_execution_time' => 30])` |
 | `count()` / `sum($col)` / `avg($col)` / `min($col)` / `max($col)` | অ্যাগ্রিগেশন |
-| `insert($data)` | ইনসার্ট (একক সারি বা ব্যাচ) |
-| `delete()` | ডিলিট |
+| `insert($data)` | ইনসার্ট (একক সারি বা ব্যাচ)। একই ব্যাচের সব সারিতে কলাম একই থাকতে হবে, কলাম কম বা বেশি হলে সরাসরি এরর (পজিশন ধরে ভুল মান লেখা এড়াতে) |
+| `delete()` | ডিলিট (`ALTER TABLE ... DELETE`-এ কম্পাইল হয়, **WHERE অবশ্যই লাগবে**, নাহলে Exception) |
 | `get()` | কুয়েরি চালান, Result রিটার্ন করে |
 | `first()` | প্রথমটি রিটার্ন করে |
 | `toSql()` | জেনারেট করা SQL পান |
+
+### বড় রেজাল্ট সেট ও স্ট্রিমিং পড়া
+
+`get()` পুরো রেজাল্ট সেটকে PHP অ্যারে-তে পার্স করে, মেমরি রেসপন্স সাইজের প্রায় ৭ গুণ (৫ কলামের সরু টেবিলে মাপা: পেলোড 93 B/সারি → ডিকোডের পর 677 B/সারি, ১ লাখ সারিতে প্রায় 73 MB)। ডেটার পরিমাণ বড় হলে `stream()` দিয়ে সারি ধরে ধরে নিন, মেমরি রেজাল্ট সেটের আকারের সাথে বাড়ে না:
+
+```php
+use Erikwang2013\ClickHouse\Client\StreamingClientInterface;
+
+$client = ClickHouse::client();           // নিচের স্তরের ক্লায়েন্ট দরকার হলে এটি (connection() রিটার্ন করে বিল্ডার)
+if ($client instanceof StreamingClientInterface) {
+    foreach ($client->stream('SELECT * FROM logs') as $row) {   // FORMAT JSONEachRow
+        echo $row['message'], PHP_EOL;
+    }
+}
+
+// নিজস্ব FORMAT থাকা কুয়েরিতে (CSV/TSV ইত্যাদি) raw() ব্যবহার করুন, রেসপন্স বডি হুবহু পাওয়া যায়
+$csv = $client->raw('SELECT * FROM logs FORMAT CSV');
+```
+
+পুলড মোডেও `stream()` কাজ করে: জেনারেটর শেষ হলে (বা আগেই break করে ধ্বংস হলে) কানেকশন ফেরত যায়।
+
+### র' SQL এন্ট্রি
+
+নিচের এন্ট্রিগুলো **হুবহু জোড়া লাগানো** র' SQL চ্যানেল, এখানে ইউজার ইনপুট দিলে ডেটাবেসই তুলে দিলেন: `selectRaw()`, `whereRaw()`, `havingRaw()`, `new Expression($sql)`, `Blueprint::settings()`-এর মান, আর `$table->string('col')`-এর মতো কলাম টাইপ স্ট্রিং (`array($name, $type)`)। আইডেন্টিফায়ার ও মান নিজে থেকেই এস্কেপ হয় (কলাম নাম ব্যাকটিক, মান টাইপ অনুযায়ী এস্কেপ), কিন্তু র' SQL ফ্র্যাগমেন্টে কোনো প্রসেসিং হয় না।
+
+`Expression` কে `select()`-এ (অ্যারের ভেতরে), `where()`, `prewhere()`, `having()`, `orderBy()`, `groupBy()`-তে পাস করা যায়, `rand()`, `toStartOfHour(ts)`-এর মতো এক্সপ্রেশনের জন্য।
 
 ## Schema কলাম টাইপ
 
@@ -449,6 +480,8 @@ class LogController
 ];
 ```
 
+Connection Pool প্রসঙ্গে: `pool` কনফিগ কেবল **কোরুটিন চ্যানেল থাকলেই** কাজ করে (Swoole / Swow / Workerman), FPM-এর মতো সিঙ্ক্রোনাস পরিবেশে এটি উপেক্ষা করে সরাসরি কানেক্ট করে, কোনো কনকারেন্সি সীমা বসায় না। এছাড়া HTTP ড্রাইভার সিঙ্ক্রোনাস Guzzle ব্যবহার করে, পুলিংয়ের আসল লাভ "কনকারেন্সি কানেকশন সংখ্যা সীমিত করা + কানেকশন অবজেক্ট পুনর্ব্যবহার", **এটি নিজে থেকে নন-ব্লকিং হয়ে যায় না** —— সত্যিকারের নন-ব্লকিং চাইলে নিজে Swoole-এর curl হুক চালু করুন (`Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_NATIVE_CURL)`, এটি `SWOOLE_HOOK_ALL`-এর মধ্যে নেই) বা hyperf/guzzle-এর CoroutineHandler যুক্ত করুন। `pool.driver` দিয়ে স্পষ্টভাবে `swoole|swow|workerman|none` নির্দিষ্ট করা যায়।
+
 ## এনভায়রনমেন্ট ভেরিয়েবল
 
 | ভেরিয়েবল | ডিফল্ট মান | বিবরণ |
@@ -466,7 +499,7 @@ class LogController
 | `CLICKHOUSE_POOL_MAX` | 16 | সর্বোচ্চ কানেকশন |
 | `CLICKHOUSE_POOL_TIMEOUT` | 5.0 | কানেকশন নেওয়ার টাইমআউট (সেকেন্ড) |
 
-নেটিভ PHP-তে উপরের ভেরিয়েবলগুলো `ClickHouse::bootstrap()` / `Manager::fromEnv()` পড়ে। চারটি ফ্রেমওয়ার্কের কনফিগ ফাইল একই ভেরিয়েবল নাম সেট পড়ে, তবে কভারেজ ভিন্ন (Laravel সম্পূর্ণ, Hyperf-এ `CLICKHOUSE_CONNECTION`/`CLICKHOUSE_DRIVER`/`CLICKHOUSE_HTTPS` নেই, Webman শুধু পাঁচটি কানেকশন ভেরিয়েবল, ThinkPHP এখন এনভায়রনমেন্ট ভেরিয়েবল পড়ে না), প্রতিটির নিজস্ব কনফিগ ফাইলই চূড়ান্ত।
+উপরের ভেরিয়েবলগুলো নেটিভ PHP-তে `ClickHouse::bootstrap()` / `Manager::fromEnv()` পড়ে, চারটি ফ্রেমওয়ার্কের কনফিগ ফাইল একই ভেরিয়েবল নাম সেট পড়ে (`CLICKHOUSE_HTTPS` সহ)।
 
 ## Exception হ্যান্ডলিং
 

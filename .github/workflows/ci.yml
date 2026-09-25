@@ -93,3 +93,79 @@ jobs:
 
           echo "OK\n";
           PHP
+
+  # The unit suite stubs the transport, so it cannot see anything the server
+  # rejects. That is how "every statement gets ` FORMAT JSON` appended, so every
+  # INSERT fails on a real server" stayed invisible for so long — see
+  # tests/Integration/InsertTest.php. This job runs the same client against a
+  # real ClickHouse.
+  integration:
+    name: Integration (real ClickHouse)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # The service container takes CLICKHOUSE_PASSWORD for its own user setup;
+    # the PHP client reads CLICKHOUSE_PASS (see Manager::fromEnv). The anchor
+    # keeps both sides on one explicitly set value instead of relying on the
+    # image's empty default password.
+    env:
+      CLICKHOUSE_HOST: 127.0.0.1
+      CLICKHOUSE_PORT: '8123'
+      CLICKHOUSE_DB: default
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASS: &clickhouse_password clickhouse-ci-password
+      # A misconfigured service container must not produce "0 integration tests
+      # run, all green" — that is the failure mode this suite exists to catch.
+      CLICKHOUSE_INTEGRATION_REQUIRED: '1'
+
+    services:
+      clickhouse:
+        image: clickhouse/clickhouse-server:latest
+        env:
+          CLICKHOUSE_USER: default
+          CLICKHOUSE_PASSWORD: *clickhouse_password
+        ports:
+          - 8123:8123
+        # /ping answers without credentials, so the health check needs no auth
+        # (the image ships wget, not curl).
+        options: >-
+          --health-cmd "wget --no-verbose --tries=1 --spider http://localhost:8123/ping || exit 1"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 30
+          --health-start-period 10s
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      # The service health check only proves the port answers (/ping needs no
+      # credentials). This proves the exact user/password pair the tests will
+      # use actually authenticates, using the same headers HttpTransport sends,
+      # and fails before PHPUnit with the server's own message on mismatch.
+      - name: Wait for ClickHouse to accept our credentials
+        run: |
+          url="http://$CLICKHOUSE_HOST:$CLICKHOUSE_PORT/"
+          for attempt in $(seq 1 60); do
+            body=$(curl -sS -m 5 \
+              -H "X-ClickHouse-User: $CLICKHOUSE_USER" \
+              -H "X-ClickHouse-Key: $CLICKHOUSE_PASS" \
+              --data-binary "SELECT 1" "$url" 2>&1) && [ "$body" = "1" ] && {
+              echo "ClickHouse authenticated user '$CLICKHOUSE_USER' and answered SELECT 1"
+              exit 0
+            }
+            echo "attempt $attempt: $body"
+            sleep 2
+          done
+          echo "ClickHouse did not accept the configured credentials in time" >&2
+          exit 1
+
+      - name: Run integration tests
+        run: vendor/bin/phpunit --group integration

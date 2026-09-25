@@ -387,22 +387,53 @@ class LogController
 | Metode | Keterangan |
 |------|------|
 | `table($name)` / `from($name)` | Menentukan nama tabel |
-| `select([...])` / `selectRaw($expr)` | Kolom SELECT |
-| `where($col, $op, $val)` | Kondisi (dengan 2 argumen `$op` default `=`) |
+| `select([...])` / `selectRaw($expr)` | Kolom SELECT. Nama kolom pada `select()` diberi tanda backtick (kata kunci cadangan seperti `` `order` `` bisa dipakai), alias `id as uid` masing-masing sisinya diberi backtick tersendiri; untuk menulis fungsi atau subquery gunakan `selectRaw()` atau `Expression` |
+| `where($col, $op, $val)` | Kondisi (dengan 2 argumen `$op` default `=`). Bila nilainya `null` otomatis menjadi `IS NULL` / `IS NOT NULL` |
 | `orWhere($col, $op, $val)` | Kondisi OR |
 | `whereIn($col, $arr)` / `whereNotIn($col, $arr)` | IN / NOT IN |
 | `whereBetween($col, [$min, $max])` | BETWEEN |
 | `whereNull($col)` / `whereNotNull($col)` | IS NULL / IS NOT NULL |
-| `whereRaw($sql)` | WHERE mentah |
+| `whereRaw($sql)` | WHERE mentah (jangan lewatkan input pengguna) |
+| `prewhere($col, $op, $val)` | PREWHERE, posisinya sebelum WHERE (pemangkasan pemindaian paling efektif di ClickHouse) |
 | `orderBy($col, $dir)` | Pengurutan (default ASC) |
 | `groupBy(...$cols)` | Pengelompokan |
+| `having($col, $op, $val)` / `havingRaw($sql)` | HAVING, posisinya setelah GROUP BY. `having()` memperlakukan nama kolom sebagai identifier, jadi kondisi agregat (misalnya `count() > 100`) harus memakai `havingRaw()` atau `new Expression('count()')` |
 | `limit($n)` / `offset($n)` | Paginasi |
+| `final()` | Penggabungan dan deduplikasi saat membaca (ReplacingMergeTree dsb.) |
+| `sample($ratio)` | Sampling `SAMPLE`, misalnya `sample(0.1)` |
+| `settings([...])` | SETTINGS tingkat query, misalnya `settings(['max_execution_time' => 30])` |
 | `count()` / `sum($col)` / `avg($col)` / `min($col)` / `max($col)` | Agregasi |
-| `insert($data)` | Sisip (satu baris atau batch) |
-| `delete()` | Hapus |
+| `insert($data)` | Sisip (satu baris atau batch). Dalam satu batch semua baris harus punya kolom yang sama; kolom kurang atau berlebih langsung memicu error (mencegah nilai tertulis bergeser posisi) |
+| `delete()` | Hapus (dikompilasi menjadi `ALTER TABLE ... DELETE`, **wajib memakai WHERE**, jika tidak akan melempar exception) |
 | `get()` | Menjalankan query, mengembalikan Result |
 | `first()` | Mengembalikan baris pertama |
 | `toSql()` | Mengambil SQL yang dihasilkan |
+
+### Hasil Besar dan Pembacaan Streaming
+
+`get()` mengurai seluruh hasil menjadi array PHP, memorinya sekitar 7 kali ukuran respons (pengukuran pada tabel ramping 5 kolom: payload 93 B/baris → 677 B/baris setelah dekode, 100 ribu baris sekitar 73 MB). Untuk data berukuran besar gunakan `stream()` agar dikonsumsi baris demi baris; memorinya tidak bergantung pada ukuran hasil:
+
+```php
+use Erikwang2013\ClickHouse\Client\StreamingClientInterface;
+
+$client = ClickHouse::client();           // Pakai ini saat butuh klien tingkat rendah (connection() mengembalikan builder)
+if ($client instanceof StreamingClientInterface) {
+    foreach ($client->stream('SELECT * FROM logs') as $row) {   // FORMAT JSONEachRow
+        echo $row['message'], PHP_EOL;
+    }
+}
+
+// Query dengan FORMAT sendiri (CSV/TSV dsb.) pakai raw(), body respons diambil apa adanya
+$csv = $client->raw('SELECT * FROM logs FORMAT CSV');
+```
+
+Dalam mode pool `stream()` juga bisa dipakai: koneksi dikembalikan saat generator selesai dikonsumsi (atau dimusnahkan karena break lebih awal).
+
+### Jalur SQL Mentah
+
+Jalur berikut adalah kanal SQL mentah yang **disambung apa adanya**, jadi memasukkan input pengguna sama dengan menyerahkan database Anda: `selectRaw()`, `whereRaw()`, `havingRaw()`, `new Expression($sql)`, nilai `Blueprint::settings()`, serta string tipe kolom seperti `$table->string('col')` (`array($name, $type)`). Identifier dan nilai sendiri sudah di-escape (nama kolom memakai backtick, nilai di-escape sesuai tipe), tetapi potongan SQL mentah tidak diproses sama sekali.
+
+`Expression` bisa diteruskan ke `select()` (dimasukkan ke dalam array), `where()`, `prewhere()`, `having()`, `orderBy()`, dan `groupBy()`, untuk ekspresi seperti `rand()` atau `toStartOfHour(ts)`.
 
 ## Tipe Kolom Schema
 
@@ -449,6 +480,8 @@ class LogController
 ];
 ```
 
+Tentang connection pool: konfigurasi `pool` hanya berlaku bila **tersedia kanal korutin** (Swoole / Swow / Workerman); di lingkungan sinkron seperti FPM konfigurasi ini diabaikan dan koneksi dibuat langsung, sehingga tidak ada batas konkurensi tambahan. Selain itu driver HTTP memakai Guzzle sinkron, jadi manfaat nyata dari pooling adalah "membatasi jumlah koneksi bersamaan + memakai ulang objek koneksi", **bukan otomatis menjadi non-blocking** — agar benar-benar non-blocking Anda perlu mengaktifkan sendiri hook curl milik Swoole (`Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_NATIVE_CURL)`, yang tidak termasuk dalam `SWOOLE_HOOK_ALL`) atau memakai CoroutineHandler dari hyperf/guzzle. `pool.driver` dapat dipakai untuk menentukan secara eksplisit: `swoole|swow|workerman|none`.
+
 ## Variabel Lingkungan
 
 | Variabel | Nilai default | Keterangan |
@@ -466,7 +499,7 @@ class LogController
 | `CLICKHOUSE_POOL_MAX` | 16 | Jumlah koneksi maksimum |
 | `CLICKHOUSE_POOL_TIMEOUT` | 5.0 | Timeout pengambilan koneksi (detik) |
 
-Di PHP native variabel-variabel di atas dibaca oleh `ClickHouse::bootstrap()` / `Manager::fromEnv()`. Berkas konfigurasi keempat framework membaca kumpulan nama variabel yang sama, tetapi cakupannya berbeda (Laravel lengkap; Hyperf tidak memakai `CLICKHOUSE_CONNECTION`/`CLICKHOUSE_DRIVER`/`CLICKHOUSE_HTTPS`; Webman hanya lima variabel koneksi; ThinkPHP untuk saat ini tidak membaca variabel lingkungan), jadi acuannya adalah berkas konfigurasi masing-masing.
+Di PHP native variabel-variabel di atas dibaca oleh `ClickHouse::bootstrap()` / `Manager::fromEnv()`; berkas konfigurasi keempat framework membaca kumpulan nama variabel yang sama (termasuk `CLICKHOUSE_HTTPS`).
 
 ## Penanganan Exception
 

@@ -5,10 +5,13 @@
  */
 
 
+// 连接名取自环境变量，connections 的键必须跟着它走，否则 default 会指向不存在的连接
+$connection = env('CLICKHOUSE_CONNECTION', 'default');
+
 return [
-    'default' => env('CLICKHOUSE_CONNECTION', 'default'),
+    'default' => $connection,
     'connections' => [
-        'default' => [
+        $connection => [
             'driver' => env('CLICKHOUSE_DRIVER', 'http'),
             'host' => env('CLICKHOUSE_HOST', 'localhost'),
             'port' => env('CLICKHOUSE_PORT', 8123),
@@ -16,6 +19,7 @@ return [
             'username' => env('CLICKHOUSE_USER', 'default'),
             'password' => env('CLICKHOUSE_PASS', ''),
             'timeout' => env('CLICKHOUSE_TIMEOUT', 30),
+            'https' => env('CLICKHOUSE_HTTPS', false),
         ],
     ],
     'migrations' => [

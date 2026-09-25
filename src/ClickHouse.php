@@ -7,6 +7,7 @@
 
 namespace Erikwang2013\ClickHouse;
 
+use Erikwang2013\ClickHouse\Client\ClientInterface;
 use Erikwang2013\ClickHouse\Client\Manager;
 use Erikwang2013\ClickHouse\Query\Builder;
 use Erikwang2013\ClickHouse\Schema\Builder as SchemaBuilder;
@@ -38,6 +39,22 @@ class ClickHouse
     public static function connection(?string $name = null): Builder
     {
         return new Builder(static::manager()->connection($name));
+    }
+
+    /**
+     * 取底层客户端本身（需要 select/insert/ping 时用这个，connection() 返回的是查询构造器）。
+     */
+    public static function client(?string $name = null): ClientInterface
+    {
+        return static::manager()->connection($name);
+    }
+
+    /**
+     * 健康检查：连不上返回 false，不抛异常。
+     */
+    public static function ping(?string $name = null): bool
+    {
+        return static::client($name)->ping();
     }
 
     public static function table(string $table, ?string $connection = null): Builder

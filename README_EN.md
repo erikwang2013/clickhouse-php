@@ -382,22 +382,53 @@ class LogController
 | Method | Description |
 |--------|-------------|
 | `table($name)` / `from($name)` | Set table name |
-| `select([...])` / `selectRaw($expr)` | SELECT columns |
-| `where($col, $op, $val)` | WHERE clause (2-arg defaults to `=`) |
+| `select([...])` / `selectRaw($expr)` | SELECT columns. `select()` back-quotes identifiers (so `` `order` `` works) and quotes both sides of `id as uid` aliases; use `selectRaw()` or an `Expression` for functions and subqueries |
+| `where($col, $op, $val)` | WHERE clause (2-arg defaults to `=`). A `null` value becomes `IS NULL` / `IS NOT NULL` |
 | `orWhere($col, $op, $val)` | OR WHERE clause |
 | `whereIn($col, $arr)` / `whereNotIn($col, $arr)` | WHERE IN / NOT IN |
 | `whereBetween($col, [$min, $max])` | WHERE BETWEEN |
 | `whereNull($col)` / `whereNotNull($col)` | IS NULL / IS NOT NULL |
-| `whereRaw($sql)` | Raw WHERE expression |
+| `whereRaw($sql)` | Raw WHERE expression (never pass user input) |
+| `prewhere($col, $op, $val)` | PREWHERE, emitted before WHERE |
 | `orderBy($col, $dir)` | ORDER BY (default ASC) |
 | `groupBy(...$cols)` | GROUP BY |
+| `having($col, $op, $val)` / `havingRaw($sql)` | HAVING, emitted after GROUP BY. `having()` treats its first argument as an identifier to quote, so aggregate conditions (`count() > 100`) need `havingRaw()` or `new Expression('count()')` |
 | `limit($n)` / `offset($n)` | Pagination |
+| `final()` | FINAL (deduplicating reads) |
+| `sample($ratio)` | SAMPLE, e.g. `sample(0.1)` |
+| `settings([...])` | Query-level SETTINGS, e.g. `settings(['max_execution_time' => 30])` |
 | `count()` / `sum($col)` / `avg($col)` / `min($col)` / `max($col)` | Aggregates |
-| `insert($data)` | Insert (single or batch) |
-| `delete()` | Delete (ALTER TABLE ... DELETE) |
+| `insert($data)` | Insert (single or batch). Every row in a batch must have the same columns — a missing or unknown column is an error instead of a silently shifted value |
+| `delete()` | Delete (ALTER TABLE ... DELETE). **Requires a WHERE clause**, otherwise it throws |
 | `get()` | Execute query, returns Result |
 | `first()` | Return first row |
 | `toSql()` | Get generated SQL |
+
+### Large Result Sets and Streaming
+
+`get()` decodes the whole result into a PHP array, costing roughly 7× the response size (measured on a narrow 5-column table: 93 B/row on the wire → 677 B/row decoded; 100k rows ≈ 73 MB). For large data use `stream()`, whose memory use is independent of the result size:
+
+```php
+use Erikwang2013\ClickHouse\Client\StreamingClientInterface;
+
+$client = ClickHouse::client();           // the underlying client; connection() returns a builder
+if ($client instanceof StreamingClientInterface) {
+    foreach ($client->stream('SELECT * FROM logs') as $row) {   // FORMAT JSONEachRow
+        echo $row['message'], PHP_EOL;
+    }
+}
+
+// For statements with their own FORMAT (CSV/TSV/...), raw() returns the body untouched
+$csv = $client->raw('SELECT * FROM logs FORMAT CSV');
+```
+
+With a pool, `stream()` returns the connection once the generator is exhausted (or destroyed after an early `break`).
+
+### Raw SQL Entry Points
+
+These are verbatim SQL channels — passing user input to them hands over the database: `selectRaw()`, `whereRaw()`, `havingRaw()`, `new Expression($sql)`, the values passed to `Blueprint::settings()`, and column type strings such as `array($name, $type)`. Identifiers and values are escaped (back-quoted column names, type-aware value quoting), but raw SQL fragments are not touched at all.
+
+An `Expression` can be passed to `select()` (inside the array), `where()`, `prewhere()`, `having()`, `orderBy()` and `groupBy()` for things like `rand()` or `toStartOfHour(ts)`.
 
 ## Schema Column Types
 
@@ -444,6 +475,8 @@ class LogController
 ];
 ```
 
+About the pool: the `pool` config only takes effect when a usable coroutine channel exists (Swoole / Swow / Workerman). Under FPM and other synchronous runtimes it is ignored and connections go direct — no concurrency ceiling is imposed on you. Also note the HTTP driver uses synchronous Guzzle, so pooling buys you "cap the number of concurrent connections + reuse client objects", **not** non-blocking IO — for that you must enable Swoole's curl hook yourself (`Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_NATIVE_CURL)`, it is not part of `SWOOLE_HOOK_ALL`) or plug in hyperf/guzzle's CoroutineHandler. `pool.driver` accepts `swoole|swow|workerman|none`.
+
 ## Error Handling
 
 All exceptions extend `ClickHouseException`:
@@ -486,7 +519,7 @@ try {
 | `CLICKHOUSE_POOL_MAX` | 16 | Max connections |
 | `CLICKHOUSE_POOL_TIMEOUT` | 5.0 | Pool acquire timeout (seconds) |
 
-In plain PHP these are read by `ClickHouse::bootstrap()` / `Manager::fromEnv()`. The four framework config files use the same variable names but cover different subsets (Laravel covers all, Hyperf lacks `CLICKHOUSE_CONNECTION`/`CLICKHOUSE_DRIVER`/`CLICKHOUSE_HTTPS`, Webman only reads the five connection variables, ThinkPHP reads none) — check each config file.
+In plain PHP these are read by `ClickHouse::bootstrap()` / `Manager::fromEnv()`, and the four framework config files read the same set of variable names (including `CLICKHOUSE_HTTPS`).
 
 ## Support
 

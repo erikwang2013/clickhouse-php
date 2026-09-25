@@ -18,6 +18,10 @@ class Column
     ) {
     }
 
+    /**
+     * 注意：$type（及 $modifiers）是原生 SQL 片段，用于 array('tags', 'String') 这类开放类型，
+     * 不做转义，切勿把用户输入直接传进来。
+     */
     public function toSql(): string
     {
         $sql = Quoter::column($this->name) . ' ' . $this->type;

@@ -36,14 +36,47 @@ class GrammarTest extends TestCase
     {
         $grammar = new Grammar();
         $builder = $this->createBuilder()->table('logs')->select('id', 'name');
-        $this->assertSame('SELECT id, name FROM `logs`', $grammar->compileSelect($builder));
+        $this->assertSame('SELECT `id`, `name` FROM `logs`', $grammar->compileSelect($builder));
     }
 
     public function testCompileSelectWithArrayColumns(): void
     {
         $grammar = new Grammar();
         $builder = $this->createBuilder()->table('logs')->select(['id', 'name']);
-        $this->assertSame('SELECT id, name FROM `logs`', $grammar->compileSelect($builder));
+        $this->assertSame('SELECT `id`, `name` FROM `logs`', $grammar->compileSelect($builder));
+    }
+
+    public function testCompileSelectKeepsWildcardsBare(): void
+    {
+        $grammar = new Grammar();
+        $this->assertSame('SELECT * FROM `logs`', $grammar->compileSelect($this->createBuilder()->table('logs')->select('*')));
+        $this->assertSame('SELECT logs.* FROM `logs`', $grammar->compileSelect($this->createBuilder()->table('logs')->select('logs.*')));
+    }
+
+    public function testCompileSelectPassesExpressionThrough(): void
+    {
+        $grammar = new Grammar();
+        $builder = $this->createBuilder()->table('logs')->select(['id', new Expression('count(*) as total')]);
+        $this->assertSame('SELECT `id`, count(*) as total FROM `logs`', $grammar->compileSelect($builder));
+    }
+
+    public function testCompileSelectQuotesAliasSides(): void
+    {
+        $grammar = new Grammar();
+        $this->assertSame(
+            'SELECT `id` as `user_id`, `t`.`id` as `uid` FROM `logs`',
+            $grammar->compileSelect($this->createBuilder()->table('logs')->select('id as user_id', 't.id AS uid')),
+        );
+    }
+
+    public function testCompileSelectQuotesInjectedColumnName(): void
+    {
+        $grammar = new Grammar();
+        $builder = $this->createBuilder()->table('logs')->select('name FROM logs WHERE 1=1 --');
+        $this->assertSame(
+            'SELECT `name FROM logs WHERE 1=1 --` FROM `logs`',
+            $grammar->compileSelect($builder),
+        );
     }
 
     public function testCompileSelectEmptyFromThrows(): void
@@ -71,7 +104,7 @@ class GrammarTest extends TestCase
             ->where('active', true)
             ->where('score', 1.5);
         $this->assertSame(
-            'SELECT * FROM `logs` WHERE `age` = 42 AND `deleted_at` = NULL AND `active` = 1 AND `score` = 1.5',
+            'SELECT * FROM `logs` WHERE `age` = 42 AND `deleted_at` IS NULL AND `active` = 1 AND `score` = 1.5',
             $grammar->compileSelect($builder),
         );
     }
@@ -291,7 +324,7 @@ class GrammarTest extends TestCase
             ->limit(5)
             ->offset(10);
         $this->assertSame(
-            'SELECT id FROM `logs` WHERE `level` = \'error\' GROUP BY `level` ORDER BY `count` DESC LIMIT 5 OFFSET 10',
+            'SELECT `id` FROM `logs` WHERE `level` = \'error\' GROUP BY `level` ORDER BY `count` DESC LIMIT 5 OFFSET 10',
             $grammar->compileSelect($builder),
         );
     }
@@ -316,11 +349,143 @@ class GrammarTest extends TestCase
         );
     }
 
-    public function testCompileDeleteWithoutWhere(): void
+    public function testCompileDeleteWithoutWhereThrows(): void
     {
         $grammar = new Grammar();
         $builder = $this->createBuilder()->table('logs');
-        $this->assertSame('ALTER TABLE `logs` DELETE', $grammar->compileDelete($builder));
+        $this->expectException(QueryException::class);
+        $this->expectExceptionMessage('Refusing to delete without a WHERE clause.');
+        $grammar->compileDelete($builder);
+    }
+
+    public function testCompileDeleteIgnoresPrewhere(): void
+    {
+        $grammar = new Grammar();
+        $builder = $this->createBuilder()->table('logs')->prewhere('date', '>=', '2024-01-01')->where('level', 'debug');
+        $sql = $grammar->compileDelete($builder);
+        $this->assertSame("ALTER TABLE `logs` DELETE WHERE `level` = 'debug'", $sql);
+        $this->assertStringNotContainsString('PREWHERE', $sql);
+    }
+
+    public function testCompileSelectWhereNullEquality(): void
+    {
+        $grammar = new Grammar();
+        $builder = $this->createBuilder()->table('logs')
+            ->where('a', null)
+            ->where('b', '!=', null)
+            ->where('c', '<>', null)
+            ->where('d', '<', null)
+            ->orWhere('e', null);
+        $this->assertSame(
+            'SELECT * FROM `logs` WHERE `a` IS NULL AND `b` IS NOT NULL AND `c` IS NOT NULL AND `d` < NULL OR `e` IS NULL',
+            $grammar->compileSelect($builder),
+        );
+    }
+
+    public function testCompileSelectPrewhereComesBeforeWhere(): void
+    {
+        $grammar = new Grammar();
+        $builder = $this->createBuilder()->table('logs')->where('level', 'error')->prewhere('date', '>=', '2024-01-01');
+        $this->assertSame(
+            "SELECT * FROM `logs` PREWHERE `date` >= '2024-01-01' WHERE `level` = 'error'",
+            $grammar->compileSelect($builder),
+        );
+    }
+
+    public function testCompileSelectPrewhereRejectsBadOperator(): void
+    {
+        $builder = $this->createBuilder()->table('logs');
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Unsupported operator: inject_me');
+        $builder->prewhere('date', 'INJECT_ME', 'x');
+    }
+
+    public function testCompileSelectHaving(): void
+    {
+        $grammar = new Grammar();
+        $builder = $this->createBuilder()->table('logs')->select('level')->groupBy('level')
+            ->having('cnt', '>', 10)->having('total', 5);
+        $this->assertSame(
+            'SELECT `level` FROM `logs` GROUP BY `level` HAVING `cnt` > 10 AND `total` = 5',
+            $grammar->compileSelect($builder),
+        );
+    }
+
+    public function testCompileSelectHavingBetweenGroupByAndOrderBy(): void
+    {
+        $grammar = new Grammar();
+        $builder = $this->createBuilder()->table('logs')
+            ->where('level', 'error')
+            ->groupBy('level')
+            ->having('cnt', '>', 10)
+            ->orderBy('cnt', 'DESC')
+            ->limit(3);
+        $this->assertSame(
+            "SELECT * FROM `logs` WHERE `level` = 'error' GROUP BY `level` HAVING `cnt` > 10 ORDER BY `cnt` DESC LIMIT 3",
+            $grammar->compileSelect($builder),
+        );
+    }
+
+    public function testCompileSelectHavingNull(): void
+    {
+        $grammar = new Grammar();
+        $builder = $this->createBuilder()->table('logs')->groupBy('level')->having('cnt', null);
+        $this->assertSame('SELECT * FROM `logs` GROUP BY `level` HAVING `cnt` IS NULL', $grammar->compileSelect($builder));
+    }
+
+    public function testCompileSelectHavingRejectsBadOperator(): void
+    {
+        $builder = $this->createBuilder()->table('logs');
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Unsupported operator: inject_me');
+        $builder->having('cnt', 'INJECT_ME', 1);
+    }
+
+    public function testCompileSelectFinal(): void
+    {
+        $grammar = new Grammar();
+        $builder = $this->createBuilder()->table('logs')->final()->where('level', 'error');
+        $this->assertSame("SELECT * FROM `logs` FINAL WHERE `level` = 'error'", $grammar->compileSelect($builder));
+    }
+
+    public function testCompileSelectSample(): void
+    {
+        $grammar = new Grammar();
+        $this->assertSame('SELECT * FROM `logs` SAMPLE 0.1', $grammar->compileSelect($this->createBuilder()->table('logs')->sample(0.1)));
+        $this->assertSame('SELECT * FROM `logs` FINAL SAMPLE 0.5', $grammar->compileSelect($this->createBuilder()->table('logs')->final()->sample(0.5)));
+    }
+
+    public function testCompileSelectSettingsAtEnd(): void
+    {
+        $grammar = new Grammar();
+        $builder = $this->createBuilder()->table('logs')->select('id')->limit(1)
+            ->settings(['max_threads' => 4, 'log_comment' => "a'b"]);
+        $this->assertSame(
+            'SELECT `id` FROM `logs` LIMIT 1 SETTINGS `max_threads` = 4, `log_comment` = \'a\\\'b\'',
+            $grammar->compileSelect($builder),
+        );
+    }
+
+    public function testCompileSelectEveryClauseInOrder(): void
+    {
+        $grammar = new Grammar();
+        $builder = $this->createBuilder()->table('logs')
+            ->select('level')
+            ->final()
+            ->sample(0.1)
+            ->prewhere('date', '>=', '2024-01-01')
+            ->where('level', 'error')
+            ->groupBy('level')
+            ->having('cnt', '>', 10)
+            ->orderBy('cnt', 'DESC')
+            ->limit(5)
+            ->offset(2)
+            ->settings(['max_threads' => 4]);
+        $this->assertSame(
+            "SELECT `level` FROM `logs` FINAL SAMPLE 0.1 PREWHERE `date` >= '2024-01-01' WHERE `level` = 'error' "
+            . "GROUP BY `level` HAVING `cnt` > 10 ORDER BY `cnt` DESC LIMIT 5 OFFSET 2 SETTINGS `max_threads` = 4",
+            $grammar->compileSelect($builder),
+        );
     }
 
     public function testQuoteScalarTypes(): void

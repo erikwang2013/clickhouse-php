@@ -101,6 +101,15 @@ class Migrator
 
     private function resolve(string $file): Migration
     {
+        // rollback()/refresh() 的 $file 来自 migrations 表，是不可信输入：
+        // 只接受纯文件名（不含路径分隔符与点），否则 require 会被用来加载目录外任意 PHP 文件。
+        if (basename($file) !== $file || !preg_match('/^[A-Za-z0-9_]+$/', $file)) {
+            throw new QueryException(
+                "Invalid migration name [{$file}]: expected a bare filename matching [A-Za-z0-9_]+",
+                $file,
+            );
+        }
+
         $path = $this->path . '/' . $file . '.php';
 
         if (!file_exists($path)) {
@@ -109,7 +118,8 @@ class Migrator
 
         require_once $path;
 
-        $class = preg_replace('/^\d+_/', '', $file);
+        // 时间戳前缀可能有多段，如 2026_05_27_000000_create_logs_table → CreateLogsTable
+        $class = preg_replace('/^[\d_]+/', '', $file);
         $class = str_replace('_', '', ucwords($class, '_'));
 
         if (!class_exists($class)) {

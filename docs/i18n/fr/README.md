@@ -387,22 +387,53 @@ class LogController
 | Méthode | Description |
 |------|------|
 | `table($name)` / `from($name)` | Nomme la table |
-| `select([...])` / `selectRaw($expr)` | Colonnes du SELECT |
-| `where($col, $op, $val)` | Condition (`$op` vaut `=` avec 2 arguments) |
+| `select([...])` / `selectRaw($expr)` | Colonnes du SELECT. Les noms de colonnes de `select()` sont mis entre backticks (les mots réservés comme `` `order` `` passent), et un alias `id as uid` est cité des deux côtés ; pour une fonction ou une sous-requête, utilisez `selectRaw()` ou `Expression` |
+| `where($col, $op, $val)` | Condition (`$op` vaut `=` avec 2 arguments). Une valeur `null` devient automatiquement `IS NULL` / `IS NOT NULL` |
 | `orWhere($col, $op, $val)` | Condition OR |
 | `whereIn($col, $arr)` / `whereNotIn($col, $arr)` | IN / NOT IN |
 | `whereBetween($col, [$min, $max])` | BETWEEN |
 | `whereNull($col)` / `whereNotNull($col)` | IS NULL / IS NOT NULL |
-| `whereRaw($sql)` | WHERE brut |
+| `whereRaw($sql)` | WHERE brut (ne jamais y passer d'entrée utilisateur) |
+| `prewhere($col, $op, $val)` | PREWHERE, placé avant le WHERE (le filtrage de lecture le plus efficace de ClickHouse) |
 | `orderBy($col, $dir)` | Tri (ASC par défaut) |
 | `groupBy(...$cols)` | Groupement |
+| `having($col, $op, $val)` / `havingRaw($sql)` | HAVING, placé après le GROUP BY. `having()` cite les noms de colonnes comme des identifiants : pour une condition d'agrégat (comme `count() > 100`), utilisez `havingRaw()` ou `new Expression('count()')` |
 | `limit($n)` / `offset($n)` | Pagination |
+| `final()` | Déduplique et fusionne à la lecture (ReplacingMergeTree, etc.) |
+| `sample($ratio)` | Échantillonnage SAMPLE, par exemple `sample(0.1)` |
+| `settings([...])` | SETTINGS au niveau de la requête, par exemple `settings(['max_execution_time' => 30])` |
 | `count()` / `sum($col)` / `avg($col)` / `min($col)` / `max($col)` | Agrégats |
-| `insert($data)` | Insertion (ligne unique ou lot) |
-| `delete()` | Suppression |
+| `insert($data)` | Insertion (ligne unique ou lot). Toutes les lignes d'un même lot doivent avoir les mêmes colonnes : une colonne manquante ou en trop fait échouer l'insertion (pour éviter que les valeurs ne se décalent par position) |
+| `delete()` | Suppression (compilée en `ALTER TABLE ... DELETE`, **WHERE obligatoire**, sinon une exception est levée) |
 | `get()` | Exécute la requête et renvoie un Result |
 | `first()` | Renvoie la première ligne |
 | `toSql()` | Récupère le SQL généré |
+
+### Grands résultats et lecture en streaming
+
+`get()` décode tout le jeu de résultats en tableau PHP : la mémoire occupée vaut environ 7 fois le volume de la réponse (mesuré sur une table étroite à 5 colonnes : 93 B par ligne dans la charge utile → 677 B par ligne après décodage, soit environ 73 Mo pour 100 000 lignes). Sur de gros volumes, consommez ligne par ligne avec `stream()`, la mémoire ne dépend alors plus de la taille du résultat :
+
+```php
+use Erikwang2013\ClickHouse\Client\StreamingClientInterface;
+
+$client = ClickHouse::client();           // à utiliser quand il faut le client bas niveau (connection() renvoie un constructeur)
+if ($client instanceof StreamingClientInterface) {
+    foreach ($client->stream('SELECT * FROM logs') as $row) {   // FORMAT JSONEachRow
+        echo $row['message'], PHP_EOL;
+    }
+}
+
+// Pour une requête portant déjà son FORMAT (CSV/TSV, etc.), raw() renvoie le corps de la réponse tel quel
+$csv = $client->raw('SELECT * FROM logs FORMAT CSV');
+```
+
+En mode pool, `stream()` fonctionne aussi : la connexion est rendue quand le générateur est entièrement consommé (ou détruit par un `break` anticipé).
+
+### Points d'entrée SQL brut
+
+Les entrées suivantes sont des canaux SQL brut **concaténés tels quels** : y faire passer une entrée utilisateur revient à livrer la base de données. `selectRaw()`, `whereRaw()`, `havingRaw()`, `new Expression($sql)`, les valeurs de `Blueprint::settings()`, ainsi que les chaînes de type de colonne comme `$table->string('col')` (`array($name, $type)`). Les identifiants et les valeurs elles-mêmes sont échappés (noms de colonnes entre backticks, valeurs selon leur type), mais les fragments SQL brut ne subissent aucun traitement.
+
+`Expression` peut être passée à `select()` (dans le tableau), `where()`, `prewhere()`, `having()`, `orderBy()` et `groupBy()`, pour des expressions comme `rand()` ou `toStartOfHour(ts)`.
 
 ## Types de colonnes Schema
 
@@ -449,6 +480,8 @@ class LogController
 ];
 ```
 
+À propos du pool de connexions : la configuration `pool` ne prend effet que **lorsqu'un canal de coroutines est disponible** (Swoole / Swow / Workerman) ; en environnement synchrone comme FPM elle est ignorée et la connexion est directe, sans plafond de concurrence ajouté. Par ailleurs, le driver HTTP s'appuie sur Guzzle synchrone : le gain réel du pool est de « plafonner le nombre de connexions simultanées + réutiliser les objets de connexion », il **ne rend pas le code non bloquant pour autant** — pour un vrai non-bloquant, activez vous-même le hook curl de Swoole (`Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_NATIVE_CURL)`, absent de `SWOOLE_HOOK_ALL`) ou branchez le CoroutineHandler de hyperf/guzzle. `pool.driver` permet de forcer explicitement `swoole|swow|workerman|none`.
+
 ## Variables d'environnement
 
 | Variable | Valeur par défaut | Description |
@@ -466,7 +499,7 @@ class LogController
 | `CLICKHOUSE_POOL_MAX` | 16 | Nombre maximal de connexions |
 | `CLICKHOUSE_POOL_TIMEOUT` | 5.0 | Délai d'obtention d'une connexion (secondes) |
 
-En PHP natif, les variables ci-dessus sont lues par `ClickHouse::bootstrap()` / `Manager::fromEnv()`. Les fichiers de configuration des quatre frameworks lisent le même jeu de noms de variables, mais avec une couverture différente (Laravel l'intégralité ; Hyperf sans `CLICKHOUSE_CONNECTION`/`CLICKHOUSE_DRIVER`/`CLICKHOUSE_HTTPS` ; Webman seulement les cinq variables de connexion ; ThinkPHP ne lit pas les variables d'environnement pour l'instant) : le fichier de configuration de chaque framework fait foi.
+En PHP natif, ces variables sont lues par `ClickHouse::bootstrap()` / `Manager::fromEnv()` ; les fichiers de configuration des quatre frameworks lisent le même jeu de noms de variables (y compris `CLICKHOUSE_HTTPS`).
 
 ## Gestion des exceptions
 

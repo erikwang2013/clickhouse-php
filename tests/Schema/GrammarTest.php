@@ -53,9 +53,32 @@ class GrammarTest extends TestCase
             . ' PRIMARY KEY id'
             . ' SAMPLE BY rand()'
             . ' TTL created_at + INTERVAL 30 DAY'
-            . ' SETTINGS index_granularity = 8192, min_rows_for_wide_part = 0',
+            . ' SETTINGS `index_granularity` = 8192, `min_rows_for_wide_part` = 0',
             $sql,
         );
+    }
+
+    public function testCompileCreateQuotesSettingValues(): void
+    {
+        $blueprint = $this->blueprint();
+        $blueprint->uint64('id');
+        $blueprint->settings(["storage_policy" => "hot'zone", 'allow_nullable_key' => 1]);
+
+        $sql = (new Grammar())->compileCreate('events', $blueprint);
+        $this->assertStringContainsString(
+            " SETTINGS `storage_policy` = 'hot\\'zone', `allow_nullable_key` = 1",
+            $sql,
+        );
+    }
+
+    public function testCompileCreateEscapesBacktickInSettingKey(): void
+    {
+        $blueprint = $this->blueprint();
+        $blueprint->uint64('id');
+        $blueprint->settings(['we`ird' => 'v']);
+
+        $sql = (new Grammar())->compileCreate('events', $blueprint);
+        $this->assertStringContainsString(' SETTINGS `we\\`ird` = \'v\'', $sql);
     }
 
     public function testCompileCreateWithoutOrderByFallsBackToTuple(): void

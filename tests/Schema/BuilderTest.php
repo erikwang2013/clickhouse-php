@@ -130,17 +130,18 @@ class BuilderTest extends TestCase
         );
     }
 
-    public function testCreateSkipsQueryWhenBlueprintHasNoColumns(): void
+    public function testCreateThrowsWhenBlueprintHasNoColumns(): void
     {
         $client = Mockery::mock(ClientInterface::class);
         $client->shouldNotReceive('query');
         $builder = new \Erikwang2013\ClickHouse\Schema\Builder($client);
 
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('no columns');
+
         $builder->create('logs', function (Blueprint $blueprint) {
             $blueprint->engine('MergeTree');
         });
-
-        $this->expectNotToPerformAssertions();
     }
 
     public function testDropExecutesSql(): void
@@ -176,16 +177,44 @@ class BuilderTest extends TestCase
         );
     }
 
-    public function testAlterSkipsQueryWhenBlueprintHasNoColumns(): void
+    public function testAlterThrowsWhenBlueprintHasNoColumns(): void
     {
         $client = Mockery::mock(ClientInterface::class);
         $client->shouldNotReceive('query');
         $builder = new \Erikwang2013\ClickHouse\Schema\Builder($client);
 
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('no columns');
+
         $builder->alter('logs', function (Blueprint $blueprint) {
         });
+    }
 
-        $this->expectNotToPerformAssertions();
+    public function testAlterThrowsInsteadOfDroppingNonColumnClauses(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $client->shouldNotReceive('query');
+        $builder = new \Erikwang2013\ClickHouse\Schema\Builder($client);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot alter table [logs]');
+
+        $builder->alter('logs', function (Blueprint $blueprint) {
+            $blueprint->engine('MergeTree')->ttl('d + INTERVAL 1 DAY')->settings(['index_granularity' => 8192]);
+        });
+    }
+
+    public function testCreateWithEmptyClosureThrows(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $client->shouldNotReceive('query');
+        $builder = new \Erikwang2013\ClickHouse\Schema\Builder($client);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot create table [logs]');
+
+        $builder->create('logs', function (Blueprint $blueprint) {
+        });
     }
 
     public function testGetTablesDelegatesToSelect(): void

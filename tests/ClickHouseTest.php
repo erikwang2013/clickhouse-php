@@ -102,6 +102,60 @@ class ClickHouseTest extends TestCase
         $this->assertInstanceOf(Builder::class, ClickHouse::connection('replica'));
     }
 
+    public function testClientReturnsClientInterface(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $manager = $this->mockManager();
+        $manager->shouldReceive('connection')->once()->with(null)->andReturn($client);
+        ClickHouse::setManager($manager);
+
+        $this->assertSame($client, ClickHouse::client());
+    }
+
+    public function testClientPassesNameToManager(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $manager = $this->mockManager();
+        $manager->shouldReceive('connection')->once()->with('replica')->andReturn($client);
+        ClickHouse::setManager($manager);
+
+        $this->assertSame($client, ClickHouse::client('replica'));
+    }
+
+    public function testClientThrowsWhenManagerNotInitialized(): void
+    {
+        $this->expectException(ConnectionException::class);
+        ClickHouse::client();
+    }
+
+    public function testPingDelegatesToClient(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $client->shouldReceive('ping')->once()->andReturn(true);
+        $manager = $this->mockManager();
+        $manager->shouldReceive('connection')->once()->with(null)->andReturn($client);
+        ClickHouse::setManager($manager);
+
+        $this->assertTrue(ClickHouse::ping());
+    }
+
+    public function testPingPassesNameAndReportsFailure(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $client->shouldReceive('ping')->once()->andReturn(false);
+        $manager = $this->mockManager();
+        $manager->shouldReceive('connection')->once()->with('replica')->andReturn($client);
+        ClickHouse::setManager($manager);
+
+        $this->assertFalse(ClickHouse::ping('replica'));
+    }
+
+    public function testPingThrowsWhenManagerNotInitialized(): void
+    {
+        $this->expectException(ConnectionException::class);
+        ClickHouse::ping();
+    }
+
     public function testTableReturnsBuilderForTable(): void
     {
         $client = Mockery::mock(ClientInterface::class);

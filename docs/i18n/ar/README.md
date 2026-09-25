@@ -387,22 +387,53 @@ class LogController
 | الطريقة | الوصف |
 |------|------|
 | `table($name)` / `from($name)` | تحديد اسم الجدول |
-| `select([...])` / `selectRaw($expr)` | أعمدة SELECT |
-| `where($col, $op, $val)` | شرط (عند تمرير معاملين تكون `$op` افتراضيًا `=`) |
+| `select([...])` / `selectRaw($expr)` | أعمدة SELECT. أسماء الأعمدة في `select()` تُوضع بين علامتي اقتباس خلفيتين (فتعمل الكلمات المحجوزة مثل `` `order` ``)، والاسم المستعار `id as uid` يُقتبس طرفاه كلٌّ على حدة؛ لكتابة دالة أو استعلام فرعي استخدم `selectRaw()` أو `Expression` |
+| `where($col, $op, $val)` | شرط (عند تمرير معاملين تكون `$op` افتراضيًا `=`). وإذا كانت القيمة `null` تُحوَّل تلقائيًا إلى `IS NULL` / `IS NOT NULL` |
 | `orWhere($col, $op, $val)` | شرط OR |
 | `whereIn($col, $arr)` / `whereNotIn($col, $arr)` | IN / NOT IN |
 | `whereBetween($col, [$min, $max])` | BETWEEN |
 | `whereNull($col)` / `whereNotNull($col)` | IS NULL / IS NOT NULL |
-| `whereRaw($sql)` | WHERE خام |
+| `whereRaw($sql)` | WHERE خام (لا تمرّر مدخلات المستخدم) |
+| `prewhere($col, $op, $val)` | PREWHERE، وموضعه قبل WHERE (أنجع وسيلة لتقليص المسح في ClickHouse) |
 | `orderBy($col, $dir)` | الترتيب (ASC افتراضيًا) |
 | `groupBy(...$cols)` | التجميع |
+| `having($col, $op, $val)` / `havingRaw($sql)` | HAVING، وموضعه بعد GROUP BY. ويعامل `having()` أسماء الأعمدة كمعرّفات فيقتبسها؛ أما شروط التجميع (مثل `count() > 100`) فاستخدم لها `havingRaw()` أو `new Expression('count()')` |
 | `limit($n)` / `offset($n)` | ترقيم الصفحات |
+| `final()` | الدمج وإزالة التكرار عند القراءة (مثل ReplacingMergeTree) |
+| `sample($ratio)` | أخذ عيّنة SAMPLE، مثل `sample(0.1)` |
+| `settings([...])` | إعدادات SETTINGS على مستوى الاستعلام، مثل `settings(['max_execution_time' => 30])` |
 | `count()` / `sum($col)` / `avg($col)` / `min($col)` / `max($col)` | التجميع |
-| `insert($data)` | إدراج (صف واحد أو دفعة) |
-| `delete()` | حذف |
+| `insert($data)` | إدراج (صف واحد أو دفعة). يجب أن تتطابق أعمدة كل الصفوف في الدفعة الواحدة؛ فنقص عمود أو زيادته يُطلق خطأً مباشرًا (تجنّبًا لكتابة القيم في مواضع خاطئة) |
+| `delete()` | حذف (يُترجم إلى `ALTER TABLE ... DELETE`، و**يجب أن يحمل WHERE**، وإلا رُمي استثناء) |
 | `get()` | تنفيذ الاستعلام وإرجاع Result |
 | `first()` | إرجاع أول سجل |
 | `toSql()` | الحصول على SQL المُولَّد |
+
+### مجموعات النتائج الكبيرة والقراءة المتدفقة
+
+يحلّل `get()` مجموعة النتائج كاملة إلى مصفوفة PHP، بحجم ذاكرة يقارب 7 أضعاف حجم الاستجابة (قياس فعلي على جدول ضيّق من 5 أعمدة: 93 بايت/صف في الحمولة → 677 بايت/صف بعد فك الترميز، أي نحو 73 ميغابايت لـ 100 ألف صف). وعند كبر حجم البيانات استخدم `stream()` للاستهلاك صفًا صفًا، فيصبح حجم الذاكرة مستقلًا عن حجم مجموعة النتائج:
+
+```php
+use Erikwang2013\ClickHouse\Client\StreamingClientInterface;
+
+$client = ClickHouse::client();           // استخدمه عند الحاجة إلى العميل الأدنى (connection() يُرجع منشئًا)
+if ($client instanceof StreamingClientInterface) {
+    foreach ($client->stream('SELECT * FROM logs') as $row) {   // FORMAT JSONEachRow
+        echo $row['message'], PHP_EOL;
+    }
+}
+
+// للاستعلامات التي تحمل FORMAT خاصًا بها (CSV/TSV وما شابه) استخدم raw()، فيُؤخذ جسم الاستجابة كما هو
+$csv = $client->raw('SELECT * FROM logs FORMAT CSV');
+```
+
+يعمل `stream()` أيضًا في وضع الحوض: يُعاد الاتصال عند انتهاء استهلاك المولِّد (أو عند تدميره بالخروج المبكر من الحلقة).
+
+### مداخل SQL الأصلي
+
+المداخل التالية قنوات SQL أصلي تُلصق **كما هي**، وتمرير مدخلات المستخدم فيها يعني تسليم قاعدة البيانات: `selectRaw()`، و`whereRaw()`، و`havingRaw()`، و`new Expression($sql)`، وقيم `Blueprint::settings()`، وسلاسل أنواع الأعمدة مثل `$table->string('col')` (`array($name, $type)`). المعرّفات والقيم نفسها مهرَّبة (أسماء الأعمدة بين علامتي اقتباس خلفيتين، والقيم حسب النوع)، أما أجزاء SQL الأصلية فلا تُعالَج إطلاقًا.
+
+يمكن تمرير `Expression` إلى `select()` (داخل المصفوفة) و`where()` و`prewhere()` و`having()` و`orderBy()` و`groupBy()`، لاستخدام تعبيرات مثل `rand()` و`toStartOfHour(ts)`.
 
 ## أنواع أعمدة Schema
 
@@ -449,6 +480,8 @@ class LogController
 ];
 ```
 
+بخصوص حوض الاتصالات: لا يُطبَّق إعداد `pool` إلا عند **وجود قناة Coroutine متاحة** (Swoole / Swow / Workerman)، أما في البيئات المتزامنة مثل FPM فيُتجاهَل ويجري الاتصال مباشرةً، دون أن يضيف لك حدًّا للتزامن. كما أن مشغّل HTTP يستخدم Guzzle المتزامن، فالفائدة الفعلية من الحوض هي «تحديد عدد الاتصالات المتزامنة + إعادة استخدام كائنات الاتصال»، و**لا يتحول تلقائيًا إلى غير حظر** —— ولتحقيق عدم الحظر فعليًا لا بد من تمكين خطّاف curl في Swoole بنفسك (`Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_NATIVE_CURL)`، وهو ليس ضمن `SWOOLE_HOOK_ALL`) أو استخدام CoroutineHandler من hyperf/guzzle. ويمكن تحديده صراحةً عبر `pool.driver` بالقيم `swoole|swow|workerman|none`.
+
 ## متغيرات البيئة
 
 | المتغير | القيمة الافتراضية | الوصف |
@@ -466,7 +499,7 @@ class LogController
 | `CLICKHOUSE_POOL_MAX` | 16 | الحد الأقصى للاتصالات |
 | `CLICKHOUSE_POOL_TIMEOUT` | 5.0 | مهلة أخذ الاتصال (ثانية) |
 
-في PHP الأصلي تُقرأ المتغيرات أعلاه بواسطة `ClickHouse::bootstrap()` / `Manager::fromEnv()`، أما ملفات إعداد الأطر الأربعة فتُقرأ بنفس أسماء المتغيرات لكن نطاق التغطية يختلف (Laravel شامل، وHyperf يفتقر إلى `CLICKHOUSE_CONNECTION` / `CLICKHOUSE_DRIVER` / `CLICKHOUSE_HTTPS`، وWebman خمسة عناصر الاتصال فقط، وThinkPHP لا يقرأ متغيرات البيئة حاليًا)، والمرجع هو ملف الإعداد الخاص بكل إطار.
+تُقرأ المتغيرات أعلاه في PHP الأصلي بواسطة `ClickHouse::bootstrap()` / `Manager::fromEnv()`، وتقرأ ملفات إعداد الأطر الأربعة نفس أسماء المتغيرات (بما فيها `CLICKHOUSE_HTTPS`).
 
 ## معالجة الاستثناءات
 

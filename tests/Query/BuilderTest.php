@@ -99,7 +99,7 @@ class BuilderTest extends TestCase
         $builder->table('logs')->select('id', 'name');
         $builder->count();
         $sql = $builder->toSql();
-        $this->assertStringContainsString('SELECT id, name FROM', $sql);
+        $this->assertStringContainsString('SELECT `id`, `name` FROM', $sql);
     }
 
     public function testFirstDoesNotMutateLimit(): void
@@ -234,18 +234,18 @@ class BuilderTest extends TestCase
     {
         $builder = $this->createBuilder();
         $builder->table('logs')->select(['id', 'name']);
-        $this->assertStringContainsString('SELECT id, name FROM', $builder->toSql());
+        $this->assertStringContainsString('SELECT `id`, `name` FROM', $builder->toSql());
 
         $builder2 = $this->createBuilder();
         $builder2->table('logs')->select('id', 'name');
-        $this->assertStringContainsString('SELECT id, name FROM', $builder2->toSql());
+        $this->assertStringContainsString('SELECT `id`, `name` FROM', $builder2->toSql());
     }
 
-    public function testSelectRawAppendsColumn(): void
+    public function testSelectRawAppendsRawExpression(): void
     {
         $builder = $this->createBuilder();
         $builder->table('logs')->select('id')->selectRaw('COUNT(*) as total');
-        $this->assertStringContainsString('SELECT id, COUNT(*) as total FROM', $builder->toSql());
+        $this->assertStringContainsString('SELECT `id`, COUNT(*) as total FROM', $builder->toSql());
     }
 
     public function testWhereLikeOperators(): void
@@ -344,7 +344,7 @@ class BuilderTest extends TestCase
         } catch (QueryException) {
         }
 
-        $this->assertStringContainsString('SELECT id, name FROM', $builder->toSql());
+        $this->assertStringContainsString('SELECT `id`, `name` FROM', $builder->toSql());
     }
 
     public function testDeleteMethodCallsClientAndReturnsCount(): void
@@ -354,6 +354,125 @@ class BuilderTest extends TestCase
         $builder = new Builder($client);
         $builder->table('logs')->where('level', 'debug');
         $this->assertSame(3, $builder->delete());
+    }
+
+    public function testDeleteWithoutWhereThrowsBeforeTouchingClient(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $client->shouldNotReceive('query');
+        $builder = new Builder($client);
+        $builder->table('logs');
+
+        $this->expectException(QueryException::class);
+        $this->expectExceptionMessage('Refusing to delete without a WHERE clause.');
+        $builder->delete();
+    }
+
+    public function testCountAggregatesStar(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $client->shouldReceive('query')->once()->with('SELECT count(*) as aggregate FROM `logs`')->andReturn(new Result([['aggregate' => 7]]));
+        $builder = new Builder($client);
+        $this->assertSame(7, $builder->table('logs')->count());
+    }
+
+    public function testAggregateQuotesColumnName(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $client->shouldReceive('query')->once()->with('SELECT sum(`price`) as aggregate FROM `logs`')->andReturn(new Result([['aggregate' => 3]]));
+        $builder = new Builder($client);
+        $this->assertSame(3.0, $builder->table('logs')->sum('price'));
+    }
+
+    public function testAggregateColumnNameIsEscaped(): void
+    {
+        $client = Mockery::mock(ClientInterface::class);
+        $client->shouldReceive('query')->once()
+            ->with(
+                'SELECT min(`price) FROM logs WHERE 1=1 --`) as aggregate FROM `logs`',
+            )
+            ->andReturn(new Result([['aggregate' => 1]]));
+
+        $builder = new Builder($client);
+        $this->assertSame(1, $builder->table('logs')->min('price) FROM logs WHERE 1=1 --'));
+    }
+
+    public function testWhereNullBecomesIsNull(): void
+    {
+        $builder = $this->createBuilder();
+        $builder->table('logs')->where('deleted_at', null)->where('updated_at', '!=', null);
+        $sql = $builder->toSql();
+        $this->assertStringContainsString('WHERE `deleted_at` IS NULL AND `updated_at` IS NOT NULL', $sql);
+    }
+
+    public function testPrewhereSql(): void
+    {
+        $builder = $this->createBuilder();
+        $builder->table('logs')->where('level', 'error')->prewhere('date', '>=', '2024-01-01');
+        $this->assertStringContainsString("PREWHERE `date` >= '2024-01-01' WHERE `level` = 'error'", $builder->toSql());
+    }
+
+    public function testHavingSql(): void
+    {
+        $builder = $this->createBuilder();
+        $builder->table('logs')->select('level')->groupBy('level')->having('cnt', '>', 10);
+        $this->assertStringContainsString('GROUP BY `level` HAVING `cnt` > 10', $builder->toSql());
+    }
+
+    public function testHavingRejectsBadOperator(): void
+    {
+        $builder = $this->createBuilder();
+        $this->expectException(\InvalidArgumentException::class);
+        $builder->having('cnt', 'INJECT_ME', 1);
+    }
+
+    public function testFinalAndSampleSql(): void
+    {
+        $builder = $this->createBuilder();
+        $builder->table('logs')->final()->sample(0.1);
+        $this->assertStringContainsString('FROM `logs` FINAL SAMPLE 0.1', $builder->toSql());
+    }
+
+    public function testSettingsAppendsAtEndAndMerges(): void
+    {
+        $builder = $this->createBuilder();
+        $builder->table('logs')->limit(1)->settings(['max_threads' => 4])->settings(['log_comment' => 'x']);
+        $this->assertStringContainsString('LIMIT 1 SETTINGS `max_threads` = 4, `log_comment` = \'x\'', $builder->toSql());
+    }
+
+    public function testHavingQuotesPlainIdentifierButAcceptsExpression(): void
+    {
+        $plain = $this->createBuilder();
+        $plain->table('logs')->groupBy('level')->having('total', '>', 100);
+        $this->assertStringContainsString('HAVING `total` > 100', $plain->toSql());
+
+        // 聚合条件（count() 之类）不是标识符，必须走 Expression 或 havingRaw
+        $expr = $this->createBuilder();
+        $expr->table('logs')->groupBy('level')->having(new Expression('count()'), '>', 100);
+        $this->assertStringContainsString('HAVING count() > 100', $expr->toSql());
+    }
+
+    public function testHavingRawIsPassedThroughVerbatim(): void
+    {
+        $builder = $this->createBuilder();
+        $builder->table('logs')->groupBy('level')->havingRaw('count() > 100');
+        $this->assertStringContainsString('HAVING count() > 100', $builder->toSql());
+    }
+
+    public function testExpressionPassesThroughWhereOrderByAndGroupBy(): void
+    {
+        $builder = $this->createBuilder();
+        $builder->table('logs')
+            ->where(new Expression('toDate(ts)'), '>', '2024-01-01')
+            ->groupBy(new Expression('toStartOfHour(ts)'))
+            ->orderBy(new Expression('rand()'));
+
+        $sql = $builder->toSql();
+        $this->assertStringContainsString('WHERE toDate(ts) > \'2024-01-01\'', $sql);
+        $this->assertStringContainsString('GROUP BY toStartOfHour(ts)', $sql);
+        $this->assertStringContainsString('ORDER BY rand() ASC', $sql);
+        // 普通列名不受影响，仍然被引用
+        $this->assertStringNotContainsString('`toDate(ts)`', $sql);
     }
 
     protected function tearDown(): void

@@ -24,7 +24,9 @@ class Builder
         $callback($blueprint);
 
         if (empty($blueprint->columns)) {
-            return;
+            throw new \InvalidArgumentException(
+                "Cannot create table [{$table}]: the blueprint defines no columns.",
+            );
         }
 
         $sql = $this->grammar->compileCreate($table, $blueprint);
@@ -42,7 +44,10 @@ class Builder
         $callback($blueprint);
 
         if (empty($blueprint->columns)) {
-            return;
+            throw new \InvalidArgumentException(
+                "Cannot alter table [{$table}]: the blueprint defines no columns"
+                . ' (alter() only supports ADD COLUMN; engine/ttl/settings are ignored here).',
+            );
         }
 
         $this->client->query($this->grammar->compileAlterAdd($table, $blueprint));

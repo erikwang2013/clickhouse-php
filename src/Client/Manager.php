@@ -9,6 +9,9 @@ namespace Erikwang2013\ClickHouse\Client;
 
 use Erikwang2013\ClickHouse\Exceptions\ConnectionException;
 use Erikwang2013\ClickHouse\Pool\PoolInterface;
+use Erikwang2013\ClickHouse\Pool\SwoolePool;
+use Erikwang2013\ClickHouse\Pool\SwowPool;
+use Erikwang2013\ClickHouse\Pool\WorkermanPool;
 use Erikwang2013\ClickHouse\Support\Config;
 use Erikwang2013\ClickHouse\Transport\HttpTransport;
 use Erikwang2013\ClickHouse\Transport\TransportInterface;
@@ -67,6 +70,15 @@ class Manager
         return $value === false || $value === '' ? $default : $value;
     }
 
+    /**
+     * connection() 的别名：门面（含 Laravel Facade，它把静态调用转发到 Manager）上
+     * `ClickHouse::client()` 与 `ClickHouse::connection()` 语义不同，用这个拿客户端本身。
+     */
+    public function client(?string $name = null): ClientInterface
+    {
+        return $this->connection($name);
+    }
+
     public function connection(?string $name = null): ClientInterface
     {
         $name ??= $this->defaultConnection;
@@ -96,9 +108,69 @@ class Manager
         }
 
         $connConfig = new Config($connections[$name]);
-        $transport = $this->createTransport($connConfig);
+        $pool = $this->createPool($connConfig);
 
-        return new HttpClient($transport, $connConfig, $this->logger);
+        if ($pool !== null) {
+            return new PooledClient($pool);
+        }
+
+        return new HttpClient($this->createTransport($connConfig), $connConfig, $this->logger);
+    }
+
+    /**
+     * 连接自带的 pool 覆盖全局 pool；两处都没配 pool 就直连（与池化功能引入前一致）。
+     */
+    private function createPool(Config $connConfig): ?PoolInterface
+    {
+        $poolConfig = array_replace($this->config['pool'] ?? [], $connConfig->get('pool', []) ?? []);
+
+        if ($poolConfig === []) {
+            return null;
+        }
+
+        $driver = $poolConfig['driver'] ?? null;
+
+        if ($driver === 'none') {
+            return null;
+        }
+
+        $poolClass = self::poolClass($driver);
+
+        if ($poolClass === null) {
+            // 没有可用的协程运行时（典型 FPM/CLI）：不池化，也不限流
+            return null;
+        }
+
+        $factory = fn(): ClientInterface => new HttpClient(
+            $this->createTransport($connConfig), $connConfig, $this->logger,
+        );
+
+        return new $poolClass($factory, $poolConfig);
+    }
+
+    /**
+     * 解析池实现。$driver 为 null 时按 swoole → swow → workerman 找运行时真正可用的通道；
+     * 返回 null 表示当前进程池化不了（调用方退回直连）。只看通道类是否存在，不看 extension_loaded。
+     */
+    private static function poolClass(?string $driver): ?string
+    {
+        return match ($driver) {
+            null => self::poolClass('swoole') ?? self::poolClass('swow') ?? self::poolClass('workerman'),
+            'swoole' => self::swooleAvailable() ? SwoolePool::class : null,
+            'swow' => class_exists(\Swow\Channel::class) ? SwowPool::class : null,
+            'workerman' => class_exists(\Workerman\Coroutine\Channel::class) ? WorkermanPool::class : null,
+            default => throw new ConnectionException("Unsupported ClickHouse pool driver [{$driver}]."),
+        };
+    }
+
+    /**
+     * Swoole 的 Channel 在协程外调用是 fatal 且捕获不住，所以光有类还不够，必须真的在协程里。
+     */
+    private static function swooleAvailable(): bool
+    {
+        return class_exists(\Swoole\Coroutine::class)
+            && class_exists(\Swoole\Coroutine\Channel::class)
+            && \Swoole\Coroutine::getCid() > 0;
     }
 
     private function createTransport(Config $config): TransportInterface

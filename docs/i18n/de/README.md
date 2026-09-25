@@ -387,22 +387,53 @@ class LogController
 | Methode | Beschreibung |
 |---------|--------------|
 | `table($name)` / `from($name)` | Tabellennamen angeben |
-| `select([...])` / `selectRaw($expr)` | SELECT-Spalten |
-| `where($col, $op, $val)` | Bedingung (bei 2 Argumenten ist `$op` standardmäßig `=`) |
+| `select([...])` / `selectRaw($expr)` | SELECT-Spalten. Spaltennamen in `select()` werden in Backticks gesetzt (Schlüsselwörter wie `` `order` `` sind damit nutzbar), bei einem Alias `id as uid` wird jede Seite einzeln gequotet; für Funktionen oder Unterabfragen `selectRaw()` oder `Expression` verwenden |
+| `where($col, $op, $val)` | Bedingung (bei 2 Argumenten ist `$op` standardmäßig `=`). Bei einem Wert `null` wird automatisch `IS NULL` / `IS NOT NULL` daraus |
 | `orWhere($col, $op, $val)` | OR-Bedingung |
 | `whereIn($col, $arr)` / `whereNotIn($col, $arr)` | IN / NOT IN |
 | `whereBetween($col, [$min, $max])` | BETWEEN |
 | `whereNull($col)` / `whereNotNull($col)` | IS NULL / IS NOT NULL |
-| `whereRaw($sql)` | Rohes WHERE |
+| `whereRaw($sql)` | Rohes WHERE (keine Benutzereingaben übergeben) |
+| `prewhere($col, $op, $val)` | PREWHERE, steht vor WHERE (die wirksamste Scan-Eingrenzung in ClickHouse) |
 | `orderBy($col, $dir)` | Sortierung (standardmäßig ASC) |
 | `groupBy(...$cols)` | Gruppierung |
+| `having($col, $op, $val)` / `havingRaw($sql)` | HAVING, steht nach GROUP BY. `having()` quotet Spaltennamen als Bezeichner; für Aggregatbedingungen (z. B. `count() > 100`) `havingRaw()` oder `new Expression('count()')` verwenden |
 | `limit($n)` / `offset($n)` | Paginierung |
+| `final()` | Deduplizierende Zusammenführung beim Lesen (ReplacingMergeTree usw.) |
+| `sample($ratio)` | SAMPLE-Stichprobe, z. B. `sample(0.1)` |
+| `settings([...])` | SETTINGS auf Abfrageebene, z. B. `settings(['max_execution_time' => 30])` |
 | `count()` / `sum($col)` / `avg($col)` / `min($col)` / `max($col)` | Aggregation |
-| `insert($data)` | Einfügen (einzelne Zeile oder Batch) |
-| `delete()` | Löschen |
+| `insert($data)` | Einfügen (einzelne Zeile oder Batch). Innerhalb eines Batches müssen alle Zeilen dieselben Spalten haben; fehlende oder zusätzliche Spalten lösen direkt einen Fehler aus (sonst könnten Werte positional verrutschen) |
+| `delete()` | Löschen (kompiliert zu `ALTER TABLE ... DELETE`; **WHERE ist Pflicht**, sonst wird eine Ausnahme geworfen) |
 | `get()` | Abfrage ausführen, liefert Result |
 | `first()` | Ersten Datensatz liefern |
 | `toSql()` | Erzeugtes SQL abrufen |
+
+### Große Resultsets und Streaming
+
+`get()` parst das gesamte Resultset in ein PHP-Array; der Speicherbedarf liegt bei rund dem 7-Fachen der Antwortgröße (gemessen an einer schmalen Tabelle mit 5 Spalten: 93 B/Zeile im Payload → 677 B/Zeile nach dem Dekodieren, bei 100 000 Zeilen etwa 73 MB). Bei großen Datenmengen mit `stream()` Zeile für Zeile konsumieren — der Speicherbedarf ist dann unabhängig von der Resultset-Größe:
+
+```php
+use Erikwang2013\ClickHouse\Client\StreamingClientInterface;
+
+$client = ClickHouse::client();           // für den Low-Level-Client verwenden (connection() liefert den Builder)
+if ($client instanceof StreamingClientInterface) {
+    foreach ($client->stream('SELECT * FROM logs') as $row) {   // FORMAT JSONEachRow
+        echo $row['message'], PHP_EOL;
+    }
+}
+
+// Abfragen mit eigenem FORMAT (CSV/TSV usw.) über raw(), Antwortkörper unverändert
+$csv = $client->raw('SELECT * FROM logs FORMAT CSV');
+```
+
+Im Pool-Modus ist `stream()` ebenso nutzbar: Die Verbindung wird zurückgegeben, sobald der Generator vollständig konsumiert (oder bei vorzeitigem `break` verworfen) ist.
+
+### Nativer SQL-Einstieg
+
+Die folgenden Einstiegspunkte sind **unverändert zusammengesetzte** native SQL-Kanäle — wer hier Benutzereingaben durchreicht, gibt die Datenbank aus der Hand: `selectRaw()`, `whereRaw()`, `havingRaw()`, `new Expression($sql)`, die Werte von `Blueprint::settings()` sowie Spaltentyp-Strings wie `$table->string('col')` (`array($name, $type)`). Bezeichner und Werte werden für sich escapt (Spaltennamen in Backticks, Werte je nach Typ), native SQL-Fragmente jedoch in keiner Weise behandelt.
+
+`Expression` lässt sich in `select()` (im Array), `where()`, `prewhere()`, `having()`, `orderBy()` und `groupBy()` übergeben — für Ausdrücke wie `rand()` oder `toStartOfHour(ts)`.
 
 ## Schema-Spaltentypen
 
@@ -449,6 +480,8 @@ class LogController
 ];
 ```
 
+Zum Verbindungspool: Die `pool`-Konfiguration greift nur, **wenn ein nutzbarer Coroutine-Kanal vorhanden ist** (Swoole / Swow / Workerman); in synchronen Umgebungen wie FPM wird sie ignoriert und direkt verbunden — eine Nebenläufigkeitsgrenze entsteht dadurch nicht. Außerdem nutzt der HTTP-Treiber synchrones Guzzle; der tatsächliche Nutzen des Poolings ist „Begrenzung der gleichzeitigen Verbindungen + Wiederverwendung der Verbindungsobjekte“ und **macht den Aufruf nicht automatisch nicht blockierend** — dafür muss der curl-Hook von Swoole selbst aktiviert werden (`Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_NATIVE_CURL)`, er ist nicht in `SWOOLE_HOOK_ALL` enthalten) oder der CoroutineHandler von hyperf/guzzle eingebunden werden. Mit `pool.driver` lässt sich `swoole|swow|workerman|none` explizit festlegen.
+
 ## Umgebungsvariablen
 
 | Variable | Standardwert | Beschreibung |
@@ -466,7 +499,7 @@ class LogController
 | `CLICKHOUSE_POOL_MAX` | 16 | Maximale Verbindungsanzahl |
 | `CLICKHOUSE_POOL_TIMEOUT` | 5.0 | Timeout beim Holen einer Verbindung (Sekunden) |
 
-In reinem PHP werden diese Variablen von `ClickHouse::bootstrap()` / `Manager::fromEnv()` gelesen. Die Konfigurationsdateien der vier Frameworks lesen dieselben Variablennamen, decken aber unterschiedlich viel ab (Laravel vollständig, Hyperf ohne `CLICKHOUSE_CONNECTION`/`CLICKHOUSE_DRIVER`/`CLICKHOUSE_HTTPS`, Webman nur die fünf Verbindungswerte, ThinkPHP liest derzeit keine Umgebungsvariablen); maßgeblich ist die jeweilige Konfigurationsdatei.
+Alle diese Variablen werden in reinem PHP von `ClickHouse::bootstrap()` / `Manager::fromEnv()` gelesen; die Konfigurationsdateien der vier Frameworks lesen dieselben Variablennamen (inklusive `CLICKHOUSE_HTTPS`).
 
 ## Fehlerbehandlung
 

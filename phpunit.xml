@@ -3,22 +3,43 @@
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
          bootstrap="vendor/autoload.php"
          colors="true"
-         cacheDirectory=".phpunit.cache">
+         cacheDirectory=".phpunit.cache"
+         displayDetailsOnSkippedTests="true">
     <testsuites>
         <testsuite name="Unit">
             <directory>tests</directory>
         </testsuite>
     </testsuites>
+
+    <!--
+        tests/Integration talks to a real ClickHouse server and is excluded here
+        so a plain `vendor/bin/phpunit` run never needs one. Run that suite
+        explicitly by selecting its group from the command line (a CLI group
+        filter overrides this exclusion). Without a reachable server the tests
+        skip themselves, and the connection parameters come from the
+        CLICKHOUSE_* environment variables below.
+    -->
+    <groups>
+        <exclude>
+            <group>integration</group>
+        </exclude>
+    </groups>
+
     <source>
         <include>
             <directory>src</directory>
         </include>
     </source>
     <php>
+        <!--
+            Host/port/database defaults only. CLICKHOUSE_USER and
+            CLICKHOUSE_PASS are deliberately not set here: the integration
+            suite tells "the developer configured credentials" from "we bumped
+            into somebody else's server" by their absence, and PHPUnit only
+            fills these in when the real environment has nothing.
+        -->
         <env name="CLICKHOUSE_HOST" value="localhost"/>
         <env name="CLICKHOUSE_PORT" value="8123"/>
-        <env name="CLICKHOUSE_USER" value="default"/>
-        <env name="CLICKHOUSE_PASS" value=""/>
         <env name="CLICKHOUSE_DB" value="default"/>
     </php>
 </phpunit>

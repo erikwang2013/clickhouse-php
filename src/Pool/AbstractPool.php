@@ -28,9 +28,9 @@ abstract class AbstractPool implements PoolInterface
 
         $this->channel = $this->newChannel($this->maxConnections);
 
+        // 预热只把连接放进 channel 里待借，不算已借出
         for ($i = 0; $i < $this->minConnections; $i++) {
             $this->push(($this->factory)(), $this->connectionTimeout);
-            $this->activeCount++;
         }
     }
 
@@ -39,30 +39,34 @@ abstract class AbstractPool implements PoolInterface
         $client = $this->pop($this->connectionTimeout);
 
         if ($client === false) {
-            if ($this->activeCount < $this->maxConnections) {
-                $client = ($this->factory)();
-                $this->activeCount++;
-            } else {
+            if ($this->activeCount >= $this->maxConnections) {
                 throw new PoolException($this->name() . ': connection pool exhausted');
             }
+            $client = ($this->factory)();
         }
+
+        $this->activeCount++;
 
         return $client;
     }
 
     public function put(ClientInterface $client): void
     {
-        if ($this->push($client, $this->connectionTimeout) === false) {
-            $this->activeCount--;
-        }
+        $this->activeCount = max(0, $this->activeCount - 1);
+
+        // 池已满或已关闭时推不回去，连接就此丢弃
+        $this->push($client, $this->connectionTimeout);
     }
 
+    /** active = 已借出，idle = 池内空闲，total = active + idle */
     public function stats(): array
     {
+        $idle = $this->idleCount();
+
         return [
             'active' => $this->activeCount,
-            'idle' => $this->idleCount(),
-            'total' => $this->activeCount,
+            'idle' => $idle,
+            'total' => $this->activeCount + $idle,
         ];
     }
 

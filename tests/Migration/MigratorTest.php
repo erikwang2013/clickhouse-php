@@ -152,6 +152,95 @@ class MigratorTest extends TestCase
         }
     }
 
+    /**
+     * rollback() 的 migration 值来自 migrations 表，可能被写成路径穿越。
+     * 合法文件名为空的这些写法必须抛「文件名非法」，而不是「文件不存在」。
+     *
+     * @dataProvider invalidMigrationNames
+     */
+    public function testRollbackRejectsMigrationNamesOutsideThePath(string $name): void
+    {
+        $client = $this->clientMock();
+        $repository = $this->repositoryMock();
+        $repository->shouldReceive('getLastBatch')->once()->andReturn(1);
+        $repository->shouldReceive('getMigrationsByBatch')->once()->with(1)
+            ->andReturn([['migration' => $name]]);
+        $repository->shouldNotReceive('delete');
+
+        try {
+            $this->makeMigrator($client, $repository)->rollback();
+            $this->fail('expected QueryException');
+        } catch (QueryException $e) {
+            $this->assertStringContainsString('Invalid migration name', $e->getMessage());
+            $this->assertStringContainsString($name, $e->getMessage());
+            $this->assertSame($name, $e->getSql());
+        }
+    }
+
+    public static function invalidMigrationNames(): array
+    {
+        return [
+            'traversal' => ['../evil'],
+            'traversal nested' => ['../../evil'],
+            'subdirectory' => ['foo/bar'],
+            'absolute' => ['/tmp/evil'],
+            'php extension' => ['foo.php'],
+            'backslash' => ['..\\evil'],
+            'dotted' => ['evil.min'],
+        ];
+    }
+
+    /**
+     * 真·回归测试：旧实现先 require 再推导类名，穿越文件会被执行（RCE）。
+     */
+    public function testRollbackDoesNotExecuteFileReachedThroughTraversal(): void
+    {
+        $evilName = 'ch_evil_' . uniqid();
+        $evilPath = dirname($this->dir) . '/' . $evilName . '.php';
+        file_put_contents($evilPath, "<?php\n\$GLOBALS['ch_migration_probe']['../{$evilName}'] = true;\n");
+
+        $client = $this->clientMock();
+        $repository = $this->repositoryMock();
+        $repository->shouldReceive('getLastBatch')->once()->andReturn(1);
+        $repository->shouldReceive('getMigrationsByBatch')->once()->with(1)
+            ->andReturn([['migration' => '../' . $evilName]]);
+        $repository->shouldNotReceive('delete');
+
+        try {
+            $this->makeMigrator($client, $repository)->rollback();
+            $this->fail('expected QueryException');
+        } catch (QueryException $e) {
+            $this->assertStringContainsString('Invalid migration name', $e->getMessage());
+        } finally {
+            $this->assertArrayNotHasKey('../' . $evilName, $GLOBALS['ch_migration_probe'] ?? []);
+            if (file_exists($evilPath)) {
+                unlink($evilPath);
+            }
+        }
+    }
+
+    /**
+     * 多段时间戳前缀（README 教的写法）必须能推导出类名。
+     */
+    public function testRunDerivesClassFromMultiSegmentTimestampPrefix(): void
+    {
+        $file = $this->writeMigration(
+            '2026_05_27_000000_create_logs_table',
+            'CreateLogsTable',
+            'public function up(): void { $this->schema->drop(\'logs\'); }',
+        );
+
+        $client = $this->clientMock();
+        $client->shouldReceive('query')->once()->with('DROP TABLE IF EXISTS `logs`');
+
+        $repository = $this->repositoryMock();
+        $repository->shouldReceive('getMigrations')->once()->andReturn([]);
+        $repository->shouldReceive('getLastBatch')->once()->andReturn(0);
+        $repository->shouldReceive('log')->once()->with($file, 1);
+
+        $this->assertSame([$file], $this->makeMigrator($client, $repository)->run());
+    }
+
     public function testRunThrowsWrappedWhenMigrationClassMissing(): void
     {
         $file = $this->writeMigration('20240101_orphan_file', 'TotallyDifferentClass', 'public function up(): void {}');

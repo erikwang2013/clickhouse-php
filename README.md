@@ -387,22 +387,53 @@ class LogController
 | 方法 | 说明 |
 |------|------|
 | `table($name)` / `from($name)` | 指定表名 |
-| `select([...])` / `selectRaw($expr)` | SELECT 列 |
-| `where($col, $op, $val)` | 条件 (2 参数时 `$op` 默认 `=`) |
+| `select([...])` / `selectRaw($expr)` | SELECT 列。`select()` 的列名会被反引号引用（`` `order` `` 这类保留字可用），别名 `id as uid` 两侧分别引用；要写函数或子查询请用 `selectRaw()` 或 `Expression` |
+| `where($col, $op, $val)` | 条件 (2 参数时 `$op` 默认 `=`)。值为 `null` 时自动转 `IS NULL` / `IS NOT NULL` |
 | `orWhere($col, $op, $val)` | OR 条件 |
 | `whereIn($col, $arr)` / `whereNotIn($col, $arr)` | IN / NOT IN |
 | `whereBetween($col, [$min, $max])` | BETWEEN |
 | `whereNull($col)` / `whereNotNull($col)` | IS NULL / IS NOT NULL |
-| `whereRaw($sql)` | 原生 WHERE |
+| `whereRaw($sql)` | 原生 WHERE（勿传用户输入） |
+| `prewhere($col, $op, $val)` | PREWHERE，位置在 WHERE 之前（ClickHouse 最有效的扫描裁剪） |
 | `orderBy($col, $dir)` | 排序 (默认 ASC) |
 | `groupBy(...$cols)` | 分组 |
+| `having($col, $op, $val)` / `havingRaw($sql)` | HAVING，位置在 GROUP BY 之后。`having()` 会把列名当标识符引用，聚合条件（如 `count() > 100`）请用 `havingRaw()` 或 `new Expression('count()')` |
 | `limit($n)` / `offset($n)` | 分页 |
+| `final()` | 读取时去重合并（ReplacingMergeTree 等） |
+| `sample($ratio)` | SAMPLE 抽样，如 `sample(0.1)` |
+| `settings([...])` | 查询级 SETTINGS，如 `settings(['max_execution_time' => 30])` |
 | `count()` / `sum($col)` / `avg($col)` / `min($col)` / `max($col)` | 聚合 |
-| `insert($data)` | 插入 (单行或批量) |
-| `delete()` | 删除 |
+| `insert($data)` | 插入 (单行或批量)。同一批各行必须列一致，缺列或多列会直接报错（避免值按位置错位写入） |
+| `delete()` | 删除（编译为 `ALTER TABLE ... DELETE`，**必须带 WHERE**，否则抛异常） |
 | `get()` | 执行查询，返回 Result |
 | `first()` | 返回第一条 |
 | `toSql()` | 获取生成的 SQL |
+
+### 大结果集与流式读取
+
+`get()` 会把整个结果集解析成 PHP 数组，内存约是响应体积的 7 倍（实测 5 列窄表：载荷 93 B/行 → 解码后 677 B/行，10 万行约 73 MB）。数据量大时用 `stream()` 逐行消费，内存与结果集大小无关：
+
+```php
+use Erikwang2013\ClickHouse\Client\StreamingClientInterface;
+
+$client = ClickHouse::client();           // 需要底层客户端时用它（connection() 返回的是构造器）
+if ($client instanceof StreamingClientInterface) {
+    foreach ($client->stream('SELECT * FROM logs') as $row) {   // FORMAT JSONEachRow
+        echo $row['message'], PHP_EOL;
+    }
+}
+
+// 自带 FORMAT 的查询（CSV/TSV 等）用 raw()，原样拿响应体
+$csv = $client->raw('SELECT * FROM logs FORMAT CSV');
+```
+
+池化模式下 `stream()` 同样可用：连接在生成器消费完（或提前 break 被销毁）时归还。
+
+### 原生 SQL 入口
+
+以下入口是**原样拼接**的原生 SQL 通道，传入用户输入等于交出数据库：`selectRaw()`、`whereRaw()`、`havingRaw()`、`new Expression($sql)`、`Blueprint::settings()` 的值、以及 `$table->string('col')` 这类列类型字符串（`array($name, $type)`）。标识符与值本身已做转义（列名反引号、值按类型转义），但原生 SQL 片段不做任何处理。
+
+`Expression` 可以传进 `select()`（放进数组里）、`where()`、`prewhere()`、`having()`、`orderBy()`、`groupBy()`，用于 `rand()`、`toStartOfHour(ts)` 这类表达式。
 
 ## Schema 列类型
 
@@ -449,6 +480,8 @@ class LogController
 ];
 ```
 
+关于连接池：`pool` 配置只在**存在可用协程通道**时生效（Swoole / Swow / Workerman），FPM 等同步环境下会忽略它并直连，不会给你加并发上限。另外 HTTP 驱动走同步 Guzzle，池化的实际收益是「限制并发连接数 + 复用连接对象」，**不会自动变成非阻塞** —— 要真正非阻塞需自行开启 Swoole 的 curl 钩子（`Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_NATIVE_CURL)`，它不在 `SWOOLE_HOOK_ALL` 里）或接入 hyperf/guzzle 的 CoroutineHandler。可用 `pool.driver` 显式指定 `swoole|swow|workerman|none`。
+
 ## 环境变量
 
 | 变量 | 默认值 | 说明 |
@@ -466,7 +499,7 @@ class LogController
 | `CLICKHOUSE_POOL_MAX` | 16 | 最大连接数 |
 | `CLICKHOUSE_POOL_TIMEOUT` | 5.0 | 取连接超时(秒) |
 
-原生 PHP 下以上变量由 `ClickHouse::bootstrap()` / `Manager::fromEnv()` 读取。四个框架的配置文件读的是同一套变量名，但覆盖范围不同（Laravel 全量、Hyperf 缺 `CLICKHOUSE_CONNECTION`/`CLICKHOUSE_DRIVER`/`CLICKHOUSE_HTTPS`、Webman 仅连接五项、ThinkPHP 目前不读环境变量），以各自的配置文件为准。
+以上变量在原生 PHP 下由 `ClickHouse::bootstrap()` / `Manager::fromEnv()` 读取，四个框架的配置文件读的是同一套变量名（含 `CLICKHOUSE_HTTPS`）。
 
 ## 异常处理
 
