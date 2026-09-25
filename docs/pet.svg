@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" role="img" aria-labelledby="petTitle petDesc">
+  <title id="petTitle">clickhouse-php 项目宠物</title>
+  <desc id="petDesc">一只 PHP 小象：身体是一座顶着黄色屋顶的小房子，长着象耳和象鼻，站在 ClickHouse 风格的柱状图前。</desc>
+
+  <!-- 柱状图（列式存储） -->
+  <g fill="#FFD400" stroke="#1E2233" stroke-width="3.5">
+    <rect x="26" y="158" width="26" height="28" rx="4"/>
+    <rect x="87" y="144" width="26" height="42" rx="4"/>
+    <rect x="148" y="150" width="26" height="36" rx="4"/>
+  </g>
+
+  <!-- 象鼻 -->
+  <path d="M150 100c14 1 22 7 22 17s-4 18-11 22" fill="none" stroke="#1E2233" stroke-width="16" stroke-linecap="round"/>
+  <path d="M150 100c14 1 22 7 22 17s-4 18-11 22" fill="none" stroke="#777BB4" stroke-width="10" stroke-linecap="round"/>
+
+  <!-- 身体（房子） -->
+  <rect x="46" y="66" width="108" height="72" rx="14" fill="#777BB4" stroke="#1E2233" stroke-width="3.5"/>
+  <!-- 象耳 -->
+  <ellipse cx="68" cy="92" rx="19" ry="23" fill="#5C61A0" stroke="#1E2233" stroke-width="3.5"/>
+  <!-- 屋顶 -->
+  <path d="M38 74 100 24l62 50z" fill="#FFD400" stroke="#1E2233" stroke-width="3.5" stroke-linejoin="round"/>
+  <!-- 门 -->
+  <path d="M118 138v-22a11 11 0 0 1 22 0v22z" fill="#2F3456" stroke="#1E2233" stroke-width="3.5" stroke-linejoin="round"/>
+  <circle cx="134" cy="128" r="2.4" fill="#FFD400"/>
+  <!-- 眼睛 -->
+  <circle cx="110" cy="88" r="7.5" fill="#ffffff" stroke="#1E2233" stroke-width="3"/>
+  <circle cx="112.5" cy="88.5" r="3.4" fill="#1E2233"/>
+  <!-- 腮红 -->
+  <circle cx="98" cy="106" r="5" fill="#FF9BB3" opacity=".75"/>
+</svg>

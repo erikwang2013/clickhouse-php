@@ -38,6 +38,10 @@ jobs:
             git log --pretty=format:"- %s" > /tmp/changelog.md
           fi
 
+          # 项目宠物：release 页面底部展示 docs/pet.svg
+          printf '\n\n---\n\n![clickhouse-php](https://raw.githubusercontent.com/%s/main/docs/pet.svg)\n' \
+            "${{ github.repository }}" >> /tmp/changelog.md
+
       - name: Create and push tag
         env:
           NEXT: ${{ steps.version.outputs.next }}

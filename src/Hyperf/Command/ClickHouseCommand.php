@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Erikwang2013\ClickHouse\Hyperf\Command;
 
 use Erikwang2013\ClickHouse\Hyperf\ClickHouseConnection;
+use Erikwang2013\ClickHouse\Support\Pet;
 use Hyperf\Command\Command;
 
 class ClickHouseCommand extends Command
@@ -25,6 +26,11 @@ class ClickHouseCommand extends Command
 
     public function handle(): void
     {
+        foreach (Pet::lines() as $line) {
+            $this->line($line);
+        }
+        $this->newLine();
+
         $tables = $this->clickhouse->connection()->select('SHOW TABLES');
         $this->info('ClickHouse Tables:');
         foreach ($tables as $table) {

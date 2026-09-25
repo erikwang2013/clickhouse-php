@@ -9,6 +9,7 @@ namespace Erikwang2013\ClickHouse\Laravel\Console;
 
 use Erikwang2013\ClickHouse\ClickHouse;
 use Erikwang2013\ClickHouse\Migration\Repository;
+use Erikwang2013\ClickHouse\Support\Pet;
 use Illuminate\Console\Command;
 
 class MigrationInstallCommand extends Command
@@ -18,6 +19,11 @@ class MigrationInstallCommand extends Command
 
     public function handle(): int
     {
+        foreach (Pet::lines() as $line) {
+            $this->line($line);
+        }
+        $this->newLine();
+
         $config = config('clickhouse.migrations');
         $repository = new Repository(
             ClickHouse::getManager()->connection(),
