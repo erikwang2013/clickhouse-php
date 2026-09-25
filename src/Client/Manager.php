@@ -27,6 +27,46 @@ class Manager
         $this->defaultConnection = $config['default'] ?? 'default';
     }
 
+    /**
+     * 用 CLICKHOUSE_* 环境变量构建配置，供不依赖框架的原生 PHP 项目使用。
+     * 变量名与默认值见 README「环境变量」一节。
+     */
+    public static function fromEnv(?LoggerInterface $logger = null): self
+    {
+        $name = self::env('CLICKHOUSE_CONNECTION', 'default');
+
+        return new self([
+            'default' => $name,
+            'connections' => [
+                $name => [
+                    'driver' => self::env('CLICKHOUSE_DRIVER', 'http'),
+                    'host' => self::env('CLICKHOUSE_HOST', 'localhost'),
+                    'port' => (int) self::env('CLICKHOUSE_PORT', 8123),
+                    'database' => self::env('CLICKHOUSE_DB', 'default'),
+                    'username' => self::env('CLICKHOUSE_USER', 'default'),
+                    'password' => self::env('CLICKHOUSE_PASS', ''),
+                    'timeout' => (int) self::env('CLICKHOUSE_TIMEOUT', 30),
+                    'https' => filter_var(self::env('CLICKHOUSE_HTTPS', false), FILTER_VALIDATE_BOOL),
+                ],
+            ],
+            'pool' => [
+                'min_connections' => (int) self::env('CLICKHOUSE_POOL_MIN', 2),
+                'max_connections' => (int) self::env('CLICKHOUSE_POOL_MAX', 16),
+                'connection_timeout' => (float) self::env('CLICKHOUSE_POOL_TIMEOUT', 5.0),
+            ],
+        ], $logger);
+    }
+
+    /**
+     * 读取环境变量，未设置或为空串时取默认值。
+     */
+    private static function env(string $key, mixed $default): mixed
+    {
+        $value = getenv($key);
+
+        return $value === false || $value === '' ? $default : $value;
+    }
+
     public function connection(?string $name = null): ClientInterface
     {
         $name ??= $this->defaultConnection;

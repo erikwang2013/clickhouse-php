@@ -97,7 +97,28 @@ composer require erikwang2013/clickhouse-php
 
 ## দ্রুত শুরু
 
-### স্বতন্ত্র ব্যবহার
+### স্বতন্ত্র ব্যবহার (নেটিভ PHP)
+
+কোনো ফ্রেমওয়ার্কের উপর নির্ভরতা নেই। `CLICKHOUSE_*` এনভায়রনমেন্ট ভেরিয়েবল দিয়ে ইনিশিয়ালাইজ করুন, এক লাইনেই:
+
+```php
+use Erikwang2013\ClickHouse\ClickHouse;
+
+ClickHouse::bootstrap();   // সমতুল্য ClickHouse::setManager(Manager::fromEnv())
+
+$rows = ClickHouse::table('logs')
+    ->where('date', '>=', '2024-01-01')
+    ->whereIn('level', ['error', 'warn'])
+    ->orderBy('timestamp', 'desc')
+    ->limit(100)
+    ->get();
+
+foreach ($rows as $row) {
+    echo $row['message'];
+}
+```
+
+এনভায়রনমেন্ট ভেরিয়েবলে যেসব কনফিগ কভার হয় না (মাল্টি-কানেকশন, Connection Pool টিউনিং), সেগুলো `Manager` দিয়ে সরাসরি পাস করুন:
 
 ```php
 use Erikwang2013\ClickHouse\ClickHouse;
@@ -115,7 +136,13 @@ $config = [
             'username' => 'default',
             'password' => '',
             'timeout'  => 30,
+            'https'    => false,         // true হলে HTTPS
         ],
+    ],
+    'pool' => [
+        'min_connections'    => 2,
+        'max_connections'    => 16,
+        'connection_timeout' => 5.0,
     ],
 ];
 
@@ -410,6 +437,7 @@ class LogController
             'username' => 'default',
             'password' => '',
             'timeout'  => 30,
+            'https'    => false,
         ],
     ],
     'pool' => [
@@ -425,15 +453,20 @@ class LogController
 
 | ভেরিয়েবল | ডিফল্ট মান | বিবরণ |
 |------|--------|------|
+| `CLICKHOUSE_CONNECTION` | default | ডিফল্ট কানেকশনের নাম |
 | `CLICKHOUSE_HOST` | localhost | হোস্ট |
 | `CLICKHOUSE_PORT` | 8123 | HTTP পোর্ট |
 | `CLICKHOUSE_DB` | default | ডেটাবেসের নাম |
 | `CLICKHOUSE_USER` | default | ইউজারনেম |
 | `CLICKHOUSE_PASS` | — | পাসওয়ার্ড |
 | `CLICKHOUSE_TIMEOUT` | 30 | কানেকশন টাইমআউট (সেকেন্ড) |
+| `CLICKHOUSE_HTTPS` | false | HTTPS ব্যবহার হবে কি না |
 | `CLICKHOUSE_DRIVER` | http | ড্রাইভার টাইপ |
 | `CLICKHOUSE_POOL_MIN` | 2 | সর্বনিম্ন কানেকশন |
 | `CLICKHOUSE_POOL_MAX` | 16 | সর্বোচ্চ কানেকশন |
+| `CLICKHOUSE_POOL_TIMEOUT` | 5.0 | কানেকশন নেওয়ার টাইমআউট (সেকেন্ড) |
+
+নেটিভ PHP-তে উপরের ভেরিয়েবলগুলো `ClickHouse::bootstrap()` / `Manager::fromEnv()` পড়ে। চারটি ফ্রেমওয়ার্কের কনফিগ ফাইল একই ভেরিয়েবল নাম সেট পড়ে, তবে কভারেজ ভিন্ন (Laravel সম্পূর্ণ, Hyperf-এ `CLICKHOUSE_CONNECTION`/`CLICKHOUSE_DRIVER`/`CLICKHOUSE_HTTPS` নেই, Webman শুধু পাঁচটি কানেকশন ভেরিয়েবল, ThinkPHP এখন এনভায়রনমেন্ট ভেরিয়েবল পড়ে না), প্রতিটির নিজস্ব কনফিগ ফাইলই চূড়ান্ত।
 
 ## Exception হ্যান্ডলিং
 

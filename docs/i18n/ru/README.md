@@ -97,7 +97,28 @@ composer require erikwang2013/clickhouse-php
 
 ## Быстрый старт
 
-### Автономное использование
+### Автономное использование (чистый PHP)
+
+Без каких-либо фреймворков. Инициализация через переменные окружения `CLICKHOUSE_*` — одной строкой:
+
+```php
+use Erikwang2013\ClickHouse\ClickHouse;
+
+ClickHouse::bootstrap();   // эквивалентно ClickHouse::setManager(Manager::fromEnv())
+
+$rows = ClickHouse::table('logs')
+    ->where('date', '>=', '2024-01-01')
+    ->whereIn('level', ['error', 'warn'])
+    ->orderBy('timestamp', 'desc')
+    ->limit(100)
+    ->get();
+
+foreach ($rows as $row) {
+    echo $row['message'];
+}
+```
+
+Настройки, которые не покрываются переменными окружения (несколько соединений, параметры пула), передаются явно через `Manager`:
 
 ```php
 use Erikwang2013\ClickHouse\ClickHouse;
@@ -115,7 +136,13 @@ $config = [
             'username' => 'default',
             'password' => '',
             'timeout'  => 30,
+            'https'    => false,         // true — по HTTPS
         ],
+    ],
+    'pool' => [
+        'min_connections'    => 2,
+        'max_connections'    => 16,
+        'connection_timeout' => 5.0,
     ],
 ];
 
@@ -410,6 +437,7 @@ class LogController
             'username' => 'default',
             'password' => '',
             'timeout'  => 30,
+            'https'    => false,
         ],
     ],
     'pool' => [
@@ -425,15 +453,20 @@ class LogController
 
 | Переменная | По умолчанию | Описание |
 |------|--------|------|
+| `CLICKHOUSE_CONNECTION` | default | Имя соединения по умолчанию |
 | `CLICKHOUSE_HOST` | localhost | Адрес хоста |
 | `CLICKHOUSE_PORT` | 8123 | Порт HTTP |
 | `CLICKHOUSE_DB` | default | Имя базы данных |
 | `CLICKHOUSE_USER` | default | Имя пользователя |
 | `CLICKHOUSE_PASS` | — | Пароль |
 | `CLICKHOUSE_TIMEOUT` | 30 | Таймаут соединения (сек) |
+| `CLICKHOUSE_HTTPS` | false | Использовать HTTPS |
 | `CLICKHOUSE_DRIVER` | http | Тип драйвера |
 | `CLICKHOUSE_POOL_MIN` | 2 | Минимум соединений |
 | `CLICKHOUSE_POOL_MAX` | 16 | Максимум соединений |
+| `CLICKHOUSE_POOL_TIMEOUT` | 5.0 | Таймаут получения соединения (сек) |
+
+В чистом PHP эти переменные читают `ClickHouse::bootstrap()` / `Manager::fromEnv()`. Конфигурационные файлы всех четырёх фреймворков используют те же имена переменных, но покрывают разные подмножества (Laravel — все, Hyperf — без `CLICKHOUSE_CONNECTION`/`CLICKHOUSE_DRIVER`/`CLICKHOUSE_HTTPS`, Webman — только пять переменных соединения, ThinkPHP сейчас переменные окружения не читает) — ориентируйтесь на соответствующий конфигурационный файл.
 
 ## Обработка исключений
 

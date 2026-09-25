@@ -97,7 +97,28 @@ composer require erikwang2013/clickhouse-php
 
 ## 快速开始
 
-### 独立使用
+### 独立使用（原生 PHP）
+
+不依赖任何框架。用 `CLICKHOUSE_*` 环境变量初始化，一行即可：
+
+```php
+use Erikwang2013\ClickHouse\ClickHouse;
+
+ClickHouse::bootstrap();   // 等价于 ClickHouse::setManager(Manager::fromEnv())
+
+$rows = ClickHouse::table('logs')
+    ->where('date', '>=', '2024-01-01')
+    ->whereIn('level', ['error', 'warn'])
+    ->orderBy('timestamp', 'desc')
+    ->limit(100)
+    ->get();
+
+foreach ($rows as $row) {
+    echo $row['message'];
+}
+```
+
+环境变量覆盖不到的配置（多连接、连接池调参）用 `Manager` 显式传入：
 
 ```php
 use Erikwang2013\ClickHouse\ClickHouse;
@@ -115,7 +136,13 @@ $config = [
             'username' => 'default',
             'password' => '',
             'timeout'  => 30,
+            'https'    => false,         // true 走 HTTPS
         ],
+    ],
+    'pool' => [
+        'min_connections'    => 2,
+        'max_connections'    => 16,
+        'connection_timeout' => 5.0,
     ],
 ];
 
@@ -410,6 +437,7 @@ class LogController
             'username' => 'default',
             'password' => '',
             'timeout'  => 30,
+            'https'    => false,
         ],
     ],
     'pool' => [
@@ -425,15 +453,20 @@ class LogController
 
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
+| `CLICKHOUSE_CONNECTION` | default | 默认连接名 |
 | `CLICKHOUSE_HOST` | localhost | 主机地址 |
 | `CLICKHOUSE_PORT` | 8123 | HTTP 端口 |
 | `CLICKHOUSE_DB` | default | 数据库名 |
 | `CLICKHOUSE_USER` | default | 用户名 |
 | `CLICKHOUSE_PASS` | — | 密码 |
 | `CLICKHOUSE_TIMEOUT` | 30 | 连接超时(秒) |
+| `CLICKHOUSE_HTTPS` | false | 是否走 HTTPS |
 | `CLICKHOUSE_DRIVER` | http | 驱动类型 |
 | `CLICKHOUSE_POOL_MIN` | 2 | 最小连接数 |
 | `CLICKHOUSE_POOL_MAX` | 16 | 最大连接数 |
+| `CLICKHOUSE_POOL_TIMEOUT` | 5.0 | 取连接超时(秒) |
+
+原生 PHP 下以上变量由 `ClickHouse::bootstrap()` / `Manager::fromEnv()` 读取。四个框架的配置文件读的是同一套变量名，但覆盖范围不同（Laravel 全量、Hyperf 缺 `CLICKHOUSE_CONNECTION`/`CLICKHOUSE_DRIVER`/`CLICKHOUSE_HTTPS`、Webman 仅连接五项、ThinkPHP 目前不读环境变量），以各自的配置文件为准。
 
 ## 异常处理
 

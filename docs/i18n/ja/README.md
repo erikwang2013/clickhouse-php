@@ -97,7 +97,28 @@ composer require erikwang2013/clickhouse-php
 
 ## クイックスタート
 
-### 単体での利用
+### スタンドアロン利用（ネイティブ PHP）
+
+フレームワークに依存しません。`CLICKHOUSE_*` 環境変数で初期化でき、たった 1 行で済みます：
+
+```php
+use Erikwang2013\ClickHouse\ClickHouse;
+
+ClickHouse::bootstrap();   // ClickHouse::setManager(Manager::fromEnv()) と等価
+
+$rows = ClickHouse::table('logs')
+    ->where('date', '>=', '2024-01-01')
+    ->whereIn('level', ['error', 'warn'])
+    ->orderBy('timestamp', 'desc')
+    ->limit(100)
+    ->get();
+
+foreach ($rows as $row) {
+    echo $row['message'];
+}
+```
+
+環境変数ではカバーできない設定（マルチ接続、コネクションプールのチューニング）は `Manager` に明示的に渡します：
 
 ```php
 use Erikwang2013\ClickHouse\ClickHouse;
@@ -115,7 +136,13 @@ $config = [
             'username' => 'default',
             'password' => '',
             'timeout'  => 30,
+            'https'    => false,         // true で HTTPS
         ],
+    ],
+    'pool' => [
+        'min_connections'    => 2,
+        'max_connections'    => 16,
+        'connection_timeout' => 5.0,
     ],
 ];
 
@@ -410,6 +437,7 @@ class LogController
             'username' => 'default',
             'password' => '',
             'timeout'  => 30,
+            'https'    => false,
         ],
     ],
     'pool' => [
@@ -425,15 +453,20 @@ class LogController
 
 | 変数 | 既定値 | 説明 |
 |------|--------|------|
+| `CLICKHOUSE_CONNECTION` | default | 既定の接続名 |
 | `CLICKHOUSE_HOST` | localhost | ホストアドレス |
 | `CLICKHOUSE_PORT` | 8123 | HTTP ポート |
 | `CLICKHOUSE_DB` | default | データベース名 |
 | `CLICKHOUSE_USER` | default | ユーザー名 |
 | `CLICKHOUSE_PASS` | — | パスワード |
 | `CLICKHOUSE_TIMEOUT` | 30 | 接続タイムアウト（秒） |
+| `CLICKHOUSE_HTTPS` | false | HTTPS を使うか |
 | `CLICKHOUSE_DRIVER` | http | ドライバ種別 |
 | `CLICKHOUSE_POOL_MIN` | 2 | 最小接続数 |
 | `CLICKHOUSE_POOL_MAX` | 16 | 最大接続数 |
+| `CLICKHOUSE_POOL_TIMEOUT` | 5.0 | 接続取得タイムアウト（秒） |
+
+ネイティブ PHP では以上の変数を `ClickHouse::bootstrap()` / `Manager::fromEnv()` が読み取ります。4 つのフレームワークの設定ファイルは同じ変数名のセットを読み取りますが、カバー範囲は異なります（Laravel は全項目、Hyperf は `CLICKHOUSE_CONNECTION`/`CLICKHOUSE_DRIVER`/`CLICKHOUSE_HTTPS` を除く、Webman は接続に関する 5 項目のみ、ThinkPHP は現時点で環境変数を読み取りません）。各フレームワークの設定ファイルを優先してください。
 
 ## 例外処理
 

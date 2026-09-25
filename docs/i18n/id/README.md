@@ -97,7 +97,28 @@ composer require erikwang2013/clickhouse-php
 
 ## Mulai Cepat
 
-### Penggunaan Mandiri
+### Penggunaan Mandiri (PHP native)
+
+Tanpa bergantung pada framework apa pun. Inisialisasi lewat variabel lingkungan `CLICKHOUSE_*`, cukup satu baris:
+
+```php
+use Erikwang2013\ClickHouse\ClickHouse;
+
+ClickHouse::bootstrap();   // setara dengan ClickHouse::setManager(Manager::fromEnv())
+
+$rows = ClickHouse::table('logs')
+    ->where('date', '>=', '2024-01-01')
+    ->whereIn('level', ['error', 'warn'])
+    ->orderBy('timestamp', 'desc')
+    ->limit(100)
+    ->get();
+
+foreach ($rows as $row) {
+    echo $row['message'];
+}
+```
+
+Konfigurasi yang tidak tercakup variabel lingkungan (multi-koneksi, penyetelan connection pool) diteruskan secara eksplisit lewat `Manager`:
 
 ```php
 use Erikwang2013\ClickHouse\ClickHouse;
@@ -115,7 +136,13 @@ $config = [
             'username' => 'default',
             'password' => '',
             'timeout'  => 30,
+            'https'    => false,         // true memakai HTTPS
         ],
+    ],
+    'pool' => [
+        'min_connections'    => 2,
+        'max_connections'    => 16,
+        'connection_timeout' => 5.0,
     ],
 ];
 
@@ -410,6 +437,7 @@ class LogController
             'username' => 'default',
             'password' => '',
             'timeout'  => 30,
+            'https'    => false,
         ],
     ],
     'pool' => [
@@ -425,15 +453,20 @@ class LogController
 
 | Variabel | Nilai default | Keterangan |
 |------|--------|------|
+| `CLICKHOUSE_CONNECTION` | default | Nama koneksi default |
 | `CLICKHOUSE_HOST` | localhost | Alamat host |
 | `CLICKHOUSE_PORT` | 8123 | Port HTTP |
 | `CLICKHOUSE_DB` | default | Nama database |
 | `CLICKHOUSE_USER` | default | Nama pengguna |
 | `CLICKHOUSE_PASS` | — | Kata sandi |
 | `CLICKHOUSE_TIMEOUT` | 30 | Timeout koneksi (detik) |
+| `CLICKHOUSE_HTTPS` | false | Apakah memakai HTTPS |
 | `CLICKHOUSE_DRIVER` | http | Jenis driver |
 | `CLICKHOUSE_POOL_MIN` | 2 | Jumlah koneksi minimum |
 | `CLICKHOUSE_POOL_MAX` | 16 | Jumlah koneksi maksimum |
+| `CLICKHOUSE_POOL_TIMEOUT` | 5.0 | Timeout pengambilan koneksi (detik) |
+
+Di PHP native variabel-variabel di atas dibaca oleh `ClickHouse::bootstrap()` / `Manager::fromEnv()`. Berkas konfigurasi keempat framework membaca kumpulan nama variabel yang sama, tetapi cakupannya berbeda (Laravel lengkap; Hyperf tidak memakai `CLICKHOUSE_CONNECTION`/`CLICKHOUSE_DRIVER`/`CLICKHOUSE_HTTPS`; Webman hanya lima variabel koneksi; ThinkPHP untuk saat ini tidak membaca variabel lingkungan), jadi acuannya adalah berkas konfigurasi masing-masing.
 
 ## Penanganan Exception
 

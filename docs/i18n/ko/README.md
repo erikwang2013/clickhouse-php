@@ -97,7 +97,28 @@ composer require erikwang2013/clickhouse-php
 
 ## 빠른 시작
 
-### 단독 사용
+### 단독 사용(네이티브 PHP)
+
+프레임워크에 의존하지 않습니다. `CLICKHOUSE_*` 환경 변수로 초기화하며, 한 줄이면 됩니다:
+
+```php
+use Erikwang2013\ClickHouse\ClickHouse;
+
+ClickHouse::bootstrap();   // ClickHouse::setManager(Manager::fromEnv()) 와 동일
+
+$rows = ClickHouse::table('logs')
+    ->where('date', '>=', '2024-01-01')
+    ->whereIn('level', ['error', 'warn'])
+    ->orderBy('timestamp', 'desc')
+    ->limit(100)
+    ->get();
+
+foreach ($rows as $row) {
+    echo $row['message'];
+}
+```
+
+환경 변수로 덮을 수 없는 설정(다중 연결, 커넥션 풀 튜닝)은 `Manager` 로 명시적으로 전달합니다:
 
 ```php
 use Erikwang2013\ClickHouse\ClickHouse;
@@ -115,7 +136,13 @@ $config = [
             'username' => 'default',
             'password' => '',
             'timeout'  => 30,
+            'https'    => false,         // true 이면 HTTPS
         ],
+    ],
+    'pool' => [
+        'min_connections'    => 2,
+        'max_connections'    => 16,
+        'connection_timeout' => 5.0,
     ],
 ];
 
@@ -410,6 +437,7 @@ class LogController
             'username' => 'default',
             'password' => '',
             'timeout'  => 30,
+            'https'    => false,
         ],
     ],
     'pool' => [
@@ -425,15 +453,20 @@ class LogController
 
 | 변수 | 기본값 | 설명 |
 |------|--------|------|
+| `CLICKHOUSE_CONNECTION` | default | 기본 연결 이름 |
 | `CLICKHOUSE_HOST` | localhost | 호스트 주소 |
 | `CLICKHOUSE_PORT` | 8123 | HTTP 포트 |
 | `CLICKHOUSE_DB` | default | 데이터베이스 이름 |
 | `CLICKHOUSE_USER` | default | 사용자 이름 |
 | `CLICKHOUSE_PASS` | — | 비밀번호 |
 | `CLICKHOUSE_TIMEOUT` | 30 | 연결 타임아웃(초) |
+| `CLICKHOUSE_HTTPS` | false | HTTPS 사용 여부 |
 | `CLICKHOUSE_DRIVER` | http | 드라이버 유형 |
 | `CLICKHOUSE_POOL_MIN` | 2 | 최소 연결 수 |
 | `CLICKHOUSE_POOL_MAX` | 16 | 최대 연결 수 |
+| `CLICKHOUSE_POOL_TIMEOUT` | 5.0 | 연결 대여 타임아웃(초) |
+
+네이티브 PHP 에서는 위 변수들을 `ClickHouse::bootstrap()` / `Manager::fromEnv()` 가 읽습니다. 네 프레임워크의 설정 파일도 같은 변수 이름을 읽지만 적용 범위는 다릅니다(Laravel 은 전체, Hyperf 는 `CLICKHOUSE_CONNECTION`/`CLICKHOUSE_DRIVER`/`CLICKHOUSE_HTTPS` 누락, Webman 은 연결 5개 항목만, ThinkPHP 는 현재 환경 변수를 읽지 않음). 각 설정 파일을 기준으로 하십시오.
 
 ## 예외 처리
 

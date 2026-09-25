@@ -73,6 +73,15 @@ class ClickHouseTest extends TestCase
         $this->assertSame($manager, ClickHouse::getManager());
     }
 
+    public function testBootstrapBuildsManagerFromEnv(): void
+    {
+        $manager = ClickHouse::bootstrap();
+
+        $this->assertInstanceOf(Manager::class, $manager);
+        $this->assertSame($manager, ClickHouse::getManager());
+        $this->assertInstanceOf(Builder::class, ClickHouse::table('logs'));
+    }
+
     public function testConnectionReturnsBuilder(): void
     {
         $client = Mockery::mock(ClientInterface::class);

@@ -97,7 +97,28 @@ composer require erikwang2013/clickhouse-php
 
 ## क्विक स्टार्ट
 
-### स्टैंडअलोन उपयोग
+### स्वतंत्र उपयोग (नेटिव PHP)
+
+किसी फ्रेमवर्क की ज़रूरत नहीं। `CLICKHOUSE_*` एनवायरनमेंट वेरिएबल से इनिशियलाइज़ करें, बस एक लाइन काफ़ी है:
+
+```php
+use Erikwang2013\ClickHouse\ClickHouse;
+
+ClickHouse::bootstrap();   // ClickHouse::setManager(Manager::fromEnv()) के बराबर
+
+$rows = ClickHouse::table('logs')
+    ->where('date', '>=', '2024-01-01')
+    ->whereIn('level', ['error', 'warn'])
+    ->orderBy('timestamp', 'desc')
+    ->limit(100)
+    ->get();
+
+foreach ($rows as $row) {
+    echo $row['message'];
+}
+```
+
+जो कॉन्फ़िग एनवायरनमेंट वेरिएबल से कवर नहीं होती (मल्टी-कनेक्शन, कनेक्शन पूल की ट्यूनिंग), उसे `Manager` में साफ़-साफ़ पास करें:
 
 ```php
 use Erikwang2013\ClickHouse\ClickHouse;
@@ -115,7 +136,13 @@ $config = [
             'username' => 'default',
             'password' => '',
             'timeout'  => 30,
+            'https'    => false,         // true पर HTTPS
         ],
+    ],
+    'pool' => [
+        'min_connections'    => 2,
+        'max_connections'    => 16,
+        'connection_timeout' => 5.0,
     ],
 ];
 
@@ -410,6 +437,7 @@ class LogController
             'username' => 'default',
             'password' => '',
             'timeout'  => 30,
+            'https'    => false,
         ],
     ],
     'pool' => [
@@ -425,15 +453,20 @@ class LogController
 
 | वेरिएबल | डिफ़ॉल्ट | विवरण |
 |------|--------|------|
+| `CLICKHOUSE_CONNECTION` | default | डिफ़ॉल्ट कनेक्शन नाम |
 | `CLICKHOUSE_HOST` | localhost | होस्ट पता |
 | `CLICKHOUSE_PORT` | 8123 | HTTP पोर्ट |
 | `CLICKHOUSE_DB` | default | डेटाबेस नाम |
 | `CLICKHOUSE_USER` | default | यूज़रनेम |
 | `CLICKHOUSE_PASS` | — | पासवर्ड |
 | `CLICKHOUSE_TIMEOUT` | 30 | कनेक्शन टाइमआउट (सेकंड) |
+| `CLICKHOUSE_HTTPS` | false | HTTPS इस्तेमाल करें या नहीं |
 | `CLICKHOUSE_DRIVER` | http | ड्राइवर टाइप |
 | `CLICKHOUSE_POOL_MIN` | 2 | न्यूनतम कनेक्शन |
 | `CLICKHOUSE_POOL_MAX` | 16 | अधिकतम कनेक्शन |
+| `CLICKHOUSE_POOL_TIMEOUT` | 5.0 | कनेक्शन लेने का टाइमआउट (सेकंड) |
+
+नेटिव PHP में ऊपर दिए गए वेरिएबल `ClickHouse::bootstrap()` / `Manager::fromEnv()` पढ़ते हैं। चारों फ्रेमवर्क की कॉन्फ़िग फ़ाइलें यही वेरिएबल नाम पढ़ती हैं, लेकिन उनका दायरा अलग-अलग है (Laravel पूरा, Hyperf में `CLICKHOUSE_CONNECTION`/`CLICKHOUSE_DRIVER`/`CLICKHOUSE_HTTPS` नहीं हैं, Webman में केवल कनेक्शन के पाँच वेरिएबल, ThinkPHP अभी एनवायरनमेंट वेरिएबल नहीं पढ़ता) — अंतिम आधार अपनी-अपनी कॉन्फ़िग फ़ाइल ही है।
 
 ## Exception हैंडलिंग
 

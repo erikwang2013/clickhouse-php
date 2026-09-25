@@ -51,11 +51,13 @@ jobs:
           require 'vendor/autoload.php';
 
           use Erikwang2013\ClickHouse\Client\ClientInterface;
+          use Erikwang2013\ClickHouse\Client\Manager;
           use Erikwang2013\ClickHouse\Pool\NoPool;
           use Erikwang2013\ClickHouse\Query\Builder as QueryBuilder;
           use Erikwang2013\ClickHouse\Query\Result;
           use Erikwang2013\ClickHouse\Schema\Builder as SchemaBuilder;
           use Erikwang2013\ClickHouse\Support\Config;
+          use Erikwang2013\ClickHouse\Support\Pet;
 
           $client = new class implements ClientInterface {
               public function query(string $sql, array $bindings = []): Result
@@ -84,6 +86,10 @@ jobs:
           new SchemaBuilder($client);
           new NoPool(static fn () => $client);
           new Result([['id' => 1]]);
+
+          // 原生 PHP 入口与命令行横幅使用的 API
+          Manager::fromEnv();
+          Pet::lines();
 
           echo "OK\n";
           PHP

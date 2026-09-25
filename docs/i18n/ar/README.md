@@ -97,7 +97,28 @@ composer require erikwang2013/clickhouse-php
 
 ## البدء السريع
 
-### الاستخدام المستقل
+### الاستخدام المستقل (PHP الأصلي)
+
+لا يعتمد على أي إطار. التهيئة بمتغيرات البيئة `CLICKHOUSE_*` بسطر واحد:
+
+```php
+use Erikwang2013\ClickHouse\ClickHouse;
+
+ClickHouse::bootstrap();   // يعادل ClickHouse::setManager(Manager::fromEnv())
+
+$rows = ClickHouse::table('logs')
+    ->where('date', '>=', '2024-01-01')
+    ->whereIn('level', ['error', 'warn'])
+    ->orderBy('timestamp', 'desc')
+    ->limit(100)
+    ->get();
+
+foreach ($rows as $row) {
+    echo $row['message'];
+}
+```
+
+الإعدادات التي لا تغطيها متغيرات البيئة (اتصالات متعددة، وضبط حوض الاتصالات) تُمرَّر صراحةً عبر `Manager`:
 
 ```php
 use Erikwang2013\ClickHouse\ClickHouse;
@@ -115,7 +136,13 @@ $config = [
             'username' => 'default',
             'password' => '',
             'timeout'  => 30,
+            'https'    => false,         // true يعني استخدام HTTPS
         ],
+    ],
+    'pool' => [
+        'min_connections'    => 2,
+        'max_connections'    => 16,
+        'connection_timeout' => 5.0,
     ],
 ];
 
@@ -410,6 +437,7 @@ class LogController
             'username' => 'default',
             'password' => '',
             'timeout'  => 30,
+            'https'    => false,
         ],
     ],
     'pool' => [
@@ -425,15 +453,20 @@ class LogController
 
 | المتغير | القيمة الافتراضية | الوصف |
 |------|--------|------|
+| `CLICKHOUSE_CONNECTION` | default | اسم الاتصال الافتراضي |
 | `CLICKHOUSE_HOST` | localhost | عنوان المضيف |
 | `CLICKHOUSE_PORT` | 8123 | منفذ HTTP |
 | `CLICKHOUSE_DB` | default | اسم قاعدة البيانات |
 | `CLICKHOUSE_USER` | default | اسم المستخدم |
 | `CLICKHOUSE_PASS` | — | كلمة المرور |
 | `CLICKHOUSE_TIMEOUT` | 30 | مهلة الاتصال (ثانية) |
+| `CLICKHOUSE_HTTPS` | false | هل يُستخدم HTTPS |
 | `CLICKHOUSE_DRIVER` | http | نوع المشغّل |
 | `CLICKHOUSE_POOL_MIN` | 2 | الحد الأدنى للاتصالات |
 | `CLICKHOUSE_POOL_MAX` | 16 | الحد الأقصى للاتصالات |
+| `CLICKHOUSE_POOL_TIMEOUT` | 5.0 | مهلة أخذ الاتصال (ثانية) |
+
+في PHP الأصلي تُقرأ المتغيرات أعلاه بواسطة `ClickHouse::bootstrap()` / `Manager::fromEnv()`، أما ملفات إعداد الأطر الأربعة فتُقرأ بنفس أسماء المتغيرات لكن نطاق التغطية يختلف (Laravel شامل، وHyperf يفتقر إلى `CLICKHOUSE_CONNECTION` / `CLICKHOUSE_DRIVER` / `CLICKHOUSE_HTTPS`، وWebman خمسة عناصر الاتصال فقط، وThinkPHP لا يقرأ متغيرات البيئة حاليًا)، والمرجع هو ملف الإعداد الخاص بكل إطار.
 
 ## معالجة الاستثناءات
 

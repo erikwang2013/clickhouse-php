@@ -97,7 +97,28 @@ composer require erikwang2013/clickhouse-php
 
 ## Démarrage rapide
 
-### Utilisation autonome
+### Utilisation autonome (PHP natif)
+
+Sans dépendre d'aucun framework. Initialisation par les variables d'environnement `CLICKHOUSE_*`, en une seule ligne :
+
+```php
+use Erikwang2013\ClickHouse\ClickHouse;
+
+ClickHouse::bootstrap();   // équivaut à ClickHouse::setManager(Manager::fromEnv())
+
+$rows = ClickHouse::table('logs')
+    ->where('date', '>=', '2024-01-01')
+    ->whereIn('level', ['error', 'warn'])
+    ->orderBy('timestamp', 'desc')
+    ->limit(100)
+    ->get();
+
+foreach ($rows as $row) {
+    echo $row['message'];
+}
+```
+
+Les réglages que les variables d'environnement ne couvrent pas (connexions multiples, paramétrage du pool) se passent explicitement via `Manager` :
 
 ```php
 use Erikwang2013\ClickHouse\ClickHouse;
@@ -115,7 +136,13 @@ $config = [
             'username' => 'default',
             'password' => '',
             'timeout'  => 30,
+            'https'    => false,         // true pour passer en HTTPS
         ],
+    ],
+    'pool' => [
+        'min_connections'    => 2,
+        'max_connections'    => 16,
+        'connection_timeout' => 5.0,
     ],
 ];
 
@@ -410,6 +437,7 @@ class LogController
             'username' => 'default',
             'password' => '',
             'timeout'  => 30,
+            'https'    => false,
         ],
     ],
     'pool' => [
@@ -425,15 +453,20 @@ class LogController
 
 | Variable | Valeur par défaut | Description |
 |------|--------|------|
+| `CLICKHOUSE_CONNECTION` | default | Nom de la connexion par défaut |
 | `CLICKHOUSE_HOST` | localhost | Adresse de l'hôte |
 | `CLICKHOUSE_PORT` | 8123 | Port HTTP |
 | `CLICKHOUSE_DB` | default | Nom de la base |
 | `CLICKHOUSE_USER` | default | Nom d'utilisateur |
 | `CLICKHOUSE_PASS` | — | Mot de passe |
 | `CLICKHOUSE_TIMEOUT` | 30 | Délai de connexion (secondes) |
+| `CLICKHOUSE_HTTPS` | false | Passer en HTTPS |
 | `CLICKHOUSE_DRIVER` | http | Type de driver |
 | `CLICKHOUSE_POOL_MIN` | 2 | Nombre minimal de connexions |
 | `CLICKHOUSE_POOL_MAX` | 16 | Nombre maximal de connexions |
+| `CLICKHOUSE_POOL_TIMEOUT` | 5.0 | Délai d'obtention d'une connexion (secondes) |
+
+En PHP natif, les variables ci-dessus sont lues par `ClickHouse::bootstrap()` / `Manager::fromEnv()`. Les fichiers de configuration des quatre frameworks lisent le même jeu de noms de variables, mais avec une couverture différente (Laravel l'intégralité ; Hyperf sans `CLICKHOUSE_CONNECTION`/`CLICKHOUSE_DRIVER`/`CLICKHOUSE_HTTPS` ; Webman seulement les cinq variables de connexion ; ThinkPHP ne lit pas les variables d'environnement pour l'instant) : le fichier de configuration de chaque framework fait foi.
 
 ## Gestion des exceptions
 

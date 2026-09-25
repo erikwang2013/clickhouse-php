@@ -10,6 +10,7 @@ namespace Erikwang2013\ClickHouse;
 use Erikwang2013\ClickHouse\Client\Manager;
 use Erikwang2013\ClickHouse\Query\Builder;
 use Erikwang2013\ClickHouse\Schema\Builder as SchemaBuilder;
+use Psr\Log\LoggerInterface;
 
 class ClickHouse
 {
@@ -18,6 +19,15 @@ class ClickHouse
     public static function setManager(Manager $manager): void
     {
         static::$manager = $manager;
+    }
+
+    /**
+     * 从 CLICKHOUSE_* 环境变量一键初始化，免写配置数组。
+     * 原生 PHP 项目 composer require 后即可：ClickHouse::bootstrap();
+     */
+    public static function bootstrap(?LoggerInterface $logger = null): Manager
+    {
+        return static::$manager = Manager::fromEnv($logger);
     }
 
     public static function getManager(): ?Manager
