@@ -51,7 +51,7 @@ abstract class IntegrationTestCase extends TestCase
         $host = self::env('CLICKHOUSE_HOST', '127.0.0.1');
         $port = (int) self::env('CLICKHOUSE_PORT', '8123');
 
-        [$reachable, $reason] = self::probe();
+        [$reachable, $reason] = self::probe($host, $port);
 
         if ($reachable && $reason === null) {
             return;
@@ -96,12 +96,12 @@ abstract class IntegrationTestCase extends TestCase
      *
      * @return array{0: bool, 1: ?string} [socket answered, failure reason]
      */
-    private static function probe(): array
+    private static function probe(string $host, int $port): array
     {
         $errno = 0;
         $error = '';
         $socket = @stream_socket_client(
-            sprintf('tcp://%s:%d', self::env('CLICKHOUSE_HOST', '127.0.0.1'), (int) self::env('CLICKHOUSE_PORT', '8123')),
+            sprintf('tcp://%s:%d', $host, $port),
             $errno,
             $error,
             1.0,
