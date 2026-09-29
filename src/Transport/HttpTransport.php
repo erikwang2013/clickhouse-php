@@ -128,7 +128,11 @@ class HttpTransport implements TransportInterface, StreamingTransportInterface
             $message = $this->sanitize($e->getMessage());
             $previous = new \RuntimeException($message);
 
-            if (($e->getHandlerContext()['errno'] ?? null) === 28 || stripos($message, 'timed out') !== false) {
+            // Guzzle 8 删了 getHandlerContext()（超时改用 NetworkTimeoutException 等子类），
+            // 拿不到 errno 时退回消息判断：cURL 28 的文案都含 "timed out"。
+            $errno = method_exists($e, 'getHandlerContext') ? ($e->getHandlerContext()['errno'] ?? null) : null;
+
+            if ($errno === 28 || stripos($message, 'timed out') !== false) {
                 throw new TimeoutException('ClickHouse request timed out: ' . $message, 0, $previous);
             }
 

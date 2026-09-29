@@ -294,6 +294,30 @@ class HttpTransportTest extends TestCase
         $transport->send('SELECT 1');
     }
 
+    /**
+     * Guzzle 8 删掉了 getHandlerContext()，超时只能靠消息判断。
+     * 仍去调该方法会触发 Error: Call to undefined method（Guzzle 7 下不会走到，跳过）。
+     */
+    public function testSendTimeoutMapsToTimeoutExceptionWithoutHandlerContext(): void
+    {
+        $class = \GuzzleHttp\Exception\NetworkTimeoutException::class;
+        if (!class_exists($class)) {
+            $this->markTestSkipped('Guzzle 8 起才有无 getHandlerContext() 的超时异常');
+        }
+
+        $client = Mockery::mock(Client::class);
+        $client->shouldReceive('post')->once()
+            ->andThrow(new $class(
+                'cURL error 28: Operation timed out after 30000 milliseconds',
+                new Request('POST', 'http://localhost:8123/'),
+            ));
+
+        $transport = $this->makeTransport();
+        $this->injectClient($transport, $client);
+
+        $this->expectException(\Erikwang2013\ClickHouse\Exceptions\TimeoutException::class);
+        $transport->send('SELECT 1');
+    }
 
     public function testCloseResetsHttpClient(): void
     {
