@@ -108,18 +108,19 @@
   <!-- Kartu 6: integrasi framework -->
   <rect class="card" x="600" y="368" width="260" height="252" rx="14"/>
   <text class="ct" x="618" y="398">Integrasi Framework</text>
-  <text class="cs ctr" x="810" y="398">Empat adaptor</text>
+  <text class="cs ctr" x="810" y="398">Enam adaptor</text>
   <rect x="618" y="408" width="48" height="4" rx="2" fill="#777BB4"/>
   <line class="hr" x1="600" y1="422" x2="860" y2="422"/>
   <g>
     <circle cx="624" cy="443" r="2.5" fill="#777BB4"/><text class="li" x="636" y="447">Laravel auto + Facade + perintah</text>
-    <circle cx="624" cy="464" r="2.5" fill="#777BB4"/><text class="li" x="636" y="468">ThinkPHP Service + perintah think</text>
-    <circle cx="624" cy="485" r="2.5" fill="#777BB4"/><text class="li" x="636" y="489">Webman plugin config auto load</text>
-    <circle cx="624" cy="506" r="2.5" fill="#777BB4"/><text class="li" x="636" y="510">Hyperf ConfigProvider + korutin</text>
-    <circle cx="624" cy="527" r="2.5" fill="#777BB4"/><text class="li" x="636" y="531">Config terpadu connections / pool</text>
-    <circle cx="624" cy="548" r="2.5" fill="#777BB4"/><text class="li" x="636" y="552">Env CLICKHOUSE_* menimpa default</text>
-    <circle cx="624" cy="569" r="2.5" fill="#777BB4"/><text class="li" x="636" y="573">Log query PSR-3 opsional</text>
-    <circle cx="624" cy="590" r="2.5" fill="#777BB4"/><text class="li" x="636" y="594">CLI daftar tabel / migrasi</text>
+    <circle cx="624" cy="462" r="2.5" fill="#777BB4"/><text class="li" x="636" y="466">ThinkPHP Service + perintah think</text>
+    <circle cx="624" cy="481" r="2.5" fill="#777BB4"/><text class="li" x="636" y="485">Webman plugin config auto load</text>
+    <circle cx="624" cy="500" r="2.5" fill="#777BB4"/><text class="li" x="636" y="504">Hyperf ConfigProvider + korutin</text>
+    <circle cx="624" cy="519" r="2.5" fill="#777BB4"/><text class="li" x="636" y="523">Yii2 komponen · Yii3 config DI</text>
+    <circle cx="624" cy="538" r="2.5" fill="#777BB4"/><text class="li" x="636" y="542">Config terpadu connections / pool</text>
+    <circle cx="624" cy="557" r="2.5" fill="#777BB4"/><text class="li" x="636" y="561">Env CLICKHOUSE_* menimpa default</text>
+    <circle cx="624" cy="576" r="2.5" fill="#777BB4"/><text class="li" x="636" y="580">Log query PSR-3 opsional</text>
+    <circle cx="624" cy="595" r="2.5" fill="#777BB4"/><text class="li" x="636" y="599">CLI daftar tabel / migrasi</text>
   </g>
 
   <!-- Keamanan dan exception -->

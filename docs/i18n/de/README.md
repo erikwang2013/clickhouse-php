@@ -1,6 +1,6 @@
 # clickhouse-php
 
-PHP-ClickHouse-Client. Kommuniziert standardmäßig über die ClickHouse-HTTP-Schnittstelle (Port 8123), mit integriertem Query Builder, Schema Builder, Migrationssystem und ORM sowie Anpassung an Laravel, ThinkPHP, Webman und Hyperf.
+PHP-ClickHouse-Client. Kommuniziert standardmäßig über die ClickHouse-HTTP-Schnittstelle (Port 8123), mit integriertem Query Builder, Schema Builder, Migrationssystem und ORM sowie Anpassung an Laravel, ThinkPHP, Webman, Hyperf, Yii2 und Yii3.
 
 Schichtenweise entkoppelt: `Manager → ClientInterface → PoolInterface → TransportInterface`. Client-Form, Verbindungspool und Transportprotokoll richten sich jeweils an einer eigenen Schnittstelle aus und sind austauschbar. Das Native-TCP-Protokoll hat in der Transportschicht bereits seinen Platz, ist aber noch nicht implementiert.
 
@@ -54,7 +54,10 @@ clickhouse-php/
 │   ├── Laravel/                        # ServiceProvider · Facade · Artisan-Befehle
 │   ├── ThinkPHP/                       # Service · Facade · Befehle
 │   ├── Webman/                         # Service · Installationsskript
-│   └── Hyperf/                         # ConfigProvider · Coroutine-Pool · Befehle
+│   ├── Hyperf/                         # ConfigProvider · Coroutine-Pool · Befehle
+│   ├── Yii2/                           # Anwendungskomponente · automatische Bootstrap-Registrierung
+│   └── Yii3/                           # Komforteinstieg (über das config/ im Projektstamm in die DI registriert)
+├── config/                             # Yii3 config-plugin: params.php / di.php
 ├── tests/                              # PHPUnit-Tests, Verzeichnisse analog zu src
 ├── docs/                               # Designdiagramme und Dokumentation
 └── composer.json
@@ -70,7 +73,7 @@ Von oben nach unten in sechs Schichten gegliedert; jede Schicht hängt nur von d
 
 | Schicht | Aufgabe | Zentrale Typen |
 |---------|---------|----------------|
-| Einstiegsschicht | Fassade und Framework-Anpassung | `ClickHouse`, vier Framework-Adapter |
+| Einstiegsschicht | Fassade und Framework-Anpassung | `ClickHouse`, sechs Framework-Adapter |
 | Aufbauschicht | Zusammenbau von Queries und DDL, ohne IO | `Query\Builder`, `Schema\Builder`, `ORM\Model`, `Migration\Migrator` |
 | Client-Schicht | Verwaltung mehrerer Verbindungen und Ausführungseinstieg | `Manager`, `HttpClient`, `PooledClient` |
 | Pool-Schicht | Verbindungswiederverwendung und Nebenläufigkeitsgrenze | `PoolInterface`, `AbstractPool`, `NoPool` |
@@ -382,6 +385,71 @@ class LogController
 }
 ```
 
+### Yii2
+
+Eine Zeile im `bootstrap` genügt für den Anschluss ohne Konfiguration (über die Umgebungsvariablen `CLICKHOUSE_*`); sie gilt sowohl für web als auch für console:
+
+```php
+// config/web.php, config/console.php
+'bootstrap' => ['Erikwang2013\ClickHouse\Yii2\Bootstrap'],
+```
+
+Alternativ lässt sie sich wie gewohnt als Anwendungskomponente registrieren und mit eigenen Verbindungsparametern versehen:
+
+```php
+// config/web.php
+'components' => [
+    'clickhouse' => [
+        'class' => \Erikwang2013\ClickHouse\Yii2\ClickHouse::class,
+        'config' => require __DIR__ . '/clickhouse.php',   // Manager-Konfigurationsarray, siehe Konfigurationsreferenz
+    ],
+],
+```
+
+```php
+Yii::$app->clickhouse->table('logs')->where('level', 'error')->get();
+ClickHouse::table('logs')->get();   // Statische Fassade: nach Initialisierung der Komponente ebenfalls nutzbar
+```
+
+Beide Einstiege teilen sich denselben Manager; bleibt `config` leer, werden die Umgebungsvariablen `CLICKHOUSE_*` gelesen.
+
+### Yii3
+
+Das Paket bringt `config/params.php` und `config/di.php` mit; ist `yiisoft/config` installiert, werden sie automatisch zusammengeführt, eine Registrierung entfällt.
+
+```php
+// Verbindungsparameter über die anwendungsseitige config/params.php überschreiben
+return [
+    'erikwang2013/clickhouse-php' => [
+        'default' => 'default',
+        'connections' => [
+            'default' => [
+                'driver' => 'http',
+                'host' => 'ch.internal',
+                'port' => 8123,
+                'database' => 'logs',
+            ],
+        ],
+    ],
+];
+```
+
+```php
+use Erikwang2013\ClickHouse\Yii3\ClickHouseConnection;
+
+class LogController
+{
+    public function __construct(private ClickHouseConnection $clickhouse) {}
+
+    public function index()
+    {
+        return $this->clickhouse->table('logs')->where('level', 'error')->get();
+    }
+}
+```
+
+Wer mehrere Verbindungen, einen Verbindungspool oder den zugrunde liegenden Client benötigt, injiziert `Erikwang2013\ClickHouse\Client\Manager` (ebenfalls registriert).
+
 ## Referenz: Query Builder
 
 | Methode | Beschreibung |
@@ -499,7 +567,7 @@ Zum Verbindungspool: Die `pool`-Konfiguration greift nur, **wenn ein nutzbarer C
 | `CLICKHOUSE_POOL_MAX` | 16 | Maximale Verbindungsanzahl |
 | `CLICKHOUSE_POOL_TIMEOUT` | 5.0 | Timeout beim Holen einer Verbindung (Sekunden) |
 
-Alle diese Variablen werden in reinem PHP von `ClickHouse::bootstrap()` / `Manager::fromEnv()` gelesen; die Konfigurationsdateien der vier Frameworks lesen dieselben Variablennamen (inklusive `CLICKHOUSE_HTTPS`).
+Alle diese Variablen werden in reinem PHP von `ClickHouse::bootstrap()` / `Manager::fromEnv()` gelesen; die Konfigurationsdateien der sechs Frameworks lesen dieselben Variablennamen (inklusive `CLICKHOUSE_HTTPS`).
 
 ## Fehlerbehandlung
 

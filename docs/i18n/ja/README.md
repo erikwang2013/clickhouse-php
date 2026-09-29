@@ -1,6 +1,6 @@
 # clickhouse-php
 
-PHP 製 ClickHouse クライアント。デフォルトでは ClickHouse HTTP インターフェース（ポート 8123）を介して通信し、クエリビルダー、Schema Builder、マイグレーションシステム、ORM を内蔵し、Laravel、ThinkPHP、Webman、Hyperf に対応しています。
+PHP 製 ClickHouse クライアント。デフォルトでは ClickHouse HTTP インターフェース（ポート 8123）を介して通信し、クエリビルダー、Schema Builder、マイグレーションシステム、ORM を内蔵し、Laravel、ThinkPHP、Webman、Hyperf、Yii2、Yii3 に対応しています。
 
 階層は疎結合：`Manager → ClientInterface → PoolInterface → TransportInterface`。クライアント形態、コネクションプール、トランスポートプロトコルはそれぞれインターフェース指向で、いずれも差し替え可能です。Native TCP プロトコルはトランスポート層に場所を確保済みですが、未実装です。
 
@@ -54,7 +54,10 @@ clickhouse-php/
 │   ├── Laravel/                        # ServiceProvider · Facade · Artisan コマンド
 │   ├── ThinkPHP/                       # Service · Facade · コマンド
 │   ├── Webman/                         # Service · インストールスクリプト
-│   └── Hyperf/                         # ConfigProvider · コルーチンコネクションプール · コマンド
+│   ├── Hyperf/                         # ConfigProvider · コルーチンコネクションプール · コマンド
+│   ├── Yii2/                           # アプリケーションコンポーネント · Bootstrap 自動登録
+│   └── Yii3/                           # 手軽な入口（ルートの config/ から DI に登録）
+├── config/                             # Yii3 config-plugin：params.php / di.php
 ├── tests/                              # PHPUnit テスト、ディレクトリは src と同構造
 ├── docs/                               # 設計図とドキュメント
 └── composer.json
@@ -70,7 +73,7 @@ clickhouse-php/
 
 | 層 | 役割 | 主要な型 |
 |----|------|----------|
-| 入口層 | ファサードとフレームワーク適応 | `ClickHouse`、4 つのフレームワークアダプタ |
+| 入口層 | ファサードとフレームワーク適応 | `ClickHouse`、6 つのフレームワークアダプタ |
 | 構築層 | クエリと DDL の組み立て、IO は発生しない | `Query\Builder`、`Schema\Builder`、`ORM\Model`、`Migration\Migrator` |
 | クライアント層 | マルチ接続管理と実行の入口 | `Manager`、`HttpClient`、`PooledClient` |
 | プール層 | 接続の再利用と同時実行の上限 | `PoolInterface`、`AbstractPool`、`NoPool` |
@@ -382,6 +385,71 @@ class LogController
 }
 ```
 
+### Yii2
+
+bootstrap に 1 行追加するだけで設定なしで導入でき（`CLICKHOUSE_*` 環境変数を使用）、web と console の両方で有効です。
+
+```php
+// config/web.php、config/console.php
+'bootstrap' => ['Erikwang2013\ClickHouse\Yii2\Bootstrap'],
+```
+
+通常どおりアプリケーションコンポーネントとして登録し、接続パラメータを自分で指定することもできます。
+
+```php
+// config/web.php
+'components' => [
+    'clickhouse' => [
+        'class' => \Erikwang2013\ClickHouse\Yii2\ClickHouse::class,
+        'config' => require __DIR__ . '/clickhouse.php',   // Manager の設定配列（設定リファレンス参照）
+    ],
+],
+```
+
+```php
+Yii::$app->clickhouse->table('logs')->where('level', 'error')->get();
+ClickHouse::table('logs')->get();   // 静的ファサード：コンポーネント初期化後も同様に利用可能
+```
+
+2 つの入口は同じ Manager を共有します。`config` を空にすると `CLICKHOUSE_*` 環境変数を読み取ります。
+
+### Yii3
+
+パッケージに `config/params.php` と `config/di.php` が同梱されており、`yiisoft/config` を導入していれば自動的にマージされるため、登録は不要です。
+
+```php
+// アプリ側の config/params.php で接続パラメータを上書き
+return [
+    'erikwang2013/clickhouse-php' => [
+        'default' => 'default',
+        'connections' => [
+            'default' => [
+                'driver' => 'http',
+                'host' => 'ch.internal',
+                'port' => 8123,
+                'database' => 'logs',
+            ],
+        ],
+    ],
+];
+```
+
+```php
+use Erikwang2013\ClickHouse\Yii3\ClickHouseConnection;
+
+class LogController
+{
+    public function __construct(private ClickHouseConnection $clickhouse) {}
+
+    public function index()
+    {
+        return $this->clickhouse->table('logs')->where('level', 'error')->get();
+    }
+}
+```
+
+マルチ接続、コネクションプール、低レベルクライアントが必要な場合は、`Erikwang2013\ClickHouse\Client\Manager` を注入します（こちらも登録済み）。
+
 ## クエリビルダーリファレンス
 
 | メソッド | 説明 |
@@ -499,7 +567,7 @@ $csv = $client->raw('SELECT * FROM logs FORMAT CSV');
 | `CLICKHOUSE_POOL_MAX` | 16 | 最大接続数 |
 | `CLICKHOUSE_POOL_TIMEOUT` | 5.0 | 接続取得タイムアウト（秒） |
 
-以上の変数はネイティブ PHP では `ClickHouse::bootstrap()` / `Manager::fromEnv()` が読み取ります。4 つのフレームワークの設定ファイルも同じ変数名のセット（`CLICKHOUSE_HTTPS` を含む）を読み取ります。
+以上の変数はネイティブ PHP では `ClickHouse::bootstrap()` / `Manager::fromEnv()` が読み取ります。6 つのフレームワークの設定ファイルも同じ変数名のセット（`CLICKHOUSE_HTTPS` を含む）を読み取ります。
 
 ## 例外処理
 

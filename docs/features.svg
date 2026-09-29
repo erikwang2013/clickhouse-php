@@ -108,18 +108,19 @@
   <!-- 卡片 6：框架集成 -->
   <rect class="card" x="600" y="368" width="260" height="252" rx="14"/>
   <text class="ct" x="618" y="398">框架集成</text>
-  <text class="cs ctr" x="810" y="398">四个框架适配器</text>
+  <text class="cs ctr" x="810" y="398">六个框架适配器</text>
   <rect x="618" y="408" width="48" height="4" rx="2" fill="#777BB4"/>
   <line class="hr" x1="600" y1="422" x2="860" y2="422"/>
   <g>
     <circle cx="624" cy="443" r="2.5" fill="#777BB4"/><text class="li" x="636" y="447">Laravel 自动发现 + Facade + 命令</text>
-    <circle cx="624" cy="464" r="2.5" fill="#777BB4"/><text class="li" x="636" y="468">ThinkPHP Service 注册 + think 命令</text>
-    <circle cx="624" cy="485" r="2.5" fill="#777BB4"/><text class="li" x="636" y="489">Webman 插件配置自动加载</text>
-    <circle cx="624" cy="506" r="2.5" fill="#777BB4"/><text class="li" x="636" y="510">Hyperf ConfigProvider + 协程池</text>
-    <circle cx="624" cy="527" r="2.5" fill="#777BB4"/><text class="li" x="636" y="531">统一配置 connections / pool</text>
-    <circle cx="624" cy="548" r="2.5" fill="#777BB4"/><text class="li" x="636" y="552">环境变量 CLICKHOUSE_* 覆盖默认值</text>
-    <circle cx="624" cy="569" r="2.5" fill="#777BB4"/><text class="li" x="636" y="573">可选 PSR-3 查询日志</text>
-    <circle cx="624" cy="590" r="2.5" fill="#777BB4"/><text class="li" x="636" y="594">表清单 / 迁移 命令行工具</text>
+    <circle cx="624" cy="462" r="2.5" fill="#777BB4"/><text class="li" x="636" y="466">ThinkPHP Service 注册 + think 命令</text>
+    <circle cx="624" cy="481" r="2.5" fill="#777BB4"/><text class="li" x="636" y="485">Webman 插件配置自动加载</text>
+    <circle cx="624" cy="500" r="2.5" fill="#777BB4"/><text class="li" x="636" y="504">Hyperf ConfigProvider + 协程池</text>
+    <circle cx="624" cy="519" r="2.5" fill="#777BB4"/><text class="li" x="636" y="523">Yii2 Bootstrap 组件 · Yii3 DI 配置</text>
+    <circle cx="624" cy="538" r="2.5" fill="#777BB4"/><text class="li" x="636" y="542">统一配置 connections / pool</text>
+    <circle cx="624" cy="557" r="2.5" fill="#777BB4"/><text class="li" x="636" y="561">环境变量 CLICKHOUSE_* 覆盖默认值</text>
+    <circle cx="624" cy="576" r="2.5" fill="#777BB4"/><text class="li" x="636" y="580">可选 PSR-3 查询日志</text>
+    <circle cx="624" cy="595" r="2.5" fill="#777BB4"/><text class="li" x="636" y="599">表清单 / 迁移 命令行工具</text>
   </g>
 
   <!-- 安全与异常 -->

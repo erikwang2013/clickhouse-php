@@ -108,18 +108,19 @@
   <!-- कार्ड 6: फ्रेमवर्क इंटीग्रेशन -->
   <rect class="card" x="600" y="368" width="260" height="252" rx="14"/>
   <text class="ct" x="618" y="398">फ्रेमवर्क इंटीग्रेशन</text>
-  <text class="cs ctr" x="810" y="398">4 एडाप्टर</text>
+  <text class="cs ctr" x="810" y="398">6 एडाप्टर</text>
   <rect x="618" y="408" width="48" height="4" rx="2" fill="#777BB4"/>
   <line class="hr" x1="600" y1="422" x2="860" y2="422"/>
   <g>
     <circle cx="624" cy="443" r="2.5" fill="#777BB4"/><text class="li" x="636" y="447">Laravel ऑटो-डिस्कवरी + Facade + कमांड</text>
-    <circle cx="624" cy="464" r="2.5" fill="#777BB4"/><text class="li" x="636" y="468">ThinkPHP Service रजिस्ट्रेशन + कमांड</text>
-    <circle cx="624" cy="485" r="2.5" fill="#777BB4"/><text class="li" x="636" y="489">Webman प्लगिन कॉन्फ़िग ऑटो-लोड</text>
-    <circle cx="624" cy="506" r="2.5" fill="#777BB4"/><text class="li" x="636" y="510">Hyperf ConfigProvider + कोरूटीन पूल</text>
-    <circle cx="624" cy="527" r="2.5" fill="#777BB4"/><text class="li" x="636" y="531">एक जैसा कॉन्फ़िग connections / pool</text>
-    <circle cx="624" cy="548" r="2.5" fill="#777BB4"/><text class="li" x="636" y="552">env वेरिएबल CLICKHOUSE_* ओवरराइड</text>
-    <circle cx="624" cy="569" r="2.5" fill="#777BB4"/><text class="li" x="636" y="573">वैकल्पिक PSR-3 क्वेरी लॉग</text>
-    <circle cx="624" cy="590" r="2.5" fill="#777BB4"/><text class="li" x="636" y="594">टेबल सूची / माइग्रेशन CLI टूल</text>
+    <circle cx="624" cy="462" r="2.5" fill="#777BB4"/><text class="li" x="636" y="466">ThinkPHP Service रजिस्ट्रेशन + कमांड</text>
+    <circle cx="624" cy="481" r="2.5" fill="#777BB4"/><text class="li" x="636" y="485">Webman प्लगिन कॉन्फ़िग ऑटो-लोड</text>
+    <circle cx="624" cy="500" r="2.5" fill="#777BB4"/><text class="li" x="636" y="504">Hyperf ConfigProvider + कोरूटीन पूल</text>
+    <circle cx="624" cy="519" r="2.5" fill="#777BB4"/><text class="li" x="636" y="523">Yii2 कंपोनेंट · Yii3 DI कॉन्फ़िग</text>
+    <circle cx="624" cy="538" r="2.5" fill="#777BB4"/><text class="li" x="636" y="542">एक जैसा कॉन्फ़िग connections / pool</text>
+    <circle cx="624" cy="557" r="2.5" fill="#777BB4"/><text class="li" x="636" y="561">env वेरिएबल CLICKHOUSE_* ओवरराइड</text>
+    <circle cx="624" cy="576" r="2.5" fill="#777BB4"/><text class="li" x="636" y="580">वैकल्पिक PSR-3 क्वेरी लॉग</text>
+    <circle cx="624" cy="595" r="2.5" fill="#777BB4"/><text class="li" x="636" y="599">टेबल सूची / माइग्रेशन CLI टूल</text>
   </g>
 
   <!-- सुरक्षा और Exception -->

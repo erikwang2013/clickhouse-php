@@ -1,6 +1,6 @@
 # clickhouse-php
 
-PHP के लिए ClickHouse क्लाइंट। डिफ़ॉल्ट रूप से ClickHouse HTTP इंटरफ़ेस (पोर्ट 8123) से संवाद करता है; इसमें Query Builder, Schema Builder, माइग्रेशन सिस्टम और ORM अंतर्निहित हैं, और यह Laravel, ThinkPHP, Webman, Hyperf के लिए अनुकूलित है।
+PHP के लिए ClickHouse क्लाइंट। डिफ़ॉल्ट रूप से ClickHouse HTTP इंटरफ़ेस (पोर्ट 8123) से संवाद करता है; इसमें Query Builder, Schema Builder, माइग्रेशन सिस्टम और ORM अंतर्निहित हैं, और यह Laravel, ThinkPHP, Webman, Hyperf, Yii2, Yii3 के लिए अनुकूलित है।
 
 लेयर अलगाव: `Manager → ClientInterface → PoolInterface → TransportInterface` — क्लाइंट का स्वरूप, कनेक्शन पूल और ट्रांसपोर्ट प्रोटोकॉल, तीनों इंटरफ़ेस-उन्मुख हैं और बदले जा सकते हैं। Native TCP प्रोटोकॉल के लिए ट्रांसपोर्ट लेयर में जगह सुरक्षित है, अभी लागू नहीं है।
 
@@ -54,7 +54,10 @@ clickhouse-php/
 │   ├── Laravel/                        # ServiceProvider · Facade · Artisan कमांड
 │   ├── ThinkPHP/                       # Service · Facade · कमांड
 │   ├── Webman/                         # Service · इंस्टॉल स्क्रिप्ट
-│   └── Hyperf/                         # ConfigProvider · कोरूटीन पूल · कमांड
+│   ├── Hyperf/                         # ConfigProvider · कोरूटीन पूल · कमांड
+│   ├── Yii2/                           # ऐप कंपोनेंट · Bootstrap से ऑटो-रजिस्ट्रेशन
+│   └── Yii3/                           # सुविधाजनक एंट्री (रूट config/ से DI में रजिस्टर)
+├── config/                             # Yii3 config-plugin: params.php / di.php
 ├── tests/                              # PHPUnit टेस्ट, डायरेक्टरी संरचना src जैसी
 ├── docs/                               # डिज़ाइन डायग्राम और दस्तावेज़
 └── composer.json
@@ -70,7 +73,7 @@ clickhouse-php/
 
 | लेयर | ज़िम्मेदारी | मुख्य टाइप |
 |----|------|----------|
-| एंट्री लेयर | फ़साड और फ्रेमवर्क अडैप्टेशन | `ClickHouse`, चारों फ्रेमवर्क एडाप्टर |
+| एंट्री लेयर | फ़साड और फ्रेमवर्क अडैप्टेशन | `ClickHouse`, छह फ्रेमवर्क एडाप्टर |
 | बिल्डर लेयर | क्वेरी और DDL बनाता है, कोई IO नहीं | `Query\Builder`, `Schema\Builder`, `ORM\Model`, `Migration\Migrator` |
 | क्लाइंट लेयर | मल्टी-कनेक्शन प्रबंधन और निष्पादन एंट्री | `Manager`, `HttpClient`, `PooledClient` |
 | कनेक्शन पूल लेयर | कनेक्शन रीयूज़ और समवर्ती सीमा | `PoolInterface`, `AbstractPool`, `NoPool` |
@@ -382,6 +385,71 @@ class LogController
 }
 ```
 
+### Yii2
+
+bootstrap की एक लाइन जोड़ते ही बिना कॉन्फ़िग के जुड़ जाता है (`CLICKHOUSE_*` एनवायरनमेंट वेरिएबल से), वेब और कंसोल दोनों में काम करता है:
+
+```php
+// config/web.php, config/console.php
+'bootstrap' => ['Erikwang2013\ClickHouse\Yii2\Bootstrap'],
+```
+
+चाहें तो सामान्य तरीक़े से ऐप्लिकेशन कंपोनेंट के रूप में भी रजिस्टर कर सकते हैं, अपने कनेक्शन पैरामीटर के साथ:
+
+```php
+// config/web.php
+'components' => [
+    'clickhouse' => [
+        'class' => \Erikwang2013\ClickHouse\Yii2\ClickHouse::class,
+        'config' => require __DIR__ . '/clickhouse.php',   // Manager कॉन्फ़िग ऐरे, देखें "कॉन्फ़िग संदर्भ"
+    ],
+],
+```
+
+```php
+Yii::$app->clickhouse->table('logs')->where('level', 'error')->get();
+ClickHouse::table('logs')->get();   // स्टैटिक फ़साड: कंपोनेंट इनिशियलाइज़ होने पर यह भी उपलब्ध
+```
+
+दोनों एंट्री एक ही Manager साझा करती हैं; `config` ख़ाली छोड़ें तो `CLICKHOUSE_*` एनवायरनमेंट वेरिएबल पढ़े जाते हैं।
+
+### Yii3
+
+पैकेज के साथ `config/params.php` और `config/di.php` आते हैं; `yiisoft/config` इंस्टॉल हो तो वे अपने-आप मर्ज हो जाते हैं, रजिस्टर करने की ज़रूरत नहीं।
+
+```php
+// ऐप की config/params.php में कनेक्शन पैरामीटर ओवरराइड करें
+return [
+    'erikwang2013/clickhouse-php' => [
+        'default' => 'default',
+        'connections' => [
+            'default' => [
+                'driver' => 'http',
+                'host' => 'ch.internal',
+                'port' => 8123,
+                'database' => 'logs',
+            ],
+        ],
+    ],
+];
+```
+
+```php
+use Erikwang2013\ClickHouse\Yii3\ClickHouseConnection;
+
+class LogController
+{
+    public function __construct(private ClickHouseConnection $clickhouse) {}
+
+    public function index()
+    {
+        return $this->clickhouse->table('logs')->where('level', 'error')->get();
+    }
+}
+```
+
+मल्टी-कनेक्शन, कनेक्शन पूल या अंदरूनी क्लाइंट चाहिए तो `Erikwang2013\ClickHouse\Client\Manager` इंजेक्ट करें (यह भी रजिस्टर है)।
+
 ## Query Builder संदर्भ
 
 | मेथड | विवरण |
@@ -499,7 +567,7 @@ $csv = $client->raw('SELECT * FROM logs FORMAT CSV');
 | `CLICKHOUSE_POOL_MAX` | 16 | अधिकतम कनेक्शन |
 | `CLICKHOUSE_POOL_TIMEOUT` | 5.0 | कनेक्शन लेने का टाइमआउट (सेकंड) |
 
-ऊपर दिए गए वेरिएबल नेटिव PHP में `ClickHouse::bootstrap()` / `Manager::fromEnv()` पढ़ते हैं, और चारों फ्रेमवर्क की कॉन्फ़िग फ़ाइलें भी यही वेरिएबल नाम पढ़ती हैं (`CLICKHOUSE_HTTPS` सहित)।
+ऊपर दिए गए वेरिएबल नेटिव PHP में `ClickHouse::bootstrap()` / `Manager::fromEnv()` पढ़ते हैं, और छहों फ्रेमवर्क की कॉन्फ़िग फ़ाइलें भी यही वेरिएबल नाम पढ़ती हैं (`CLICKHOUSE_HTTPS` सहित)।
 
 ## Exception हैंडलिंग
 

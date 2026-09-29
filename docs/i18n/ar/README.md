@@ -1,6 +1,6 @@
 # clickhouse-php
 
-عميل ClickHouse لـ PHP. يتواصل افتراضيًا عبر واجهة ClickHouse HTTP (المنفذ 8123)، ويتضمن منشئ استعلامات وSchema Builder ونظام مهاجرات وORM، مع دعم Laravel وThinkPHP وWebman وHyperf.
+عميل ClickHouse لـ PHP. يتواصل افتراضيًا عبر واجهة ClickHouse HTTP (المنفذ 8123)، ويتضمن منشئ استعلامات وSchema Builder ونظام مهاجرات وORM، مع دعم Laravel وThinkPHP وWebman وHyperf وYii2 وYii3.
 
 فصل طَبَقي: `Manager → ClientInterface → PoolInterface → TransportInterface`، إذ يستند شكل العميل وحوض الاتصالات وبروتوكول النقل كلٌّ إلى واجهته الخاصة، ويمكن استبدالها جميعًا. بروتوكول Native TCP له موضع محجوز في طبقة النقل، لكنه لم يُنفَّذ بعد.
 
@@ -54,7 +54,10 @@ clickhouse-php/
 │   ├── Laravel/                        # ServiceProvider · Facade · أوامر Artisan
 │   ├── ThinkPHP/                       # Service · Facade · أوامر
 │   ├── Webman/                         # Service · نص التثبيت
-│   └── Hyperf/                         # ConfigProvider · حوض اتصالات Coroutine · أوامر
+│   ├── Hyperf/                         # ConfigProvider · حوض اتصالات Coroutine · أوامر
+│   ├── Yii2/                           # مكوّن تطبيق · تسجيل تلقائي عبر Bootstrap
+│   └── Yii3/                           # مدخل ميسَّر (يُسجَّل في DI من config/ بالجذر)
+├── config/                             # Yii3 config-plugin: params.php / di.php
 ├── tests/                              # اختبارات PHPUnit، الدلائل مطابقة لـ src
 ├── docs/                               # مخططات ووثائق
 └── composer.json
@@ -70,7 +73,7 @@ clickhouse-php/
 
 | الطبقة | المسؤولية | الأنواع الأساسية |
 |----|------|----------|
-| طبقة المدخل | الواجهة وتكييف الأطر | `ClickHouse`، أربع محوّلات أطر |
+| طبقة المدخل | الواجهة وتكييف الأطر | `ClickHouse`، ست محوّلات أطر |
 | طبقة البناء | تجميع الاستعلامات وDDL، دون إنتاج IO | `Query\Builder`، `Schema\Builder`، `ORM\Model`، `Migration\Migrator` |
 | طبقة العميل | إدارة اتصالات متعددة ومدخل التنفيذ | `Manager`، `HttpClient`، `PooledClient` |
 | طبقة حوض الاتصالات | إعادة استخدام الاتصالات وحد التزامن | `PoolInterface`، `AbstractPool`، `NoPool` |
@@ -382,6 +385,71 @@ class LogController
 }
 ```
 
+### Yii2
+
+سطر bootstrap واحد يكفي للاندماج دون أي إعداد (عبر متغيّرات البيئة `CLICKHOUSE_*`)، ويعمل في web وconsole معًا:
+
+```php
+// config/web.php، config/console.php
+'bootstrap' => ['Erikwang2013\ClickHouse\Yii2\Bootstrap'],
+```
+
+ويمكن أيضًا تسجيله كمكوّن تطبيق كالمعتاد مع تمرير معاملات الاتصال بنفسك:
+
+```php
+// config/web.php
+'components' => [
+    'clickhouse' => [
+        'class' => \Erikwang2013\ClickHouse\Yii2\ClickHouse::class,
+        'config' => require __DIR__ . '/clickhouse.php',   // مصفوفة إعداد Manager، انظر «مرجع الإعداد»
+    ],
+],
+```
+
+```php
+Yii::$app->clickhouse->table('logs')->where('level', 'error')->get();
+ClickHouse::table('logs')->get();   // الواجهة الساكنة: تتاح أيضًا بعد تهيئة المكوّن
+```
+
+كلا المدخلين يتشاركان Manager واحدًا؛ وإذا بقي `config` فارغًا تُقرأ متغيّرات البيئة `CLICKHOUSE_*`.
+
+### Yii3
+
+تأتي الحزمة بـ `config/params.php` و`config/di.php`، وبمجرد تثبيت `yiisoft/config` يُدمجان تلقائيًا، دون حاجة إلى تسجيل.
+
+```php
+// تجاوز معاملات الاتصال في config/params.php على جهة التطبيق
+return [
+    'erikwang2013/clickhouse-php' => [
+        'default' => 'default',
+        'connections' => [
+            'default' => [
+                'driver' => 'http',
+                'host' => 'ch.internal',
+                'port' => 8123,
+                'database' => 'logs',
+            ],
+        ],
+    ],
+];
+```
+
+```php
+use Erikwang2013\ClickHouse\Yii3\ClickHouseConnection;
+
+class LogController
+{
+    public function __construct(private ClickHouseConnection $clickhouse) {}
+
+    public function index()
+    {
+        return $this->clickhouse->table('logs')->where('level', 'error')->get();
+    }
+}
+```
+
+عند الحاجة إلى اتصالات متعددة أو حوض اتصالات أو العميل الأدنى، احقن `Erikwang2013\ClickHouse\Client\Manager` (وهو مسجَّل أيضًا).
+
 ## مرجع منشئ الاستعلامات
 
 | الطريقة | الوصف |
@@ -499,7 +567,7 @@ $csv = $client->raw('SELECT * FROM logs FORMAT CSV');
 | `CLICKHOUSE_POOL_MAX` | 16 | الحد الأقصى للاتصالات |
 | `CLICKHOUSE_POOL_TIMEOUT` | 5.0 | مهلة أخذ الاتصال (ثانية) |
 
-تُقرأ المتغيرات أعلاه في PHP الأصلي بواسطة `ClickHouse::bootstrap()` / `Manager::fromEnv()`، وتقرأ ملفات إعداد الأطر الأربعة نفس أسماء المتغيرات (بما فيها `CLICKHOUSE_HTTPS`).
+تُقرأ المتغيرات أعلاه في PHP الأصلي بواسطة `ClickHouse::bootstrap()` / `Manager::fromEnv()`، وتقرأ ملفات إعداد الأطر الستة نفس أسماء المتغيرات (بما فيها `CLICKHOUSE_HTTPS`).
 
 ## معالجة الاستثناءات
 

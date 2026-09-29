@@ -1,6 +1,6 @@
 # clickhouse-php
 
-PHP-клиент для ClickHouse. По умолчанию работает через HTTP-интерфейс ClickHouse (порт 8123); включает конструктор запросов, Schema Builder, систему миграций и ORM, а также адаптеры для Laravel, ThinkPHP, Webman и Hyperf.
+PHP-клиент для ClickHouse. По умолчанию работает через HTTP-интерфейс ClickHouse (порт 8123); включает конструктор запросов, Schema Builder, систему миграций и ORM, а также адаптеры для Laravel, ThinkPHP, Webman, Hyperf, Yii2 и Yii3.
 
 Слои разделены: `Manager → ClientInterface → PoolInterface → TransportInterface` — форма клиента, пул соединений и транспортный протокол работают через интерфейсы и могут быть заменены. Для протокола Native TCP в транспортном слое зарезервировано место, но он ещё не реализован.
 
@@ -54,7 +54,10 @@ clickhouse-php/
 │   ├── Laravel/                        # ServiceProvider · Facade · команды Artisan
 │   ├── ThinkPHP/                       # Service · Facade · команды
 │   ├── Webman/                         # Service · установочный скрипт
-│   └── Hyperf/                         # ConfigProvider · пул корутин · команды
+│   ├── Hyperf/                         # ConfigProvider · пул корутин · команды
+│   ├── Yii2/                           # Компонент приложения · авторегистрация Bootstrap
+│   └── Yii3/                           # Удобная точка входа (регистрируется через config/ из корня)
+├── config/                             # Yii3 config-plugin: params.php / di.php
 ├── tests/                              # Тесты PHPUnit, структура каталогов повторяет src
 ├── docs/                               # Схемы и документация
 └── composer.json
@@ -70,7 +73,7 @@ clickhouse-php/
 
 | Слой | Ответственность | Ключевые типы |
 |----|------|----------|
-| Слой входа | Фасад и адаптеры фреймворков | `ClickHouse`, четыре адаптера фреймворков |
+| Слой входа | Фасад и адаптеры фреймворков | `ClickHouse`, шесть адаптеров фреймворков |
 | Слой сборки | Сборка запросов и DDL, без ввода-вывода | `Query\Builder`, `Schema\Builder`, `ORM\Model`, `Migration\Migrator` |
 | Слой клиента | Управление соединениями и точка выполнения | `Manager`, `HttpClient`, `PooledClient` |
 | Слой пула | Переиспользование соединений и лимит параллелизма | `PoolInterface`, `AbstractPool`, `NoPool` |
@@ -382,6 +385,71 @@ class LogController
 }
 ```
 
+### Yii2
+
+Одной строки bootstrap достаточно для подключения без конфигурации (читает переменные окружения `CLICKHOUSE_*`), работает и в web, и в console:
+
+```php
+// config/web.php, config/console.php
+'bootstrap' => ['Erikwang2013\ClickHouse\Yii2\Bootstrap'],
+```
+
+Можно и как обычно зарегистрировать компонентом приложения, задав параметры соединения самому:
+
+```php
+// config/web.php
+'components' => [
+    'clickhouse' => [
+        'class' => \Erikwang2013\ClickHouse\Yii2\ClickHouse::class,
+        'config' => require __DIR__ . '/clickhouse.php',   // массив конфигурации Manager, см. «Справочник по конфигурации»
+    ],
+],
+```
+
+```php
+Yii::$app->clickhouse->table('logs')->where('level', 'error')->get();
+ClickHouse::table('logs')->get();   // статический фасад: доступен после инициализации компонента
+```
+
+Обе точки входа используют один и тот же Manager; если `config` пустой, читаются переменные окружения `CLICKHOUSE_*`.
+
+### Yii3
+
+Пакет уже содержит `config/params.php` и `config/di.php`; с установленным `yiisoft/config` они подключаются автоматически, регистрировать ничего не нужно.
+
+```php
+// config/params.php приложения переопределяет параметры соединения
+return [
+    'erikwang2013/clickhouse-php' => [
+        'default' => 'default',
+        'connections' => [
+            'default' => [
+                'driver' => 'http',
+                'host' => 'ch.internal',
+                'port' => 8123,
+                'database' => 'logs',
+            ],
+        ],
+    ],
+];
+```
+
+```php
+use Erikwang2013\ClickHouse\Yii3\ClickHouseConnection;
+
+class LogController
+{
+    public function __construct(private ClickHouseConnection $clickhouse) {}
+
+    public function index()
+    {
+        return $this->clickhouse->table('logs')->where('level', 'error')->get();
+    }
+}
+```
+
+Для нескольких соединений, пула или низкоуровневого клиента внедряйте `Erikwang2013\ClickHouse\Client\Manager` (он тоже зарегистрирован).
+
 ## Справочник по конструктору запросов
 
 | Метод | Описание |
@@ -499,7 +567,7 @@ $csv = $client->raw('SELECT * FROM logs FORMAT CSV');
 | `CLICKHOUSE_POOL_MAX` | 16 | Максимум соединений |
 | `CLICKHOUSE_POOL_TIMEOUT` | 5.0 | Таймаут получения соединения (сек) |
 
-В чистом PHP эти переменные читают `ClickHouse::bootstrap()` / `Manager::fromEnv()`; конфигурационные файлы всех четырёх фреймворков используют тот же набор имён переменных (включая `CLICKHOUSE_HTTPS`).
+В чистом PHP эти переменные читают `ClickHouse::bootstrap()` / `Manager::fromEnv()`; конфигурационные файлы всех шести фреймворков используют тот же набор имён переменных (включая `CLICKHOUSE_HTTPS`).
 
 ## Обработка исключений
 

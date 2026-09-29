@@ -1,6 +1,6 @@
 # clickhouse-php
 
-A PHP ClickHouse client. It talks to the ClickHouse HTTP interface (port 8123) by default and ships with a query builder, schema builder, migration system, and ORM, plus adapters for Laravel, ThinkPHP, Webman, and Hyperf.
+A PHP ClickHouse client. It talks to the ClickHouse HTTP interface (port 8123) by default and ships with a query builder, schema builder, migration system, and ORM, plus adapters for Laravel, ThinkPHP, Webman, Hyperf, Yii2, and Yii3.
 
 Clean layering: `Manager → ClientInterface → PoolInterface → TransportInterface`. Client flavour, connection pool, and transport protocol each sit behind an interface and can be swapped. The Native TCP protocol has its slot reserved in the transport layer but is not implemented yet.
 
@@ -54,7 +54,10 @@ clickhouse-php/
 │   ├── Laravel/                        # ServiceProvider · Facade · Artisan commands
 │   ├── ThinkPHP/                       # Service · Facade · command
 │   ├── Webman/                         # Service · installer
-│   └── Hyperf/                         # ConfigProvider · coroutine pool · command
+│   ├── Hyperf/                         # ConfigProvider · coroutine pool · command
+│   ├── Yii2/                           # application component · Bootstrap auto-registration
+│   └── Yii3/                           # convenience entry point (registered via config/)
+├── config/                             # Yii3 config-plugin: params.php / di.php
 ├── tests/                              # PHPUnit tests, mirrors src layout
 ├── docs/                               # design diagrams and docs
 └── composer.json
@@ -70,7 +73,7 @@ Six layers, each depending only on the abstract interface of the layer below:
 
 | Layer | Responsibility | Key types |
 |-------|----------------|-----------|
-| Entry | Facade and framework adapters | `ClickHouse`, four framework adapters |
+| Entry | Facade and framework adapters | `ClickHouse`, six framework adapters |
 | Builder | Assembles queries and DDL without IO | `Query\Builder`, `Schema\Builder`, `ORM\Model`, `Migration\Migrator` |
 | Client | Multi-connection management and execution entry | `Manager`, `HttpClient`, `PooledClient` |
 | Pool | Connection reuse and concurrency ceiling | `PoolInterface`, `AbstractPool`, `NoPool` |
@@ -377,6 +380,71 @@ class LogController
 }
 ```
 
+### Yii2
+
+One bootstrap line gives you a zero-config setup (reads `CLICKHOUSE_*` environment variables), for both web and console:
+
+```php
+// config/web.php, config/console.php
+'bootstrap' => ['Erikwang2013\ClickHouse\Yii2\Bootstrap'],
+```
+
+You can also register it as a regular application component with your own connection parameters:
+
+```php
+// config/web.php
+'components' => [
+    'clickhouse' => [
+        'class' => \Erikwang2013\ClickHouse\Yii2\ClickHouse::class,
+        'config' => require __DIR__ . '/clickhouse.php',   // Manager config array, see "Configuration Reference"
+    ],
+],
+```
+
+```php
+Yii::$app->clickhouse->table('logs')->where('level', 'error')->get();
+ClickHouse::table('logs')->get();   // static facade: available once the component is initialised
+```
+
+Both entry points share one Manager; leave `config` empty to read `CLICKHOUSE_*` environment variables.
+
+### Yii3
+
+The package ships `config/params.php` and `config/di.php`; with `yiisoft/config` installed they are merged automatically — nothing to register.
+
+```php
+// override connection params in your app's config/params.php
+return [
+    'erikwang2013/clickhouse-php' => [
+        'default' => 'default',
+        'connections' => [
+            'default' => [
+                'driver' => 'http',
+                'host' => 'ch.internal',
+                'port' => 8123,
+                'database' => 'logs',
+            ],
+        ],
+    ],
+];
+```
+
+```php
+use Erikwang2013\ClickHouse\Yii3\ClickHouseConnection;
+
+class LogController
+{
+    public function __construct(private ClickHouseConnection $clickhouse) {}
+
+    public function index()
+    {
+        return $this->clickhouse->table('logs')->where('level', 'error')->get();
+    }
+}
+```
+
+Inject `Erikwang2013\ClickHouse\Client\Manager` (also registered) for multiple connections, pooling, or the raw client.
+
 ## Query Builder Reference
 
 | Method | Description |
@@ -519,7 +587,7 @@ try {
 | `CLICKHOUSE_POOL_MAX` | 16 | Max connections |
 | `CLICKHOUSE_POOL_TIMEOUT` | 5.0 | Pool acquire timeout (seconds) |
 
-In plain PHP these are read by `ClickHouse::bootstrap()` / `Manager::fromEnv()`, and the four framework config files read the same set of variable names (including `CLICKHOUSE_HTTPS`).
+In plain PHP these are read by `ClickHouse::bootstrap()` / `Manager::fromEnv()`, and the six framework config files read the same set of variable names (including `CLICKHOUSE_HTTPS`).
 
 ## Support
 

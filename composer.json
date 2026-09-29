@@ -1,6 +1,6 @@
 {
     "name": "erikwang2013/clickhouse-php",
-    "description": "PHP ClickHouse client over HTTP with query builder, schema builder, migration system and ORM, plus Laravel, ThinkPHP, Webman and Hyperf adapters.",
+    "description": "PHP ClickHouse client over HTTP with query builder, schema builder, migration system and ORM, plus Laravel, ThinkPHP, Webman, Hyperf, Yii2 and Yii3 adapters.",
     "type": "library",
     "license": "MIT",
     "keywords": ["clickhouse", "database", "client", "php"],
@@ -23,7 +23,9 @@
         "laravel/framework": "For Laravel integration (^10.0|^11.0)",
         "topthink/framework": "For ThinkPHP integration (^8.0)",
         "workerman/workerman": "For Webman integration (^4.0)",
-        "hyperf/framework": "For Hyperf integration (^3.0)"
+        "hyperf/framework": "For Hyperf integration (^3.0)",
+        "yiisoft/yii2": "For Yii2 integration (^2.0)",
+        "yiisoft/config": "For Yii3 integration (^1.0)"
     },
     "autoload": {
         "psr-4": {
@@ -40,6 +42,13 @@
             "providers": [
                 "Erikwang2013\\ClickHouse\\Laravel\\ClickHouseServiceProvider"
             ]
+        },
+        "config-plugin-options": {
+            "source-directory": "config"
+        },
+        "config-plugin": {
+            "params": "params.php",
+            "di": "di.php"
         }
     },
     "scripts": {

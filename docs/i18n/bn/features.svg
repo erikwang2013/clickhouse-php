@@ -108,18 +108,19 @@
   <!-- কার্ড ৬: ফ্রেমওয়ার্ক ইন্টিগ্রেশন -->
   <rect class="card" x="600" y="368" width="260" height="252" rx="14"/>
   <text class="ct" x="618" y="398">ফ্রেমওয়ার্ক ইন্টিগ্রেশন</text>
-  <text class="cs ctr" x="810" y="398">৪টি অ্যাডাপ্টার</text>
+  <text class="cs ctr" x="810" y="398">৬টি অ্যাডাপ্টার</text>
   <rect x="618" y="408" width="48" height="4" rx="2" fill="#777BB4"/>
   <line class="hr" x1="600" y1="422" x2="860" y2="422"/>
   <g>
     <circle cx="624" cy="443" r="2.5" fill="#777BB4"/><text class="li" x="636" y="447">Laravel অটো-ডিসকভার + Facade + কমান্ড</text>
-    <circle cx="624" cy="464" r="2.5" fill="#777BB4"/><text class="li" x="636" y="468">ThinkPHP Service + think কমান্ড</text>
-    <circle cx="624" cy="485" r="2.5" fill="#777BB4"/><text class="li" x="636" y="489">Webman প্লাগইন কনফিগ অটো-লোড</text>
-    <circle cx="624" cy="506" r="2.5" fill="#777BB4"/><text class="li" x="636" y="510">Hyperf ConfigProvider + কোরুটিন পুল</text>
-    <circle cx="624" cy="527" r="2.5" fill="#777BB4"/><text class="li" x="636" y="531">ইউনিফায়েড কনফিগ connections / pool</text>
-    <circle cx="624" cy="548" r="2.5" fill="#777BB4"/><text class="li" x="636" y="552">CLICKHOUSE_* এনভি ভেরিয়েবল ওভাররাইড</text>
-    <circle cx="624" cy="569" r="2.5" fill="#777BB4"/><text class="li" x="636" y="573">ঐচ্ছিক PSR-3 কুয়েরি লগ</text>
-    <circle cx="624" cy="590" r="2.5" fill="#777BB4"/><text class="li" x="636" y="594">টেবিল লিস্ট / Migration কমান্ড টুল</text>
+    <circle cx="624" cy="462" r="2.5" fill="#777BB4"/><text class="li" x="636" y="466">ThinkPHP Service + think কমান্ড</text>
+    <circle cx="624" cy="481" r="2.5" fill="#777BB4"/><text class="li" x="636" y="485">Webman প্লাগইন কনফিগ অটো-লোড</text>
+    <circle cx="624" cy="500" r="2.5" fill="#777BB4"/><text class="li" x="636" y="504">Hyperf ConfigProvider + কোরুটিন পুল</text>
+    <circle cx="624" cy="519" r="2.5" fill="#777BB4"/><text class="li" x="636" y="523">Yii2 কম্পোনেন্ট · Yii3 DI কনফিগ</text>
+    <circle cx="624" cy="538" r="2.5" fill="#777BB4"/><text class="li" x="636" y="542">ইউনিফায়েড কনফিগ connections / pool</text>
+    <circle cx="624" cy="557" r="2.5" fill="#777BB4"/><text class="li" x="636" y="561">CLICKHOUSE_* এনভি ভেরিয়েবল ওভাররাইড</text>
+    <circle cx="624" cy="576" r="2.5" fill="#777BB4"/><text class="li" x="636" y="580">ঐচ্ছিক PSR-3 কুয়েরি লগ</text>
+    <circle cx="624" cy="595" r="2.5" fill="#777BB4"/><text class="li" x="636" y="599">টেবিল লিস্ট / Migration কমান্ড টুল</text>
   </g>
 
   <!-- সিকিউরিটি ও Exception -->

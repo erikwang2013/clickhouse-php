@@ -1,6 +1,6 @@
 # clickhouse-php
 
-PHP ClickHouse 客户端。默认通过 ClickHouse HTTP 接口（8123 端口）通信，内置查询构建器、Schema Builder、迁移系统与 ORM，并适配 Laravel、ThinkPHP、Webman、Hyperf。
+PHP ClickHouse 客户端。默认通过 ClickHouse HTTP 接口（8123 端口）通信，内置查询构建器、Schema Builder、迁移系统与 ORM，并适配 Laravel、ThinkPHP、Webman、Hyperf、Yii2、Yii3。
 
 分层解耦：`Manager → ClientInterface → PoolInterface → TransportInterface`，客户端形态、连接池、传输协议各自面向接口，均可替换。Native TCP 协议已在传输层预留位置，尚未实现。
 
@@ -54,7 +54,10 @@ clickhouse-php/
 │   ├── Laravel/                        # ServiceProvider · Facade · Artisan 命令
 │   ├── ThinkPHP/                       # Service · Facade · 命令
 │   ├── Webman/                         # Service · 安装脚本
-│   └── Hyperf/                         # ConfigProvider · 协程连接池 · 命令
+│   ├── Hyperf/                         # ConfigProvider · 协程连接池 · 命令
+│   ├── Yii2/                           # 应用组件 · Bootstrap 自动注册
+│   └── Yii3/                           # 便捷入口（由根目录 config/ 注册进 DI）
+├── config/                             # Yii3 config-plugin：params.php / di.php
 ├── tests/                              # PHPUnit 测试，目录与 src 同构
 ├── docs/                               # 设计图与文档
 └── composer.json
@@ -70,7 +73,7 @@ clickhouse-php/
 
 | 层 | 职责 | 关键类型 |
 |----|------|----------|
-| 入口层 | 门面与框架适配 | `ClickHouse`、四套框架适配器 |
+| 入口层 | 门面与框架适配 | `ClickHouse`、六套框架适配器 |
 | 构建层 | 拼装查询与 DDL，不产生 IO | `Query\Builder`、`Schema\Builder`、`ORM\Model`、`Migration\Migrator` |
 | 客户端层 | 多连接管理与执行入口 | `Manager`、`HttpClient`、`PooledClient` |
 | 连接池层 | 连接复用与并发上限 | `PoolInterface`、`AbstractPool`、`NoPool` |
@@ -382,6 +385,71 @@ class LogController
 }
 ```
 
+### Yii2
+
+加一行 bootstrap 就零配置接入（走 `CLICKHOUSE_*` 环境变量），web 与 console 都生效：
+
+```php
+// config/web.php、config/console.php
+'bootstrap' => ['Erikwang2013\ClickHouse\Yii2\Bootstrap'],
+```
+
+也可以照常注册成应用组件，自己给连接参数：
+
+```php
+// config/web.php
+'components' => [
+    'clickhouse' => [
+        'class' => \Erikwang2013\ClickHouse\Yii2\ClickHouse::class,
+        'config' => require __DIR__ . '/clickhouse.php',   // Manager 配置数组，见「配置参考」
+    ],
+],
+```
+
+```php
+Yii::$app->clickhouse->table('logs')->where('level', 'error')->get();
+ClickHouse::table('logs')->get();   // 静态门面：组件初始化后同样可用
+```
+
+两种入口共用同一个 Manager；`config` 留空则读 `CLICKHOUSE_*` 环境变量。
+
+### Yii3
+
+包自带 `config/params.php` 与 `config/di.php`，装了 `yiisoft/config` 就自动合并，不用注册。
+
+```php
+// 应用侧 config/params.php 覆盖连接参数
+return [
+    'erikwang2013/clickhouse-php' => [
+        'default' => 'default',
+        'connections' => [
+            'default' => [
+                'driver' => 'http',
+                'host' => 'ch.internal',
+                'port' => 8123,
+                'database' => 'logs',
+            ],
+        ],
+    ],
+];
+```
+
+```php
+use Erikwang2013\ClickHouse\Yii3\ClickHouseConnection;
+
+class LogController
+{
+    public function __construct(private ClickHouseConnection $clickhouse) {}
+
+    public function index()
+    {
+        return $this->clickhouse->table('logs')->where('level', 'error')->get();
+    }
+}
+```
+
+需要多连接、连接池或底层客户端时，注入 `Erikwang2013\ClickHouse\Client\Manager`（同样已注册）。
+
 ## 查询构建器参考
 
 | 方法 | 说明 |
@@ -499,7 +567,7 @@ $csv = $client->raw('SELECT * FROM logs FORMAT CSV');
 | `CLICKHOUSE_POOL_MAX` | 16 | 最大连接数 |
 | `CLICKHOUSE_POOL_TIMEOUT` | 5.0 | 取连接超时(秒) |
 
-以上变量在原生 PHP 下由 `ClickHouse::bootstrap()` / `Manager::fromEnv()` 读取，四个框架的配置文件读的是同一套变量名（含 `CLICKHOUSE_HTTPS`）。
+以上变量在原生 PHP 下由 `ClickHouse::bootstrap()` / `Manager::fromEnv()` 读取，六个框架的配置文件读的是同一套变量名（含 `CLICKHOUSE_HTTPS`）。
 
 ## 异常处理
 

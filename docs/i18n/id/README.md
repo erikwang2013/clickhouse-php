@@ -1,6 +1,6 @@
 # clickhouse-php
 
-Klien ClickHouse untuk PHP. Secara default berkomunikasi melalui antarmuka ClickHouse HTTP (port 8123), dilengkapi query builder, Schema Builder, sistem migrasi, dan ORM bawaan, serta mendukung Laravel, ThinkPHP, Webman, dan Hyperf.
+Klien ClickHouse untuk PHP. Secara default berkomunikasi melalui antarmuka ClickHouse HTTP (port 8123), dilengkapi query builder, Schema Builder, sistem migrasi, dan ORM bawaan, serta mendukung Laravel, ThinkPHP, Webman, Hyperf, Yii2, dan Yii3.
 
 Dekopel berlapis: `Manager → ClientInterface → PoolInterface → TransportInterface`, di mana bentuk klien, connection pool, dan protokol transport masing-masing menghadap antarmuka sehingga dapat diganti. Protokol Native TCP sudah disediakan tempatnya di lapisan transport, namun belum diimplementasikan.
 
@@ -54,7 +54,10 @@ clickhouse-php/
 │   ├── Laravel/                        # ServiceProvider · Facade · perintah Artisan
 │   ├── ThinkPHP/                       # Service · Facade · perintah
 │   ├── Webman/                         # Service · skrip instalasi
-│   └── Hyperf/                         # ConfigProvider · connection pool korutin · perintah
+│   ├── Hyperf/                         # ConfigProvider · connection pool korutin · perintah
+│   ├── Yii2/                           # Komponen aplikasi · pendaftaran otomatis Bootstrap
+│   └── Yii3/                           # Pintu masuk praktis (didaftarkan ke DI oleh config/ di root)
+├── config/                             # Yii3 config-plugin: params.php / di.php
 ├── tests/                              # Tes PHPUnit, struktur direktori sama dengan src
 ├── docs/                               # Diagram desain dan dokumentasi
 └── composer.json
@@ -70,7 +73,7 @@ Terbagi menjadi enam lapisan dari atas ke bawah, setiap lapisan hanya bergantung
 
 | Lapisan | Tanggung jawab | Tipe kunci |
 |----|------|----------|
-| Lapisan entri | Facade dan adaptasi framework | `ClickHouse`, empat adaptor framework |
+| Lapisan entri | Facade dan adaptasi framework | `ClickHouse`, enam adaptor framework |
 | Lapisan konstruksi | Menyusun query dan DDL, tanpa IO | `Query\Builder`, `Schema\Builder`, `ORM\Model`, `Migration\Migrator` |
 | Lapisan klien | Manajemen multi-koneksi dan pintu masuk eksekusi | `Manager`, `HttpClient`, `PooledClient` |
 | Lapisan pool | Pemakaian ulang koneksi dan batas konkurensi | `PoolInterface`, `AbstractPool`, `NoPool` |
@@ -382,6 +385,71 @@ class LogController
 }
 ```
 
+### Yii2
+
+Cukup menambahkan satu baris bootstrap untuk integrasi tanpa konfigurasi (memakai variabel lingkungan `CLICKHOUSE_*`), berlaku baik untuk web maupun console:
+
+```php
+// config/web.php, config/console.php
+'bootstrap' => ['Erikwang2013\ClickHouse\Yii2\Bootstrap'],
+```
+
+Anda juga bisa mendaftarkannya seperti biasa sebagai komponen aplikasi dan menentukan sendiri parameter koneksinya:
+
+```php
+// config/web.php
+'components' => [
+    'clickhouse' => [
+        'class' => \Erikwang2013\ClickHouse\Yii2\ClickHouse::class,
+        'config' => require __DIR__ . '/clickhouse.php',   // Array konfigurasi Manager, lihat Referensi Konfigurasi
+    ],
+],
+```
+
+```php
+Yii::$app->clickhouse->table('logs')->where('level', 'error')->get();
+ClickHouse::table('logs')->get();   // Facade statis: tetap bisa dipakai setelah komponen diinisialisasi
+```
+
+Kedua pintu masuk memakai Manager yang sama; jika `config` dikosongkan, variabel lingkungan `CLICKHOUSE_*` yang dibaca.
+
+### Yii3
+
+Paket ini sudah menyertakan `config/params.php` dan `config/di.php`; bila `yiisoft/config` terpasang, keduanya digabung secara otomatis sehingga tidak perlu registrasi.
+
+```php
+// Timpa parameter koneksi di config/params.php sisi aplikasi
+return [
+    'erikwang2013/clickhouse-php' => [
+        'default' => 'default',
+        'connections' => [
+            'default' => [
+                'driver' => 'http',
+                'host' => 'ch.internal',
+                'port' => 8123,
+                'database' => 'logs',
+            ],
+        ],
+    ],
+];
+```
+
+```php
+use Erikwang2013\ClickHouse\Yii3\ClickHouseConnection;
+
+class LogController
+{
+    public function __construct(private ClickHouseConnection $clickhouse) {}
+
+    public function index()
+    {
+        return $this->clickhouse->table('logs')->where('level', 'error')->get();
+    }
+}
+```
+
+Bila butuh multi-koneksi, connection pool, atau klien tingkat rendah, suntikkan `Erikwang2013\ClickHouse\Client\Manager` (juga sudah terdaftar).
+
 ## Referensi Query Builder
 
 | Metode | Keterangan |
@@ -499,7 +567,7 @@ Tentang connection pool: konfigurasi `pool` hanya berlaku bila **tersedia kanal 
 | `CLICKHOUSE_POOL_MAX` | 16 | Jumlah koneksi maksimum |
 | `CLICKHOUSE_POOL_TIMEOUT` | 5.0 | Timeout pengambilan koneksi (detik) |
 
-Di PHP native variabel-variabel di atas dibaca oleh `ClickHouse::bootstrap()` / `Manager::fromEnv()`; berkas konfigurasi keempat framework membaca kumpulan nama variabel yang sama (termasuk `CLICKHOUSE_HTTPS`).
+Di PHP native variabel-variabel di atas dibaca oleh `ClickHouse::bootstrap()` / `Manager::fromEnv()`; berkas konfigurasi keenam framework membaca kumpulan nama variabel yang sama (termasuk `CLICKHOUSE_HTTPS`).
 
 ## Penanganan Exception
 

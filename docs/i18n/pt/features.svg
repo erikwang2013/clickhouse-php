@@ -108,18 +108,19 @@
   <!-- Card 6: Integração -->
   <rect class="card" x="600" y="368" width="260" height="252" rx="14"/>
   <text class="ct" x="618" y="398">Integração</text>
-  <text class="cs ctr" x="810" y="398">4 adaptadores</text>
+  <text class="cs ctr" x="810" y="398">6 adaptadores</text>
   <rect x="618" y="408" width="48" height="4" rx="2" fill="#777BB4"/>
   <line class="hr" x1="600" y1="422" x2="860" y2="422"/>
   <g>
     <circle cx="624" cy="443" r="2.5" fill="#777BB4"/><text class="li" x="636" y="447">Laravel auto-discovery + Facade + CLI</text>
-    <circle cx="624" cy="464" r="2.5" fill="#777BB4"/><text class="li" x="636" y="468">ThinkPHP: registro de Service + CLI</text>
-    <circle cx="624" cy="485" r="2.5" fill="#777BB4"/><text class="li" x="636" y="489">Webman: config do plugin automática</text>
-    <circle cx="624" cy="506" r="2.5" fill="#777BB4"/><text class="li" x="636" y="510">Hyperf ConfigProvider + corrotinas</text>
-    <circle cx="624" cy="527" r="2.5" fill="#777BB4"/><text class="li" x="636" y="531">config unificada connections / pool</text>
-    <circle cx="624" cy="548" r="2.5" fill="#777BB4"/><text class="li" x="636" y="552">env CLICKHOUSE_* sobrescreve padrões</text>
-    <circle cx="624" cy="569" r="2.5" fill="#777BB4"/><text class="li" x="636" y="573">log de query PSR-3 opcional</text>
-    <circle cx="624" cy="590" r="2.5" fill="#777BB4"/><text class="li" x="636" y="594">CLI de tabelas e migrações</text>
+    <circle cx="624" cy="462" r="2.5" fill="#777BB4"/><text class="li" x="636" y="466">ThinkPHP: registro de Service + CLI</text>
+    <circle cx="624" cy="481" r="2.5" fill="#777BB4"/><text class="li" x="636" y="485">Webman: config do plugin automática</text>
+    <circle cx="624" cy="500" r="2.5" fill="#777BB4"/><text class="li" x="636" y="504">Hyperf ConfigProvider + corrotinas</text>
+    <circle cx="624" cy="519" r="2.5" fill="#777BB4"/><text class="li" x="636" y="523">Yii2 componente · Yii3 config DI</text>
+    <circle cx="624" cy="538" r="2.5" fill="#777BB4"/><text class="li" x="636" y="542">config unificada connections / pool</text>
+    <circle cx="624" cy="557" r="2.5" fill="#777BB4"/><text class="li" x="636" y="561">env CLICKHOUSE_* sobrescreve padrões</text>
+    <circle cx="624" cy="576" r="2.5" fill="#777BB4"/><text class="li" x="636" y="580">log de query PSR-3 opcional</text>
+    <circle cx="624" cy="595" r="2.5" fill="#777BB4"/><text class="li" x="636" y="599">CLI de tabelas e migrações</text>
   </g>
 
   <!-- Segurança e exceções -->
