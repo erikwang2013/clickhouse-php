@@ -28,10 +28,26 @@ class ClickHouse extends Command
         }
         $output->writeln('');
 
-        $tables = ClickHouseClient::schema()->getTables();
-        $output->writeln('<info>ClickHouse Tables:</info>');
-        foreach ($tables as $table) {
-            $output->writeln('  ' . ($table['name'] ?? $table));
+        try {
+            $tables = ClickHouseClient::schema()->getTables();
+            $output->writeln('<info>ClickHouse Tables:</info>');
+            foreach ($tables as $table) {
+                $output->writeln('  ' . ($table['name'] ?? $table));
+            }
+        } catch (\Throwable $e) {
+            $output->writeln('');
+            $this->printPetFace($output, Pet::CRY);
+            throw $e;
+        }
+
+        $output->writeln('');
+        $this->printPetFace($output, Pet::CUTE);
+    }
+
+    private function printPetFace(Output $output, string $form): void
+    {
+        foreach (Pet::face($form) as $line) {
+            $output->writeln($line);
         }
     }
 }

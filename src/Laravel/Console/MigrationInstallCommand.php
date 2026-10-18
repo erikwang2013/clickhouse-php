@@ -24,13 +24,29 @@ class MigrationInstallCommand extends Command
         }
         $this->newLine();
 
-        $config = config('clickhouse.migrations');
-        $repository = new Repository(
-            ClickHouse::getManager()->connection(),
-            $config['table'] ?? 'clickhouse_migrations',
-        );
-        $repository->createRepository();
+        try {
+            $config = config('clickhouse.migrations');
+            $repository = new Repository(
+                ClickHouse::getManager()->connection(),
+                $config['table'] ?? 'clickhouse_migrations',
+            );
+            $repository->createRepository();
+        } catch (\Throwable $e) {
+            $this->newLine();
+            $this->printPetFace(Pet::CRY);
+            throw $e;
+        }
+
         $this->info('ClickHouse migration table created successfully.');
+        $this->newLine();
+        $this->printPetFace(Pet::JOY);
         return 0;
+    }
+
+    private function printPetFace(string $form): void
+    {
+        foreach (Pet::face($form) as $line) {
+            $this->line($line);
+        }
     }
 }

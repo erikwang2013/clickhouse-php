@@ -31,10 +31,26 @@ class ClickHouseCommand extends Command
         }
         $this->newLine();
 
-        $tables = $this->clickhouse->connection()->select('SHOW TABLES');
-        $this->info('ClickHouse Tables:');
-        foreach ($tables as $table) {
-            $this->line('  ' . ($table['name'] ?? reset($table)));
+        try {
+            $tables = $this->clickhouse->connection()->select('SHOW TABLES');
+            $this->info('ClickHouse Tables:');
+            foreach ($tables as $table) {
+                $this->line('  ' . ($table['name'] ?? reset($table)));
+            }
+        } catch (\Throwable $e) {
+            $this->newLine();
+            $this->printPetFace(Pet::CRY);
+            throw $e;
+        }
+
+        $this->newLine();
+        $this->printPetFace(Pet::CUTE);
+    }
+
+    private function printPetFace(string $form): void
+    {
+        foreach (Pet::face($form) as $line) {
+            $this->line($line);
         }
     }
 }

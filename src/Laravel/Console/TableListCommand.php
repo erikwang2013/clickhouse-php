@@ -23,9 +23,25 @@ class TableListCommand extends Command
         }
         $this->newLine();
 
-        $database = $this->argument('database') ?? 'default';
-        $tables = ClickHouse::schema()->getTables($database);
-        $this->table(['Table'], array_map(fn($t) => [$t['name'] ?? $t], $tables));
+        try {
+            $database = $this->argument('database') ?? 'default';
+            $tables = ClickHouse::schema()->getTables($database);
+            $this->table(['Table'], array_map(fn($t) => [$t['name'] ?? $t], $tables));
+        } catch (\Throwable $e) {
+            $this->newLine();
+            $this->printPetFace(Pet::CRY);
+            throw $e;
+        }
+
+        $this->newLine();
+        $this->printPetFace(Pet::CUTE);
         return 0;
+    }
+
+    private function printPetFace(string $form): void
+    {
+        foreach (Pet::face($form) as $line) {
+            $this->line($line);
+        }
     }
 }

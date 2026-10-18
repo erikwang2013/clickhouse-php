@@ -610,6 +610,18 @@ MIT License.  Copyright (c) 2026 erik [erik@erik.xyz](mailto:erik@erik.xyz) — 
 | `:emoji-coquettish:` | `:emoji-cute:` | `:emoji-pleasing:` | `:emoji-knocking:` | `:emoji-facepalm:` | `:emoji-tongue:` |
 
 > 12 种彩色动态形态：笑 / 欢乐 / 哭 / 沮丧 / 惊恐 / 愤怒 / 撒娇 / 卖萌 / 讨好 / 敲打 / 捂脸 / 吐舌头。每个 SVG 自带表情、情绪特效与整体动效，并遵循 `prefers-reduced-motion`。
+
+### 代码中调用
+
+```php
+use Erikwang2013\ClickHouse\Support\Pet;
+
+Pet::forms();          // 12 个形态名
+Pet::svg('smile');     // 返回 SVG 字符串
+Pet::path('smile');    // SVG 绝对路径
+Pet::lines('smile');   // 终端完整横幅
+Pet::face('smile');    // 终端紧凑表情
+```
 <!-- pet-expressions:end -->
 
 <!-- assets-license:start -->
