@@ -15,6 +15,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Psr7\Utils;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 
@@ -214,6 +215,42 @@ class HttpTransportTest extends TestCase
         $this->assertSame("1\n", $transport->send('SELECT 1 FORMAT CSV'));
     }
 
+    public function testSendStreamParsesJsonLines(): void
+    {
+        $client = Mockery::mock(Client::class);
+        $client->shouldReceive('post')->once()
+            ->with('', ['body' => 'SELECT * FROM t FORMAT JSONEachRow', 'stream' => true])
+            ->andReturn(new Response(200, [], Utils::streamFor("{\"id\":1}\n{\"id\":2}\n{\"id\":3}")));
+
+        $transport = $this->makeTransport();
+        $this->injectClient($transport, $client);
+
+        $rows = iterator_to_array($transport->sendStream('SELECT * FROM t'), false);
+
+        $this->assertSame([['id' => 1], ['id' => 2], ['id' => 3]], $rows);
+    }
+
+    public function testSendStreamHandlesMultipleChunks(): void
+    {
+        $lines = [];
+        for ($i = 1; $i <= 10000; $i++) {
+            $lines[] = '{"id":' . $i . '}';
+        }
+
+        $client = Mockery::mock(Client::class);
+        $client->shouldReceive('post')->once()
+            ->andReturn(new Response(200, [], Utils::streamFor(implode("\n", $lines) . "\n")));
+
+        $transport = $this->makeTransport();
+        $this->injectClient($transport, $client);
+
+        $rows = iterator_to_array($transport->sendStream('SELECT * FROM t'), false);
+
+        $this->assertCount(10000, $rows);
+        $this->assertSame(['id' => 1], $rows[0]);
+        $this->assertSame(['id' => 10000], $rows[9999]);
+    }
+
     // ---- 绑定 ----
 
     public function testBindParamsIgnoresPlaceholderInsideQuotedIdentifier(): void
@@ -229,6 +266,34 @@ class HttpTransportTest extends TestCase
         $this->assertSame(
             'SELECT "a?b" FROM t WHERE x = 1',
             $ref->invoke($transport, 'SELECT "a?b" FROM t WHERE x = ?', [1])
+        );
+    }
+
+    public function testBindParamsIgnoresPlaceholdersInsideLineComments(): void
+    {
+        $transport = $this->makeTransport();
+
+        $ref = new \ReflectionMethod($transport, 'bindParams');
+
+        $sql = "SELECT * FROM t -- was it ?\nWHERE id = ?";
+
+        $this->assertSame(
+            "SELECT * FROM t -- was it ?\nWHERE id = 7",
+            $ref->invoke($transport, $sql, [7])
+        );
+    }
+
+    public function testBindParamsIgnoresPlaceholdersInsideBlockComments(): void
+    {
+        $transport = $this->makeTransport();
+
+        $ref = new \ReflectionMethod($transport, 'bindParams');
+
+        $sql = 'SELECT /* was it ? */ * FROM t WHERE id = ?';
+
+        $this->assertSame(
+            'SELECT /* was it ? */ * FROM t WHERE id = 7',
+            $ref->invoke($transport, $sql, [7])
         );
     }
 

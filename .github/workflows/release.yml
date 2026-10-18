@@ -19,15 +19,36 @@ jobs:
         id: version
         run: |
           PREV=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
-          SUBJECT=$(git log -1 --pretty=%s)
+          if [ -n "$PREV" ]; then
+            RANGE="$PREV..HEAD"
+          else
+            RANGE="HEAD"
+          fi
 
-          # 按提交信息判定升级级别：破坏性变更 major、新功能 minor、其余 patch
-          # （中英文标记都认，因为本仓库的提交信息以中文为主）
-          case "$SUBJECT" in
-            *BREAKING*|*破坏性*|*!:*|*!：*) BUMP=major ;;
-            feat*|feature*|*新增*|*特性*) BUMP=minor ;;
-            *) BUMP=patch ;;
-          esac
+          # 扫描上一个 tag 以来的所有提交，取最高升级级别。
+          # 约定式前缀优先：docs: 新增… 仍算 patch，不会被中文“新增”误判成 minor。
+          BUMP=patch
+          while IFS= read -r SUBJECT; do
+            case "$SUBJECT" in
+              *BREAKING*|*破坏性*|*!:*|*!：*)
+                BUMP=major
+                break
+                ;;
+              feat*|feature*)
+                if [ "$BUMP" = "patch" ]; then
+                  BUMP=minor
+                fi
+                ;;
+              fix*|docs*|chore*|ci*|test*|refactor*|perf*|build*|style*)
+                :
+                ;;
+              *新增*|*特性*)
+                if [ "$BUMP" = "patch" ]; then
+                  BUMP=minor
+                fi
+                ;;
+            esac
+          done <<< "$(git log --pretty=%s "$RANGE")"
 
           if [ -z "$PREV" ]; then
             NEXT="v0.1.0"
@@ -43,7 +64,7 @@ jobs:
             NEXT="v$MAJOR.$MINOR.$PATCH"
           fi
 
-          echo "prev=$PREV  subject=$SUBJECT  bump=$BUMP  next=$NEXT"
+          echo "prev=$PREV  bump=$BUMP  next=$NEXT"
           echo "next=$NEXT" >> "$GITHUB_OUTPUT"
           echo "prev=$PREV" >> "$GITHUB_OUTPUT"
 

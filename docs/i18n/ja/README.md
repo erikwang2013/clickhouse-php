@@ -47,7 +47,7 @@ clickhouse-php/
 │   │   ├── TransportInterface.php      # send / close
 │   │   ├── HttpTransport.php           # Guzzle HTTP、パラメータバインドと FORMAT JSON
 │   │   └── TcpTransport.php            # Native TCP（計画中）
-│   ├── Support/                        # Config / Quoter / Arr
+│   ├── Support/                        # Config / Quoter / Arr / Pet
 │   ├── Exceptions/                     # 例外体系（基底 1 つ + サブ 4 つ）
 │   ├── Laravel/                        # ServiceProvider · Facade · Artisan コマンド
 │   ├── ThinkPHP/                       # Service · Facade · コマンド

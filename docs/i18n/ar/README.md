@@ -47,7 +47,7 @@ clickhouse-php/
 │   │   ├── TransportInterface.php      # send / close
 │   │   ├── HttpTransport.php           # Guzzle HTTP، ربط المعاملات وFORMAT JSON
 │   │   └── TcpTransport.php            # Native TCP (قيد التخطيط)
-│   ├── Support/                        # Config / Quoter / Arr
+│   ├── Support/                        # Config / Quoter / Arr / Pet
 │   ├── Exceptions/                     # منظومة الاستثناءات (صنف أساسي واحد + 4 أصناف فرعية)
 │   ├── Laravel/                        # ServiceProvider · Facade · أوامر Artisan
 │   ├── ThinkPHP/                       # Service · Facade · أوامر

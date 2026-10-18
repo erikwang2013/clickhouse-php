@@ -47,7 +47,7 @@ clickhouse-php/
 │   │   ├── TransportInterface.php      # send / close
 │   │   ├── HttpTransport.php           # Guzzle HTTP, parameter binding, FORMAT JSON
 │   │   └── TcpTransport.php            # Native TCP (planned)
-│   ├── Support/                        # Config / Quoter / Arr
+│   ├── Support/                        # Config / Quoter / Arr / Pet
 │   ├── Exceptions/                     # exception hierarchy (1 base + 4 subclasses)
 │   ├── Laravel/                        # ServiceProvider · Facade · Artisan commands
 │   ├── ThinkPHP/                       # Service · Facade · command
@@ -588,6 +588,20 @@ In plain PHP these are read by `ClickHouse::bootstrap()` / `Manager::fromEnv()`,
 | ![WeChat Pay](docs/weixinpay.png) | ![Alipay](docs/alipay.png) |
 
 Thank you for your support!
+
+## Project pet
+
+The package ships a hamster mascot with 12 expression forms. The console commands use them, and they are also available from code:
+
+```php
+use Erikwang2013\ClickHouse\Support\Pet;
+
+Pet::forms();          // all 12 form names
+Pet::svg('smile');     // SVG markup
+Pet::path('smile');    // absolute SVG path
+Pet::lines('smile');   // full terminal banner
+Pet::face('smile');    // compact terminal face
+```
 
 ## License
 

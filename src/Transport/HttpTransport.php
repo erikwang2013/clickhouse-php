@@ -69,10 +69,12 @@ class HttpTransport implements TransportInterface, StreamingTransportInterface
         while (!$body->eof()) {
             $buffer .= $body->read(self::STREAM_CHUNK);
 
-            while (($pos = strpos($buffer, "\n")) !== false) {
-                $line = substr($buffer, 0, $pos);
-                $buffer = substr($buffer, $pos + 1);
+            // explode + array_pop 每块只复制一次缓冲区；逐行 substr 在大量小行时
+            // 会反复复制剩余内容，是流式读取大结果集的主要开销。
+            $lines = explode("\n", $buffer);
+            $buffer = array_pop($lines);
 
+            foreach ($lines as $line) {
                 if ($line !== '') {
                     yield json_decode($line, true);
                 }
@@ -299,6 +301,29 @@ class HttpTransport implements TransportInterface, StreamingTransportInterface
                         $quote = null;
                     }
                 }
+                continue;
+            }
+
+            // 跳过 SQL 注释，避免把注释里的 ? 当成占位符
+            if ($char === '-' && $i + 1 < $length && $sql[$i + 1] === '-') {
+                $end = strpos($sql, "\n", $i + 2);
+                if ($end === false) {
+                    $result .= substr($sql, $i);
+                    break;
+                }
+                $result .= substr($sql, $i, $end - $i + 1);
+                $i = $end;
+                continue;
+            }
+
+            if ($char === '/' && $i + 1 < $length && $sql[$i + 1] === '*') {
+                $end = strpos($sql, '*/', $i + 2);
+                if ($end === false) {
+                    $result .= substr($sql, $i);
+                    break;
+                }
+                $result .= substr($sql, $i, $end - $i + 2);
+                $i = $end + 1;
                 continue;
             }
 

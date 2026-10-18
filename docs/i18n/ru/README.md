@@ -47,7 +47,7 @@ clickhouse-php/
 │   │   ├── TransportInterface.php      # send / close
 │   │   ├── HttpTransport.php           # Guzzle HTTP, привязка параметров и FORMAT JSON
 │   │   └── TcpTransport.php            # Native TCP (в планах)
-│   ├── Support/                        # Config / Quoter / Arr
+│   ├── Support/                        # Config / Quoter / Arr / Pet
 │   ├── Exceptions/                     # Иерархия исключений (1 базовый + 4 дочерних)
 │   ├── Laravel/                        # ServiceProvider · Facade · команды Artisan
 │   ├── ThinkPHP/                       # Service · Facade · команды

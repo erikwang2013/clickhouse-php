@@ -47,7 +47,7 @@ clickhouse-php/
 │   │   ├── TransportInterface.php      # send / close
 │   │   ├── HttpTransport.php           # Guzzle HTTP, প্যারামিটার বাইন্ডিং ও FORMAT JSON
 │   │   └── TcpTransport.php            # Native TCP (পরিকল্পিত)
-│   ├── Support/                        # Config / Quoter / Arr
+│   ├── Support/                        # Config / Quoter / Arr / Pet
 │   ├── Exceptions/                     # Exception সিস্টেম (১টি বেস ক্লাস + ৪টি সাবক্লাস)
 │   ├── Laravel/                        # ServiceProvider · Facade · Artisan কমান্ড
 │   ├── ThinkPHP/                       # Service · Facade · কমান্ড

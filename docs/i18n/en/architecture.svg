@@ -146,7 +146,7 @@
   <text class="ls" x="72" y="686">Support</text>
   <rect class="bx" x="216" y="644" width="200" height="52" rx="10"/>
   <text class="n ctr" x="316" y="667">Support utils</text>
-  <text class="d ctr" x="316" y="684">Config · Quoter · Arr</text>
+  <text class="d ctr" x="316" y="684">Config · Quoter · Arr · Pet</text>
   <rect class="bx" x="446" y="644" width="200" height="52" rx="10"/>
   <text class="n ctr" x="546" y="667">Exceptions</text>
   <text class="d ctr" x="546" y="684">ClickHouse / Connection / Query</text>

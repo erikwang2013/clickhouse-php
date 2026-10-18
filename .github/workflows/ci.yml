@@ -33,11 +33,9 @@ jobs:
       # phpunit.xml is PHPUnit-10 format, which phpunit 9.6 (the version
       # composer resolves on PHP 8.0) cannot parse, so 8.0 gets syntax and
       # smoke checks instead of the full suite.
-      # --ignore-platform-req=php: composer.json currently declares php >=8.1;
-      # harmless no-op once the constraint is relaxed to >=8.0.
       - name: Install runtime dependencies (PHP 8.0)
         if: ${{ matrix.php == '8.0' }}
-        run: composer install --no-interaction --prefer-dist --no-dev --ignore-platform-req=php
+        run: composer install --no-interaction --prefer-dist --no-dev
 
       - name: Syntax check (PHP 8.0)
         if: ${{ matrix.php == '8.0' }}
@@ -87,9 +85,14 @@ jobs:
           new NoPool(static fn () => $client);
           new Result([['id' => 1]]);
 
-          // 原生 PHP 入口与命令行横幅使用的 API
+          // 原生 PHP 入口、命令行横幅与宠物 API
           Manager::fromEnv();
           Pet::lines();
+          Pet::forms();
+          Pet::lines(Pet::JOY);
+          Pet::face(Pet::CUTE);
+          Pet::svg(Pet::SMILE);
+          Pet::path(Pet::SMILE);
 
           echo "OK\n";
           PHP
