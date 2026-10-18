@@ -6,9 +6,7 @@ Desacoplamiento por capas: `Manager → ClientInterface → PoolInterface → Tr
 
 [简体中文](../../../README.md) | [English](../../../README_EN.md) | [한국어](../ko/README.md) | [Русский](../ru/README.md) | [Deutsch](../de/README.md) | [Français](../fr/README.md) | **Español** | [Português](../pt/README.md) | [हिन्दी](../hi/README.md) | [العربية](../ar/README.md) | [বাংলা](../bn/README.md) | [Bahasa Indonesia](../id/README.md) | [日本語](../ja/README.md)
 
-<p align="center">
-  <img src="../../pet.svg" width="160" alt="Mascota del proyecto clickhouse-php: una casita con trompa de elefante">
-</p>
+![Mascota del proyecto clickhouse-php: un hámster de dibujos animados con bufanda morada](../../pet.svg)
 
 ## Estructura del proyecto
 
@@ -65,9 +63,7 @@ clickhouse-php/
 
 ## Diseño de arquitectura
 
-<p align="center">
-  <img src="architecture.svg" width="880" alt="Diseño de arquitectura de clickhouse-php: capa de entrada, capa de construcción, capa de cliente, capa de pool de conexiones, capa de transporte, capa de soporte">
-</p>
+![Diseño de arquitectura de clickhouse-php: capa de entrada, capa de construcción, capa de cliente, capa de pool de conexiones, capa de transporte, capa de soporte](architecture.svg)
 
 Se divide de arriba abajo en seis capas, y cada capa solo depende de la interfaz abstracta de la capa inferior:
 
@@ -82,15 +78,11 @@ Se divide de arriba abajo en seis capas, y cada capa solo depende de la interfaz
 
 ## Diseño de funcionalidades
 
-<p align="center">
-  <img src="features.svg" width="880" alt="Diseño de funcionalidades de clickhouse-php: query builder, Schema Builder, sistema de migraciones, ORM, connection pool, integración con frameworks">
-</p>
+![Diseño de funcionalidades de clickhouse-php: query builder, Schema Builder, sistema de migraciones, ORM, connection pool, integración con frameworks](features.svg)
 
 ## Ciclo de vida
 
-<p align="center">
-  <img src="lifecycle.svg" width="880" alt="Ciclo de vida de clickhouse-php: los nueve pasos de una consulta, las ramas de excepción y el ciclo de vida de las migraciones">
-</p>
+![Ciclo de vida de clickhouse-php: los nueve pasos de una consulta, las ramas de excepción y el ciclo de vida de las migraciones](lifecycle.svg)
 
 ## Instalación
 
@@ -596,10 +588,10 @@ try {
 
 | WeChat | Alipay |
 |------|--------|
-| <img src="../../weixinpay.png" width="130" height="130" alt="WeChat Pay"> | <img src="../../alipay.png" width="130" height="130" alt="Alipay"> |
+| ![WeChat Pay](../../weixinpay.png) | ![Alipay](../../alipay.png) |
 
 ¡Gracias por tu apoyo!
 
 ## Licencia
 
-MIT License.  Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+MIT License.  Copyright (c) 2026 erik [erik@erik.xyz](mailto:erik@erik.xyz) — https://erik.xyz

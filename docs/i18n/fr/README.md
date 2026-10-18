@@ -6,9 +6,7 @@ Découplage par couches : `Manager → ClientInterface → PoolInterface → Tra
 
 [简体中文](../../../README.md) | [English](../../../README_EN.md) | [한국어](../ko/README.md) | [Русский](../ru/README.md) | [Deutsch](../de/README.md) | **Français** | [Español](../es/README.md) | [Português](../pt/README.md) | [हिन्दी](../hi/README.md) | [العربية](../ar/README.md) | [বাংলা](../bn/README.md) | [Bahasa Indonesia](../id/README.md) | [日本語](../ja/README.md)
 
-<p align="center">
-  <img src="../../pet.svg" width="160" alt="Mascotte du projet clickhouse-php : la petite maison à trompe">
-</p>
+![Mascotte du projet clickhouse-php : un hamster cartoon avec une écharpe violette](../../pet.svg)
 
 ## Structure du projet
 
@@ -65,9 +63,7 @@ clickhouse-php/
 
 ## Architecture
 
-<p align="center">
-  <img src="architecture.svg" width="880" alt="Architecture de clickhouse-php : couche entrée, construction, client, pool de connexions, transport et support">
-</p>
+![Architecture de clickhouse-php : couche entrée, construction, client, pool de connexions, transport et support](architecture.svg)
 
 Six couches de haut en bas, chacune ne dépendant que de l'interface abstraite de la couche inférieure :
 
@@ -82,15 +78,11 @@ Six couches de haut en bas, chacune ne dépendant que de l'interface abstraite d
 
 ## Conception fonctionnelle
 
-<p align="center">
-  <img src="features.svg" width="880" alt="Conception fonctionnelle de clickhouse-php : constructeur de requêtes, Schema Builder, migrations, ORM, pool de connexions, intégration des frameworks">
-</p>
+![Conception fonctionnelle de clickhouse-php : constructeur de requêtes, Schema Builder, migrations, ORM, pool de connexions, intégration des frameworks](features.svg)
 
 ## Cycle de vie
 
-<p align="center">
-  <img src="lifecycle.svg" width="880" alt="Cycle de vie de clickhouse-php : chaîne de requête en neuf étapes, branches d'exception et cycle de vie des migrations">
-</p>
+![Cycle de vie de clickhouse-php : chaîne de requête en neuf étapes, branches d'exception et cycle de vie des migrations](lifecycle.svg)
 
 ## Installation
 
@@ -596,10 +588,10 @@ try {
 
 | WeChat | Alipay |
 |------|--------|
-| <img src="../../weixinpay.png" width="130" height="130" alt="Paiement WeChat"> | <img src="../../alipay.png" width="130" height="130" alt="Alipay"> |
+| ![Paiement WeChat](../../weixinpay.png) | ![Alipay](../../alipay.png) |
 
 Merci pour votre soutien !
 
 ## Licence
 
-MIT License.  Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+MIT License.  Copyright (c) 2026 erik [erik@erik.xyz](mailto:erik@erik.xyz) — https://erik.xyz

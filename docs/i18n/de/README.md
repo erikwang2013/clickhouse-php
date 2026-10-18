@@ -6,9 +6,7 @@ Schichtenweise entkoppelt: `Manager → ClientInterface → PoolInterface → Tr
 
 [简体中文](../../../README.md) | [English](../../../README_EN.md) | [한국어](../ko/README.md) | [Русский](../ru/README.md) | **Deutsch** | [Français](../fr/README.md) | [Español](../es/README.md) | [Português](../pt/README.md) | [हिन्दी](../hi/README.md) | [العربية](../ar/README.md) | [বাংলা](../bn/README.md) | [Bahasa Indonesia](../id/README.md) | [日本語](../ja/README.md)
 
-<p align="center">
-  <img src="../../pet.svg" width="160" alt="clickhouse-php Projektmaskottchen: kleines Haus mit Rüssel">
-</p>
+![clickhouse-php Projektmaskottchen: ein Cartoon-Hamster mit lila Schal](../../pet.svg)
 
 ## Projektstruktur
 
@@ -65,9 +63,7 @@ clickhouse-php/
 
 ## Architektur
 
-<p align="center">
-  <img src="architecture.svg" width="880" alt="clickhouse-php Architektur: Einstiegsschicht, Aufbauschicht, Client-Schicht, Pool-Schicht, Transportschicht, Basisschicht">
-</p>
+![clickhouse-php Architektur: Einstiegsschicht, Aufbauschicht, Client-Schicht, Pool-Schicht, Transportschicht, Basisschicht](architecture.svg)
 
 Von oben nach unten in sechs Schichten gegliedert; jede Schicht hängt nur von der abstrakten Schnittstelle der nächsten ab:
 
@@ -82,15 +78,11 @@ Von oben nach unten in sechs Schichten gegliedert; jede Schicht hängt nur von d
 
 ## Funktionsdesign
 
-<p align="center">
-  <img src="features.svg" width="880" alt="clickhouse-php Funktionsdesign: Query Builder, Schema Builder, Migrationssystem, ORM, Verbindungspool, Framework-Integration">
-</p>
+![clickhouse-php Funktionsdesign: Query Builder, Schema Builder, Migrationssystem, ORM, Verbindungspool, Framework-Integration](features.svg)
 
 ## Lebenszyklus
 
-<p align="center">
-  <img src="lifecycle.svg" width="880" alt="clickhouse-php Lebenszyklus: neunstufige Abfragekette, Ausnahmezweige und Migrationslebenszyklus">
-</p>
+![clickhouse-php Lebenszyklus: neunstufige Abfragekette, Ausnahmezweige und Migrationslebenszyklus](lifecycle.svg)
 
 ## Installation
 
@@ -596,10 +588,10 @@ try {
 
 | WeChat | Alipay |
 |--------|--------|
-| <img src="../../weixinpay.png" width="130" height="130" alt="WeChat Pay"> | <img src="../../alipay.png" width="130" height="130" alt="Alipay"> |
+| ![WeChat Pay](../../weixinpay.png) | ![Alipay](../../alipay.png) |
 
 Vielen Dank für Ihre Unterstützung!
 
 ## Lizenz
 
-MIT License.  Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+MIT License.  Copyright (c) 2026 erik [erik@erik.xyz](mailto:erik@erik.xyz) — https://erik.xyz

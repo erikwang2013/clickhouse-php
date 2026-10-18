@@ -6,9 +6,7 @@ PHP-клиент для ClickHouse. По умолчанию работает ч�
 
 [简体中文](../../../README.md) | [English](../../../README_EN.md) | [한국어](../ko/README.md) | **Русский** | [Deutsch](../de/README.md) | [Français](../fr/README.md) | [Español](../es/README.md) | [Português](../pt/README.md) | [हिन्दी](../hi/README.md) | [العربية](../ar/README.md) | [বাংলা](../bn/README.md) | [Bahasa Indonesia](../id/README.md) | [日本語](../ja/README.md)
 
-<p align="center">
-  <img src="../../pet.svg" width="160" alt="Талисман проекта clickhouse-php: домик со хоботом">
-</p>
+![Талисман проекта clickhouse-php: мультяшный хомяк в фиолетовом шарфе](../../pet.svg)
 
 ## Структура проекта
 
@@ -65,9 +63,7 @@ clickhouse-php/
 
 ## Архитектура
 
-<p align="center">
-  <img src="architecture.svg" width="880" alt="Архитектура clickhouse-php: слой входа, слой сборки, слой клиента, слой пула соединений, транспортный слой, слой поддержки">
-</p>
+![Архитектура clickhouse-php: слой входа, слой сборки, слой клиента, слой пула соединений, транспортный слой, слой поддержки](architecture.svg)
 
 Сверху вниз — шесть слоёв, каждый слой зависит только от абстрактного интерфейса слоя ниже:
 
@@ -82,15 +78,11 @@ clickhouse-php/
 
 ## Возможности
 
-<p align="center">
-  <img src="features.svg" width="880" alt="Возможности clickhouse-php: конструктор запросов, Schema Builder, система миграций, ORM, пул соединений, интеграция с фреймворками">
-</p>
+![Возможности clickhouse-php: конструктор запросов, Schema Builder, система миграций, ORM, пул соединений, интеграция с фреймворками](features.svg)
 
 ## Жизненный цикл
 
-<p align="center">
-  <img src="lifecycle.svg" width="880" alt="Жизненный цикл clickhouse-php: девять шагов запроса, ветки исключений и жизненный цикл миграций">
-</p>
+![Жизненный цикл clickhouse-php: девять шагов запроса, ветки исключений и жизненный цикл миграций](lifecycle.svg)
 
 ## Установка
 
@@ -596,10 +588,10 @@ try {
 
 | WeChat | Alipay |
 |------|--------|
-| <img src="../../weixinpay.png" width="130" height="130" alt="WeChat Pay"> | <img src="../../alipay.png" width="130" height="130" alt="Alipay"> |
+| ![WeChat Pay](../../weixinpay.png) | ![Alipay](../../alipay.png) |
 
 Спасибо за поддержку!
 
 ## Лицензия
 
-MIT License.  Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+MIT License.  Copyright (c) 2026 erik [erik@erik.xyz](mailto:erik@erik.xyz) — https://erik.xyz

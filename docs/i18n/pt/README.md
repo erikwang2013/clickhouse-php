@@ -6,9 +6,7 @@ Camadas desacopladas: `Manager → ClientInterface → PoolInterface → Transpo
 
 [简体中文](../../../README.md) | [English](../../../README_EN.md) | [한국어](../ko/README.md) | [Русский](../ru/README.md) | [Deutsch](../de/README.md) | [Français](../fr/README.md) | [Español](../es/README.md) | **Português** | [हिन्दी](../hi/README.md) | [العربية](../ar/README.md) | [বাংলা](../bn/README.md) | [Bahasa Indonesia](../id/README.md) | [日本語](../ja/README.md)
 
-<p align="center">
-  <img src="../../pet.svg" width="160" alt="Mascote do projeto clickhouse-php: casinha com tromba de elefante">
-</p>
+![Mascote do projeto clickhouse-php: um hamster de desenho animado com cachecol roxo](../../pet.svg)
 
 ## Estrutura do projeto
 
@@ -65,9 +63,7 @@ clickhouse-php/
 
 ## Arquitetura
 
-<p align="center">
-  <img src="architecture.svg" width="880" alt="Arquitetura do clickhouse-php: entrada, construção, cliente, pool de conexões, transporte e suporte">
-</p>
+![Arquitetura do clickhouse-php: entrada, construção, cliente, pool de conexões, transporte e suporte](architecture.svg)
 
 Dividida em seis camadas, cada uma dependendo apenas da interface abstrata da camada seguinte:
 
@@ -82,15 +78,11 @@ Dividida em seis camadas, cada uma dependendo apenas da interface abstrata da ca
 
 ## Recursos
 
-<p align="center">
-  <img src="features.svg" width="880" alt="Recursos do clickhouse-php: query builder, Schema Builder, sistema de migrações, ORM, pool de conexões e integração com frameworks">
-</p>
+![Recursos do clickhouse-php: query builder, Schema Builder, sistema de migrações, ORM, pool de conexões e integração com frameworks](features.svg)
 
 ## Ciclo de vida
 
-<p align="center">
-  <img src="lifecycle.svg" width="880" alt="Ciclo de vida do clickhouse-php: as nove etapas da consulta, ramos de exceção e o ciclo de vida das migrações">
-</p>
+![Ciclo de vida do clickhouse-php: as nove etapas da consulta, ramos de exceção e o ciclo de vida das migrações](lifecycle.svg)
 
 ## Instalação
 
@@ -596,10 +588,10 @@ try {
 
 | WeChat | Alipay |
 |------|--------|
-| <img src="../../weixinpay.png" width="130" height="130" alt="Pagamento via WeChat"> | <img src="../../alipay.png" width="130" height="130" alt="Pagamento via Alipay"> |
+| ![Pagamento via WeChat](../../weixinpay.png) | ![Pagamento via Alipay](../../alipay.png) |
 
 Obrigado pelo apoio!
 
 ## Licença
 
-MIT License.  Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+MIT License.  Copyright (c) 2026 erik [erik@erik.xyz](mailto:erik@erik.xyz) — https://erik.xyz

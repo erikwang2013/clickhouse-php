@@ -6,9 +6,7 @@ PHP ClickHouse ক্লায়েন্ট। ডিফল্টভাবে 
 
 [简体中文](../../../README.md) | [English](../../../README_EN.md) | [한국어](../ko/README.md) | [Русский](../ru/README.md) | [Deutsch](../de/README.md) | [Français](../fr/README.md) | [Español](../es/README.md) | [Português](../pt/README.md) | [हिन्दी](../hi/README.md) | [العربية](../ar/README.md) | **বাংলা** | [Bahasa Indonesia](../id/README.md) | [日本語](../ja/README.md)
 
-<p align="center">
-  <img src="../../pet.svg" width="160" alt="clickhouse-php প্রকল্পের মাসকট: হাতির শুঁড়ওয়ালা ছোট্ট ঘর">
-</p>
+![clickhouse-php প্রকল্পের মাসকট: বেগুনি স্কার্ফ পরা কার্টুন হ্যামস্টার](../../pet.svg)
 
 ## প্রকল্প কাঠামো
 
@@ -65,9 +63,7 @@ clickhouse-php/
 
 ## আর্কিটেকচার ডিজাইন
 
-<p align="center">
-  <img src="architecture.svg" width="880" alt="clickhouse-php আর্কিটেকচার ডিজাইন: এন্ট্রি স্তর, বিল্ড স্তর, ক্লায়েন্ট স্তর, Connection Pool স্তর, Transport স্তর, সাপোর্ট স্তর">
-</p>
+![clickhouse-php আর্কিটেকচার ডিজাইন: এন্ট্রি স্তর, বিল্ড স্তর, ক্লায়েন্ট স্তর, Connection Pool স্তর, Transport স্তর, সাপোর্ট স্তর](architecture.svg)
 
 উপর থেকে নিচে ছয়টি স্তরে বিভক্ত, প্রতিটি স্তর কেবল তার পরের স্তরের অ্যাবস্ট্রাক্ট ইন্টারফেসের উপর নির্ভর করে:
 
@@ -82,15 +78,11 @@ clickhouse-php/
 
 ## ফিচার ডিজাইন
 
-<p align="center">
-  <img src="features.svg" width="880" alt="clickhouse-php ফিচার ডিজাইন: Query Builder, Schema Builder, Migration সিস্টেম, ORM, Connection Pool, ফ্রেমওয়ার্ক ইন্টিগ্রেশন">
-</p>
+![clickhouse-php ফিচার ডিজাইন: Query Builder, Schema Builder, Migration সিস্টেম, ORM, Connection Pool, ফ্রেমওয়ার্ক ইন্টিগ্রেশন](features.svg)
 
 ## লাইফসাইকল
 
-<p align="center">
-  <img src="lifecycle.svg" width="880" alt="clickhouse-php লাইফসাইকল: কুয়েরির নয় ধাপের চেইন, Exception শাখা ও Migration লাইফসাইকল">
-</p>
+![clickhouse-php লাইফসাইকল: কুয়েরির নয় ধাপের চেইন, Exception শাখা ও Migration লাইফসাইকল](lifecycle.svg)
 
 ## ইনস্টলেশন
 
@@ -596,10 +588,10 @@ try {
 
 | WeChat | Alipay |
 |------|--------|
-| <img src="../../weixinpay.png" width="130" height="130" alt="WeChat Pay"> | <img src="../../alipay.png" width="130" height="130" alt="Alipay"> |
+| ![WeChat Pay](../../weixinpay.png) | ![Alipay](../../alipay.png) |
 
 আপনার সমর্থনের জন্য ধন্যবাদ!
 
 ## লাইসেন্স
 
-MIT License.  Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+MIT License.  Copyright (c) 2026 erik [erik@erik.xyz](mailto:erik@erik.xyz) — https://erik.xyz

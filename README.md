@@ -6,9 +6,7 @@ PHP ClickHouse 客户端。默认通过 ClickHouse HTTP 接口（8123 端口）�
 
 **简体中文** | [English](README_EN.md) | [한국어](docs/i18n/ko/README.md) | [Русский](docs/i18n/ru/README.md) | [Deutsch](docs/i18n/de/README.md) | [Français](docs/i18n/fr/README.md) | [Español](docs/i18n/es/README.md) | [Português](docs/i18n/pt/README.md) | [हिन्दी](docs/i18n/hi/README.md) | [العربية](docs/i18n/ar/README.md) | [বাংলা](docs/i18n/bn/README.md) | [Bahasa Indonesia](docs/i18n/id/README.md) | [日本語](docs/i18n/ja/README.md)
 
-<p align="center">
-  <img src="docs/pet.svg" width="160" alt="clickhouse-php 项目宠物：象鼻小房子">
-</p>
+![clickhouse-php 项目宠物：戴紫色围巾的卡通仓鼠](docs/pet.svg)
 
 ## 项目结构
 
@@ -65,9 +63,7 @@ clickhouse-php/
 
 ## 架构设计
 
-<p align="center">
-  <img src="docs/architecture.svg" width="880" alt="clickhouse-php 架构设计：入口层、构建层、客户端层、连接池层、传输层、支撑层">
-</p>
+![clickhouse-php 架构设计：入口层、构建层、客户端层、连接池层、传输层、支撑层](docs/architecture.svg)
 
 自上而下分为六层，每层只依赖下一层的抽象接口：
 
@@ -82,15 +78,11 @@ clickhouse-php/
 
 ## 功能设计
 
-<p align="center">
-  <img src="docs/features.svg" width="880" alt="clickhouse-php 功能设计：查询构建器、Schema Builder、迁移系统、ORM、连接池、框架集成">
-</p>
+![clickhouse-php 功能设计：查询构建器、Schema Builder、迁移系统、ORM、连接池、框架集成](docs/features.svg)
 
 ## 生命周期
 
-<p align="center">
-  <img src="docs/lifecycle.svg" width="880" alt="clickhouse-php 生命周期：查询九步链路、异常分支与迁移生命周期">
-</p>
+![clickhouse-php 生命周期：查询九步链路、异常分支与迁移生命周期](docs/lifecycle.svg)
 
 ## 安装
 
@@ -596,21 +588,26 @@ try {
 
 | 微信 | 支付宝 |
 |------|--------|
-| <img src="docs/weixinpay.png" width="130" height="130" alt="微信支付"> | <img src="docs/alipay.png" width="130" height="130" alt="支付宝"> |
+| ![微信支付](docs/weixinpay.png) | ![支付宝](docs/alipay.png) |
 
 感谢您的支持！
 
 ## 许可证
 
-MIT License.  Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+MIT License.  Copyright (c) 2026 erik [erik@erik.xyz](mailto:erik@erik.xyz) — https://erik.xyz
 
 <!-- pet-expressions:start -->
-## 项目宠物表情形态 · ClickHouse 小象
+## 项目宠物表情形态 · ClickHouse 仓鼠
 
-<table align="center">
-<tr><td align="center"><img src="docs/pet-expressions/smile.svg" width="88" alt="笑"><br><b>笑</b><br><code>:emoji-smile:</code></td><td align="center"><img src="docs/pet-expressions/joy.svg" width="88" alt="欢乐"><br><b>欢乐</b><br><code>:emoji-joy:</code></td><td align="center"><img src="docs/pet-expressions/cry.svg" width="88" alt="哭"><br><b>哭</b><br><code>:emoji-cry:</code></td><td align="center"><img src="docs/pet-expressions/depressed.svg" width="88" alt="沮丧"><br><b>沮丧</b><br><code>:emoji-depressed:</code></td><td align="center"><img src="docs/pet-expressions/terrified.svg" width="88" alt="惊恐"><br><b>惊恐</b><br><code>:emoji-terrified:</code></td><td align="center"><img src="docs/pet-expressions/angry.svg" width="88" alt="愤怒"><br><b>愤怒</b><br><code>:emoji-angry:</code></td></tr>
-<tr><td align="center"><img src="docs/pet-expressions/coquettish.svg" width="88" alt="撒娇"><br><b>撒娇</b><br><code>:emoji-coquettish:</code></td><td align="center"><img src="docs/pet-expressions/cute.svg" width="88" alt="卖萌"><br><b>卖萌</b><br><code>:emoji-cute:</code></td><td align="center"><img src="docs/pet-expressions/pleasing.svg" width="88" alt="讨好"><br><b>讨好</b><br><code>:emoji-pleasing:</code></td><td align="center"><img src="docs/pet-expressions/knocking.svg" width="88" alt="敲打"><br><b>敲打</b><br><code>:emoji-knocking:</code></td><td align="center"><img src="docs/pet-expressions/facepalm.svg" width="88" alt="捂脸"><br><b>捂脸</b><br><code>:emoji-facepalm:</code></td><td align="center"><img src="docs/pet-expressions/tongue.svg" width="88" alt="吐舌头"><br><b>吐舌头</b><br><code>:emoji-tongue:</code></td></tr>
-</table>
+| 笑 | 欢乐 | 哭 | 沮丧 | 惊恐 | 愤怒 |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| ![笑](docs/pet-expressions/smile.svg) | ![欢乐](docs/pet-expressions/joy.svg) | ![哭](docs/pet-expressions/cry.svg) | ![沮丧](docs/pet-expressions/depressed.svg) | ![惊恐](docs/pet-expressions/terrified.svg) | ![愤怒](docs/pet-expressions/angry.svg) |
+| `:emoji-smile:` | `:emoji-joy:` | `:emoji-cry:` | `:emoji-depressed:` | `:emoji-terrified:` | `:emoji-angry:` |
+
+| 撒娇 | 卖萌 | 讨好 | 敲打 | 捂脸 | 吐舌头 |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| ![撒娇](docs/pet-expressions/coquettish.svg) | ![卖萌](docs/pet-expressions/cute.svg) | ![讨好](docs/pet-expressions/pleasing.svg) | ![敲打](docs/pet-expressions/knocking.svg) | ![捂脸](docs/pet-expressions/facepalm.svg) | ![吐舌头](docs/pet-expressions/tongue.svg) |
+| `:emoji-coquettish:` | `:emoji-cute:` | `:emoji-pleasing:` | `:emoji-knocking:` | `:emoji-facepalm:` | `:emoji-tongue:` |
 
 > 12 种彩色动态形态：笑 / 欢乐 / 哭 / 沮丧 / 惊恐 / 愤怒 / 撒娇 / 卖萌 / 讨好 / 敲打 / 捂脸 / 吐舌头。每个 SVG 自带表情、情绪特效与整体动效，并遵循 `prefers-reduced-motion`。
 <!-- pet-expressions:end -->

@@ -6,9 +6,7 @@
 
 [简体中文](../../../README.md) | [English](../../../README_EN.md) | [한국어](../ko/README.md) | [Русский](../ru/README.md) | [Deutsch](../de/README.md) | [Français](../fr/README.md) | [Español](../es/README.md) | [Português](../pt/README.md) | [हिन्दी](../hi/README.md) | **العربية** | [বাংলা](../bn/README.md) | [Bahasa Indonesia](../id/README.md) | [日本語](../ja/README.md)
 
-<p align="center">
-  <img src="../../pet.svg" width="160" alt="حيوان مشروع clickhouse-php الأليف: بيت صغير بخرطوم فيل">
-</p>
+![حيوان مشروع clickhouse-php الأليف: هامستر كرتوني يرتدي وشاحًا بنفسجيًا](../../pet.svg)
 
 ## هيكل المشروع
 
@@ -65,9 +63,7 @@ clickhouse-php/
 
 ## تصميم البنية
 
-<p align="center">
-  <img src="architecture.svg" width="880" alt="clickhouse-php تصميم البنية: طبقة المدخل، طبقة البناء، طبقة العميل، طبقة حوض الاتصالات، طبقة النقل، الطبقة الداعمة">
-</p>
+![clickhouse-php تصميم البنية: طبقة المدخل، طبقة البناء، طبقة العميل، طبقة حوض الاتصالات، طبقة النقل، الطبقة الداعمة](architecture.svg)
 
 تنقسم من الأعلى إلى الأسفل إلى ست طبقات، وكل طبقة تعتمد فقط على الواجهة المجردة للطبقة التي تحتها:
 
@@ -82,15 +78,11 @@ clickhouse-php/
 
 ## تصميم الوظائف
 
-<p align="center">
-  <img src="features.svg" width="880" alt="clickhouse-php تصميم الوظائف: منشئ الاستعلامات، Schema Builder، نظام المهاجرات، ORM، حوض الاتصالات، تكامل الأطر">
-</p>
+![clickhouse-php تصميم الوظائف: منشئ الاستعلامات، Schema Builder، نظام المهاجرات، ORM، حوض الاتصالات، تكامل الأطر](features.svg)
 
 ## دورة الحياة
 
-<p align="center">
-  <img src="lifecycle.svg" width="880" alt="clickhouse-php دورة الحياة: مسار الاستعلام في تسع خطوات، فروع الاستثناءات، ودورة حياة المهاجرات">
-</p>
+![clickhouse-php دورة الحياة: مسار الاستعلام في تسع خطوات، فروع الاستثناءات، ودورة حياة المهاجرات](lifecycle.svg)
 
 ## التثبيت
 
@@ -596,10 +588,10 @@ try {
 
 | WeChat | Alipay |
 |------|--------|
-| <img src="../../weixinpay.png" width="130" height="130" alt="WeChat Pay"> | <img src="../../alipay.png" width="130" height="130" alt="Alipay"> |
+| ![WeChat Pay](../../weixinpay.png) | ![Alipay](../../alipay.png) |
 
 شكرًا لدعمكم!
 
 ## الترخيص
 
-MIT License.  Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+MIT License.  Copyright (c) 2026 erik [erik@erik.xyz](mailto:erik@erik.xyz) — https://erik.xyz

@@ -6,9 +6,7 @@ PHP 製 ClickHouse クライアント。デフォルトでは ClickHouse HTTP �
 
 [简体中文](../../../README.md) | [English](../../../README_EN.md) | [한국어](../ko/README.md) | [Русский](../ru/README.md) | [Deutsch](../de/README.md) | [Français](../fr/README.md) | [Español](../es/README.md) | [Português](../pt/README.md) | [हिन्दी](../hi/README.md) | [العربية](../ar/README.md) | [বাংলা](../bn/README.md) | [Bahasa Indonesia](../id/README.md) | **日本語**
 
-<p align="center">
-  <img src="../../pet.svg" width="160" alt="clickhouse-php のマスコット：象の鼻をした小さな家">
-</p>
+![clickhouse-php のマスコット：紫のスカーフをしたカートゥーン風ハムスター](../../pet.svg)
 
 ## プロジェクト構成
 
@@ -65,9 +63,7 @@ clickhouse-php/
 
 ## アーキテクチャ設計
 
-<p align="center">
-  <img src="architecture.svg" width="880" alt="clickhouse-php アーキテクチャ設計：入口層、構築層、クライアント層、コネクションプール層、トランスポート層、サポート層">
-</p>
+![clickhouse-php アーキテクチャ設計：入口層、構築層、クライアント層、コネクションプール層、トランスポート層、サポート層](architecture.svg)
 
 上から下へ六つの層に分かれ、各層はその直下の層の抽象インターフェースのみに依存します：
 
@@ -82,15 +78,11 @@ clickhouse-php/
 
 ## 機能設計
 
-<p align="center">
-  <img src="features.svg" width="880" alt="clickhouse-php 機能設計：クエリビルダー、Schema Builder、マイグレーションシステム、ORM、コネクションプール、フレームワーク統合">
-</p>
+![clickhouse-php 機能設計：クエリビルダー、Schema Builder、マイグレーションシステム、ORM、コネクションプール、フレームワーク統合](features.svg)
 
 ## ライフサイクル
 
-<p align="center">
-  <img src="lifecycle.svg" width="880" alt="clickhouse-php ライフサイクル：クエリの 9 ステップ経路、例外分岐、マイグレーションのライフサイクル">
-</p>
+![clickhouse-php ライフサイクル：クエリの 9 ステップ経路、例外分岐、マイグレーションのライフサイクル](lifecycle.svg)
 
 ## インストール
 
@@ -596,10 +588,10 @@ try {
 
 | WeChat | Alipay |
 |------|--------|
-| <img src="../../weixinpay.png" width="130" height="130" alt="WeChat Pay"> | <img src="../../alipay.png" width="130" height="130" alt="Alipay"> |
+| ![WeChat Pay](../../weixinpay.png) | ![Alipay](../../alipay.png) |
 
 ご支援ありがとうございます！
 
 ## ライセンス
 
-MIT License.  Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+MIT License.  Copyright (c) 2026 erik [erik@erik.xyz](mailto:erik@erik.xyz) — https://erik.xyz

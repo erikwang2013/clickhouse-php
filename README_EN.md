@@ -6,9 +6,7 @@ Clean layering: `Manager → ClientInterface → PoolInterface → TransportInte
 
 [简体中文](README.md) | **English** | [한국어](docs/i18n/ko/README.md) | [Русский](docs/i18n/ru/README.md) | [Deutsch](docs/i18n/de/README.md) | [Français](docs/i18n/fr/README.md) | [Español](docs/i18n/es/README.md) | [Português](docs/i18n/pt/README.md) | [हिन्दी](docs/i18n/hi/README.md) | [العربية](docs/i18n/ar/README.md) | [বাংলা](docs/i18n/bn/README.md) | [Bahasa Indonesia](docs/i18n/id/README.md) | [日本語](docs/i18n/ja/README.md)
 
-<p align="center">
-  <img src="docs/pet.svg" width="160" alt="clickhouse-php project pet: the elephant house">
-</p>
+![clickhouse-php project pet: a cartoon hamster wearing a purple scarf](docs/pet.svg)
 
 ## Project Structure
 
@@ -65,9 +63,7 @@ clickhouse-php/
 
 ## Architecture
 
-<p align="center">
-  <img src="docs/i18n/en/architecture.svg" width="880" alt="clickhouse-php architecture: entry, builder, client, pool, transport, support layers">
-</p>
+![clickhouse-php architecture: entry, builder, client, pool, transport, support layers](docs/i18n/en/architecture.svg)
 
 Six layers, each depending only on the abstract interface of the layer below:
 
@@ -82,15 +78,11 @@ Six layers, each depending only on the abstract interface of the layer below:
 
 ## Features
 
-<p align="center">
-  <img src="docs/i18n/en/features.svg" width="880" alt="clickhouse-php features: query builder, schema builder, migrations, ORM, pooling, framework integration">
-</p>
+![clickhouse-php features: query builder, schema builder, migrations, ORM, pooling, framework integration](docs/i18n/en/features.svg)
 
 ## Lifecycle
 
-<p align="center">
-  <img src="docs/i18n/en/lifecycle.svg" width="880" alt="clickhouse-php lifecycle: the nine-step query path, error branches, and migration lifecycle">
-</p>
+![clickhouse-php lifecycle: the nine-step query path, error branches, and migration lifecycle](docs/i18n/en/lifecycle.svg)
 
 ## Installation
 
@@ -593,10 +585,10 @@ In plain PHP these are read by `ClickHouse::bootstrap()` / `Manager::fromEnv()`,
 
 | WeChat | Alipay |
 |--------|--------|
-| <img src="docs/weixinpay.png" width="130" height="130" alt="WeChat Pay"> | <img src="docs/alipay.png" width="130" height="130" alt="Alipay"> |
+| ![WeChat Pay](docs/weixinpay.png) | ![Alipay](docs/alipay.png) |
 
 Thank you for your support!
 
 ## License
 
-MIT License. Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+MIT License. Copyright (c) 2026 erik [erik@erik.xyz](mailto:erik@erik.xyz) — https://erik.xyz

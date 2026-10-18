@@ -6,9 +6,7 @@ Dekopel berlapis: `Manager → ClientInterface → PoolInterface → TransportIn
 
 [简体中文](../../../README.md) | [English](../../../README_EN.md) | [한국어](../ko/README.md) | [Русский](../ru/README.md) | [Deutsch](../de/README.md) | [Français](../fr/README.md) | [Español](../es/README.md) | [Português](../pt/README.md) | [हिन्दी](../hi/README.md) | [العربية](../ar/README.md) | [বাংলা](../bn/README.md) | **Bahasa Indonesia** | [日本語](../ja/README.md)
 
-<p align="center">
-  <img src="../../pet.svg" width="160" alt="Maskot proyek clickhouse-php: rumah mungil berbelalai">
-</p>
+![Maskot proyek clickhouse-php: hamster kartun dengan syal ungu](../../pet.svg)
 
 ## Struktur Proyek
 
@@ -65,9 +63,7 @@ clickhouse-php/
 
 ## Desain Arsitektur
 
-<p align="center">
-  <img src="architecture.svg" width="880" alt="Desain arsitektur clickhouse-php: lapisan entri, konstruksi, klien, pool, transport, pendukung">
-</p>
+![Desain arsitektur clickhouse-php: lapisan entri, konstruksi, klien, pool, transport, pendukung](architecture.svg)
 
 Terbagi menjadi enam lapisan dari atas ke bawah, setiap lapisan hanya bergantung pada antarmuka abstrak lapisan di bawahnya:
 
@@ -82,15 +78,11 @@ Terbagi menjadi enam lapisan dari atas ke bawah, setiap lapisan hanya bergantung
 
 ## Desain Fitur
 
-<p align="center">
-  <img src="features.svg" width="880" alt="Desain fitur clickhouse-php: query builder, Schema Builder, sistem migrasi, ORM, connection pool, integrasi framework">
-</p>
+![Desain fitur clickhouse-php: query builder, Schema Builder, sistem migrasi, ORM, connection pool, integrasi framework](features.svg)
 
 ## Siklus Hidup
 
-<p align="center">
-  <img src="lifecycle.svg" width="880" alt="Siklus hidup clickhouse-php: rantai sembilan langkah query, cabang exception, dan siklus hidup migrasi">
-</p>
+![Siklus hidup clickhouse-php: rantai sembilan langkah query, cabang exception, dan siklus hidup migrasi](lifecycle.svg)
 
 ## Instalasi
 
@@ -596,10 +588,10 @@ try {
 
 | WeChat | Alipay |
 |------|--------|
-| <img src="../../weixinpay.png" width="130" height="130" alt="WeChat Pay"> | <img src="../../alipay.png" width="130" height="130" alt="Alipay"> |
+| ![WeChat Pay](../../weixinpay.png) | ![Alipay](../../alipay.png) |
 
 Terima kasih atas dukungan Anda!
 
 ## Lisensi
 
-MIT License.  Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+MIT License.  Copyright (c) 2026 erik [erik@erik.xyz](mailto:erik@erik.xyz) — https://erik.xyz

@@ -6,9 +6,7 @@ PHP ClickHouse 클라이언트. 기본적으로 ClickHouse HTTP 인터페이스(
 
 **简体中文** | [English](../../../README_EN.md) | **한국어** | [Русский](../ru/README.md) | [Deutsch](../de/README.md) | [Français](../fr/README.md) | [Español](../es/README.md) | [Português](../pt/README.md) | [हिन्दी](../hi/README.md) | [العربية](../ar/README.md) | [বাংলা](../bn/README.md) | [Bahasa Indonesia](../id/README.md) | [日本語](../ja/README.md)
 
-<p align="center">
-  <img src="../../pet.svg" width="160" alt="clickhouse-php 프로젝트 마스코트: 코끼리 코로 만든 작은 집">
-</p>
+![clickhouse-php 프로젝트 마스코트: 보라색 목도리를 두른 만화풍 햄스터](../../pet.svg)
 
 ## 프로젝트 구조
 
@@ -65,9 +63,7 @@ clickhouse-php/
 
 ## 아키텍처 설계
 
-<p align="center">
-  <img src="architecture.svg" width="880" alt="clickhouse-php 아키텍처 설계: 진입 계층, 빌드 계층, 클라이언트 계층, 커넥션 풀 계층, 전송 계층, 지원 계층">
-</p>
+![clickhouse-php 아키텍처 설계: 진입 계층, 빌드 계층, 클라이언트 계층, 커넥션 풀 계층, 전송 계층, 지원 계층](architecture.svg)
 
 위에서 아래로 여섯 계층이며, 각 계층은 바로 아래 계층의 추상 인터페이스에만 의존합니다:
 
@@ -82,15 +78,11 @@ clickhouse-php/
 
 ## 기능 설계
 
-<p align="center">
-  <img src="features.svg" width="880" alt="clickhouse-php 기능 설계: 쿼리 빌더, Schema Builder, 마이그레이션 시스템, ORM, 커넥션 풀, 프레임워크 통합">
-</p>
+![clickhouse-php 기능 설계: 쿼리 빌더, Schema Builder, 마이그레이션 시스템, ORM, 커넥션 풀, 프레임워크 통합](features.svg)
 
 ## 라이프사이클
 
-<p align="center">
-  <img src="lifecycle.svg" width="880" alt="clickhouse-php 라이프사이클: 쿼리 9단계 경로, 예외 분기와 마이그레이션 라이프사이클">
-</p>
+![clickhouse-php 라이프사이클: 쿼리 9단계 경로, 예외 분기와 마이그레이션 라이프사이클](lifecycle.svg)
 
 ## 설치
 
@@ -596,10 +588,10 @@ try {
 
 | 위챗 | 알리페이 |
 |------|--------|
-| <img src="../../weixinpay.png" width="130" height="130" alt="위챗 결제"> | <img src="../../alipay.png" width="130" height="130" alt="알리페이"> |
+| ![위챗 결제](../../weixinpay.png) | ![알리페이](../../alipay.png) |
 
 후원해 주셔서 감사합니다!
 
 ## 라이선스
 
-MIT License.  Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+MIT License.  Copyright (c) 2026 erik [erik@erik.xyz](mailto:erik@erik.xyz) — https://erik.xyz

@@ -6,9 +6,7 @@ PHP के लिए ClickHouse क्लाइंट। डिफ़ॉल्�
 
 [简体中文](../../../README.md) | [English](../../../README_EN.md) | [한국어](../ko/README.md) | [Русский](../ru/README.md) | [Deutsch](../de/README.md) | [Français](../fr/README.md) | [Español](../es/README.md) | [Português](../pt/README.md) | **हिन्दी** | [العربية](../ar/README.md) | [বাংলা](../bn/README.md) | [Bahasa Indonesia](../id/README.md) | [日本語](../ja/README.md)
 
-<p align="center">
-  <img src="../../pet.svg" width="160" alt="clickhouse-php प्रोजेक्ट का शुभंकर: सूँड़ वाला छोटा घर">
-</p>
+![clickhouse-php प्रोजेक्ट का शुभंकर: बैंगनी स्कार्फ वाला कार्टून हैम्स्टर](../../pet.svg)
 
 ## प्रोजेक्ट संरचना
 
@@ -65,9 +63,7 @@ clickhouse-php/
 
 ## आर्किटेक्चर डिज़ाइन
 
-<p align="center">
-  <img src="architecture.svg" width="880" alt="clickhouse-php आर्किटेक्चर डिज़ाइन: एंट्री लेयर, बिल्डर लेयर, क्लाइंट लेयर, कनेक्शन पूल लेयर, ट्रांसपोर्ट लेयर, सपोर्ट लेयर">
-</p>
+![clickhouse-php आर्किटेक्चर डिज़ाइन: एंट्री लेयर, बिल्डर लेयर, क्लाइंट लेयर, कनेक्शन पूल लेयर, ट्रांसपोर्ट लेयर, सपोर्ट लेयर](architecture.svg)
 
 ऊपर से नीचे छह लेयर हैं, हर लेयर केवल अपनी नीचे की लेयर की अमूर्त इंटरफ़ेस पर निर्भर है:
 
@@ -82,15 +78,11 @@ clickhouse-php/
 
 ## फ़ीचर डिज़ाइन
 
-<p align="center">
-  <img src="features.svg" width="880" alt="clickhouse-php फ़ीचर डिज़ाइन: Query Builder, Schema Builder, Migration सिस्टम, ORM, कनेक्शन पूल, फ्रेमवर्क इंटीग्रेशन">
-</p>
+![clickhouse-php फ़ीचर डिज़ाइन: Query Builder, Schema Builder, Migration सिस्टम, ORM, कनेक्शन पूल, फ्रेमवर्क इंटीग्रेशन](features.svg)
 
 ## लाइफ़साइकल
 
-<p align="center">
-  <img src="lifecycle.svg" width="880" alt="clickhouse-php लाइफ़साइकल: क्वेरी के नौ चरण, एक्सेप्शन ब्रांच और माइग्रेशन लाइफ़साइकल">
-</p>
+![clickhouse-php लाइफ़साइकल: क्वेरी के नौ चरण, एक्सेप्शन ब्रांच और माइग्रेशन लाइफ़साइकल](lifecycle.svg)
 
 ## इंस्टॉलेशन
 
@@ -596,10 +588,10 @@ try {
 
 | WeChat Pay | Alipay |
 |------|--------|
-| <img src="../../weixinpay.png" width="130" height="130" alt="WeChat Pay"> | <img src="../../alipay.png" width="130" height="130" alt="Alipay"> |
+| ![WeChat Pay](../../weixinpay.png) | ![Alipay](../../alipay.png) |
 
 आपके सहयोग के लिए धन्यवाद!
 
 ## लाइसेंस
 
-MIT License.  Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+MIT License.  Copyright (c) 2026 erik [erik@erik.xyz](mailto:erik@erik.xyz) — https://erik.xyz
