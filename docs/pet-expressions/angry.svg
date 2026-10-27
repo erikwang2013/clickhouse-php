@@ -85,6 +85,6 @@
       <path d="M142 140c2 6 4 10 6 13" fill="none" stroke="#F6D36B" stroke-width="9" stroke-linecap="round"/>
       <circle cx="150" cy="158" r="11" fill="#F6D36B" stroke="#1E2233" stroke-width="3.5"/>
       <path d="M145 158h10" stroke="#1E2233" stroke-width="1.8" opacity=".5" stroke-linecap="round"/></g>
-    <g class="ex-effects"><g class="ex-anim-pulse" transform="translate(160 36) scale(1.0)"><path d="M0-10L3-3 10-6 5 0 10 6 3 3 0 10-3 3-10 6-5 0-10-6-3-3Z" fill="#EF4444"/><circle cx="0" cy="0" r="16" fill="none" stroke="#EF4444" stroke-width="2.2" opacity=".35"/></g><g transform="translate(76 30)"><circle class="ex-anim-steam" style="animation-delay:0s" r="3" fill="#D7DEE8" opacity=".75"/></g><g transform="translate(86 22)"><circle class="ex-anim-steam" style="animation-delay:0.28s" r="3.6" fill="#D7DEE8" opacity=".75"/></g><g transform="translate(96 30)"><circle class="ex-anim-steam" style="animation-delay:0.56s" r="2.8" fill="#D7DEE8" opacity=".75"/></g></g>
+    <g class="ex-effects"><g class="ex-anim-pulse" transform="translate(160 36) scale(1.0)"><path d="M0-10L3-3 10-6 5 0 10 6 3 3 0 10-3 3-10 6-5 0-10-6-3-3Z" fill="#EF4444"/></g><g transform="translate(76 30)"><circle class="ex-anim-steam" style="animation-delay:0s" r="3" fill="#D7DEE8" opacity=".75"/></g><g transform="translate(86 22)"><circle class="ex-anim-steam" style="animation-delay:0.28s" r="3.6" fill="#D7DEE8" opacity=".75"/></g><g transform="translate(96 30)"><circle class="ex-anim-steam" style="animation-delay:0.56s" r="2.8" fill="#D7DEE8" opacity=".75"/></g></g>
   </g>
 </svg>
