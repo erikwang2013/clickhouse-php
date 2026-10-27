@@ -1,5 +1,7 @@
 # clickhouse-php
 
+> 官网 / Website: [https://package.erik.xyz/clickhouse/](https://package.erik.xyz/clickhouse/)
+
 PHP ClickHouse 客户端。默认通过 ClickHouse HTTP 接口（8123 端口）通信，内置查询构建器、Schema Builder、迁移系统与 ORM，并适配 Laravel、ThinkPHP、Webman、Hyperf、Yii2、Yii3。
 
 分层解耦：`Manager → ClientInterface → PoolInterface → TransportInterface`，客户端形态、连接池、传输协议各自面向接口，均可替换。Native TCP 协议已在传输层预留位置，尚未实现。

@@ -1,6 +1,7 @@
 {
     "name": "erikwang2013/clickhouse-php",
     "description": "PHP ClickHouse client over HTTP with query builder, schema builder, migration system and ORM, plus Laravel, ThinkPHP, Webman, Hyperf, Yii2 and Yii3 adapters.",
+    "homepage": "https://package.erik.xyz/clickhouse/",
     "type": "library",
     "license": "MIT",
     "keywords": ["clickhouse", "database", "client", "php"],
